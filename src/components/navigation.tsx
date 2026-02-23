@@ -1,30 +1,50 @@
 'use client';
 
 import Link from 'next/link';
-import { Droplet, MapPin, ClipboardCheck, History, User, Bell, Menu, X } from 'lucide-react';
+import { Droplet, User, Bell, Menu, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useRouter } from 'next/navigation';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkUser = () => {
+      const savedUser = localStorage.getItem('roktodao_user');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkUser();
+    window.addEventListener('storage', checkUser);
+    return () => window.removeEventListener('storage', checkUser);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('roktodao_user');
+    setUser(null);
+    router.push('/');
+  };
 
   const navLinks = [
     { href: '/donors', label: 'রক্তদাতা খুঁজুন', icon: User },
     { href: '/requests', label: 'রক্তের অনুরোধ', icon: Droplet },
-    { href: '/gallery', label: 'গ্যালারি', icon: History },
-    { href: '/about', label: 'আমাদের সম্পর্কে', icon: ClipboardCheck },
-    { href: '/team', label: 'আমাদের টিম', icon: User },
+    { href: '/eligibility', label: 'যোগ্যতা যাচাই', icon: User },
+    { href: '/about', label: 'আমাদের সম্পর্কে', icon: User },
     { href: '/contact', label: 'যোগাযোগ', icon: Bell },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full flex flex-col">
-      {/* Urgent Notification Bar - Marquee style */}
       <div className="bg-primary text-white py-2 overflow-hidden whitespace-nowrap">
         <div className="inline-block animate-marquee hover-pause px-4">
-          <span className="mx-8">জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
-          <span className="mx-8">কক্সবাজার-এ AB+ রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
           <span className="mx-8">জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
           <span className="mx-8">কক্সবাজার-এ AB+ রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
         </div>
@@ -51,12 +71,25 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium hidden sm:block hover:text-primary">লগইন</Link>
-            <Button size="sm" asChild className="bg-primary hover:bg-primary/90 text-white rounded-full px-6">
-              <Link href="/register">রেজিস্ট্রেশন</Link>
-            </Button>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <Link href="/dashboard" className="text-sm font-bold flex items-center gap-2 text-primary">
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="hidden sm:inline">আমার ড্যাশবোর্ড</span>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-primary">
+                  <LogOut className="h-4 w-4 mr-1" /> লগআউট
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-medium hidden sm:block hover:text-primary">লগইন</Link>
+                <Button size="sm" asChild className="bg-primary hover:bg-primary/90 text-white rounded-full px-6">
+                  <Link href="/register">রেজিস্ট্রেশন</Link>
+                </Button>
+              </>
+            )}
             
-            {/* Mobile Menu */}
             <div className="lg:hidden">
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
@@ -79,7 +112,14 @@ export function Navigation() {
                       </Link>
                     ))}
                     <hr />
-                    <Link href="/login" onClick={() => setIsOpen(false)} className="text-lg font-medium">লগইন</Link>
+                    {user ? (
+                      <>
+                        <Link href="/dashboard" onClick={() => setIsOpen(false)} className="text-lg font-bold text-primary">ড্যাশবোর্ড</Link>
+                        <button onClick={handleLogout} className="text-lg font-medium text-left text-red-500">লগআউট</button>
+                      </>
+                    ) : (
+                      <Link href="/login" onClick={() => setIsOpen(false)} className="text-lg font-medium">লগইন</Link>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>

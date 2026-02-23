@@ -103,10 +103,19 @@ export default function RegisterPage() {
     try {
       const result = await registerDonor(values);
       if (result.success) {
+        // Save session locally
+        localStorage.setItem('roktodao_user', JSON.stringify({
+          email: values.email,
+          fullName: values.fullName,
+          bloodType: values.bloodType
+        }));
+        
         toast({
           title: "নিবন্ধন সফল!",
           description: "আপনি এখন আমাদের জীবন রক্ষাকারী সম্প্রদায়ের অংশ।",
         });
+        
+        window.dispatchEvent(new Event('storage')); // Update navigation
         router.push('/dashboard');
       }
     } catch (error) {
@@ -145,7 +154,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>পুরো নাম</FormLabel>
                       <FormControl>
-                        <Input placeholder="আকবর হোসেন" {...field} />
+                        <Input placeholder="আপনার নাম লিখুন" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -205,7 +214,6 @@ export default function RegisterPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-primary/10">
-                {/* Searchable District Dropdown */}
                 <FormField
                   control={form.control}
                   name="district"
@@ -234,7 +242,7 @@ export default function RegisterPage() {
                           <div className="flex items-center border-b px-3 bg-muted/20">
                             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                             <input
-                              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
                               placeholder="জেলার নাম টাইপ করুন..."
                               value={districtSearch}
                               onChange={(e) => setDistrictSearch(e.target.value)}

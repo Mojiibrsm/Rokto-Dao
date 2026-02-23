@@ -1,31 +1,73 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getDonationHistory, type Appointment } from '@/lib/sheets';
+import { useRouter } from 'next/navigation';
+import { getDonationHistory, type Appointment, getDonors } from '@/lib/sheets';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplet, Calendar, History, ShieldCheck, MapPin, Loader2, User } from 'lucide-react';
+import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
+  const [user, setUser] = useState<any>(null);
+  const [donorDetails, setDonorDetails] = useState<any>(null);
   const [history, setHistory] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const userEmail = 'test@example.com'; 
+  const router = useRouter();
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('roktodao_user');
+    if (!savedUser) {
+      router.push('/login');
+      return;
+    }
+    setUser(JSON.parse(savedUser));
+  }, [router]);
 
   useEffect(() => {
     async function loadData() {
+      if (!user?.email) return;
       setLoading(true);
-      const data = await getDonationHistory(userEmail);
-      setHistory(data);
-      setLoading(false);
+      try {
+        // Fetch donation appointments
+        const appData = await getDonationHistory(user.email);
+        setHistory(appData);
+
+        // Fetch user profile details from Google Sheet
+        const allDonors = await getDonors({ bloodType: user.bloodType });
+        const currentDonor = allDonors.find(d => d.email === user.email);
+        if (currentDonor) {
+          setDonorDetails(currentDonor);
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     loadData();
-  }, []);
+  }, [user]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('roktodao_user');
+    window.dispatchEvent(new Event('storage'));
+    router.push('/');
+  };
+
+  if (loading && !user) {
+    return (
+      <div className="flex justify-center items-center h-[60vh]">
+        <Loader2 className="animate-spin h-12 w-12 text-primary" />
+      </div>
+    );
+  }
 
   const upcoming = history.filter(a => a.status === 'Scheduled');
   const past = history.filter(a => a.status === 'Completed');
+
+  // Helper to get initials
+  const initials = user?.fullName ? user.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'RD';
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -35,13 +77,16 @@ export default function DashboardPage() {
           <Card className="border-t-4 border-t-primary shadow-lg overflow-hidden">
             <div className="bg-primary/5 p-6 flex flex-col items-center text-center gap-4">
               <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold">
-                আহ
+                {initials}
               </div>
               <div>
-                <h2 className="text-xl font-bold font-headline">আকবর হোসেন</h2>
-                <p className="text-sm text-muted-foreground">{userEmail}</p>
+                <h2 className="text-xl font-bold font-headline">{user?.fullName || 'লোড হচ্ছে...'}</h2>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
-              <Button variant="outline" size="sm" className="w-full">প্রোফাইল সম্পাদনা করুন</Button>
+              <div className="flex gap-2 w-full">
+                <Button variant="outline" size="sm" className="flex-1">সম্পাদনা</Button>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-500 hover:bg-red-50">লগআউট</Button>
+              </div>
             </div>
             <CardContent className="p-6 space-y-4">
               <div className="p-4 bg-green-50 rounded-lg border border-green-100 flex justify-between items-center">
@@ -50,21 +95,23 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-3 text-center">
-                  <div className="text-xs text-muted-foreground uppercase">বয়স</div>
-                  <div className="text-lg font-bold">২৮</div>
+                  <div className="text-xs text-muted-foreground uppercase">রক্তের গ্রুপ</div>
+                  <div className="text-lg font-bold text-primary">{user?.bloodType || donorDetails?.bloodtype || 'N/A'}</div>
                 </Card>
                 <Card className="p-3 text-center">
-                  <div className="text-xs text-muted-foreground uppercase">ওজন</div>
-                  <div className="text-lg font-bold">৭২ কেজি</div>
+                  <div className="text-xs text-muted-foreground uppercase">মোট রক্তদান</div>
+                  <div className="text-lg font-bold">{donorDetails?.totaldonations || past.length || 0}</div>
                 </Card>
               </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-sm font-medium">রক্তের গ্রুপ</span>
-                <Badge className="bg-primary h-6 px-2">O+</Badge>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-sm font-medium">মোট রক্তদান</span>
-                <span className="font-bold text-primary">{past.length}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm py-2 border-b">
+                  <span className="text-muted-foreground">জেলা</span>
+                  <span className="font-medium">{donorDetails?.district || 'লোড হচ্ছে...'}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm py-2 border-b">
+                  <span className="text-muted-foreground">ফোন</span>
+                  <span className="font-medium">{donorDetails?.phone || 'লোড হচ্ছে...'}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
