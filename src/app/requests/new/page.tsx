@@ -5,16 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, Loader2 } from 'lucide-react';
+import { Droplet, ArrowLeft, Loader2, Search, Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { createBloodRequest } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 import { getDistricts, getUpazillas, getUnionsApi, type LocationEntry } from '@/lib/bangladesh-api';
+import { HOSPITALS } from '@/lib/hospital-data';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 const formSchema = z.object({
@@ -36,6 +39,9 @@ export default function NewRequestPage() {
   const [upazilas, setUpazilas] = useState<LocationEntry[]>([]);
   const [unions, setUnions] = useState<LocationEntry[]>([]);
   const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false, unions: false });
+  
+  const [hospitalSearch, setHospitalSearch] = useState('');
+  const [hospitalPopoverOpen, setHospitalPopoverOpen] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -122,6 +128,10 @@ export default function NewRequestPage() {
     }
   }
 
+  const filteredHospitals = HOSPITALS.filter(h => 
+    h.toLowerCase().includes(hospitalSearch.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto px-4 py-12 flex flex-col items-center">
       <div className="w-full max-w-2xl mb-6">
@@ -185,11 +195,93 @@ export default function NewRequestPage() {
                 control={form.control}
                 name="hospitalName"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>হাসপাতালের নাম *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="হাসপাতালের পুরো নাম" {...field} />
-                    </FormControl>
+                    <Popover open={hospitalPopoverOpen} onOpenChange={setHospitalPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between h-12 bg-white",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? field.value : "তালিকা থেকে খুঁজুন বা টাইপ করুন"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <div className="flex items-center border-b px-3 bg-muted/20">
+                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                          <input
+                            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
+                            placeholder="হাসপাতালের নাম লিখুন..."
+                            value={hospitalSearch}
+                            onChange={(e) => setHospitalSearch(e.target.value)}
+                          />
+                        </div>
+                        <div className="max-h-[300px] overflow-y-auto p-1">
+                          {filteredHospitals.length === 0 ? (
+                            <div className="py-2 px-2">
+                              <p className="text-sm text-muted-foreground mb-2">তালিকায় নেই? আপনি যা লিখেছেন তা ব্যবহার করতে পারেন:</p>
+                              <Button 
+                                type="button"
+                                variant="secondary" 
+                                className="w-full justify-start gap-2"
+                                onClick={() => {
+                                  form.setValue("hospitalName", hospitalSearch);
+                                  setHospitalPopoverOpen(false);
+                                }}
+                              >
+                                <Plus className="h-4 w-4" /> "{hospitalSearch}" ব্যবহার করুন
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              {filteredHospitals.map((h) => (
+                                <div
+                                  key={h}
+                                  className={cn(
+                                    "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none hover:bg-primary hover:text-white transition-colors",
+                                    field.value === h && "bg-primary/10 text-primary"
+                                  )}
+                                  onClick={() => {
+                                    form.setValue("hospitalName", h);
+                                    setHospitalPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === h ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {h}
+                                </div>
+                              ))}
+                              {hospitalSearch && !filteredHospitals.includes(hospitalSearch) && (
+                                <div className="border-t mt-1 pt-1">
+                                  <Button 
+                                    type="button"
+                                    variant="ghost" 
+                                    className="w-full justify-start gap-2 text-primary"
+                                    onClick={() => {
+                                      form.setValue("hospitalName", hospitalSearch);
+                                      setHospitalPopoverOpen(false);
+                                    }}
+                                  >
+                                    <Plus className="h-4 w-4" /> "{hospitalSearch}" যোগ করুন
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -206,7 +298,7 @@ export default function NewRequestPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white">
                             <SelectValue placeholder="জেলা" />
                           </SelectTrigger>
                         </FormControl>
@@ -230,7 +322,7 @@ export default function NewRequestPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrict}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white">
                             <SelectValue placeholder="সিলেক্ট করুন" />
                           </SelectTrigger>
                         </FormControl>
@@ -255,7 +347,7 @@ export default function NewRequestPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila || selectedUpazila === 'N/A'}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white">
                             <SelectValue placeholder="সিলেক্ট করুন" />
                           </SelectTrigger>
                         </FormControl>
