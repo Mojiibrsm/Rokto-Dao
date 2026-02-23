@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, ArrowRight, Loader2, Search, Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Droplet, ArrowLeft, ArrowRight, Loader2, Search, Check, ChevronsUpDown, Plus, Hospital } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,9 +14,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { createBloodRequest } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 import { getDistricts, getUpazillas, getUnionsApi, type LocationEntry } from '@/lib/bangladesh-api';
+import { getDynamicHospitals } from '@/lib/hospital-api';
 import { HOSPITALS } from '@/lib/hospital-data';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -42,6 +45,8 @@ export default function NewRequestPage() {
   
   const [hospitalSearch, setHospitalSearch] = useState('');
   const [hospitalPopoverOpen, setHospitalPopoverOpen] = useState(false);
+  const [dynamicHospitals, setDynamicHospitals] = useState<string[]>([]);
+  const [loadingHospitals, setLoadingHospitals] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -76,19 +81,32 @@ export default function NewRequestPage() {
   }, []);
 
   useEffect(() => {
-    async function loadUpazillas() {
+    async function loadUpazillasAndHospitals() {
       if (selectedDistrict) {
+        // Load Upazillas
         setLoadingLocations(prev => ({ ...prev, upazilas: true }));
         const data = await getUpazillas(selectedDistrict);
         setUpazilas(data);
         setLoadingLocations(prev => ({ ...prev, upazilas: false }));
+
+        // Load Dynamic Hospitals from DGHS API
+        setLoadingHospitals(true);
+        try {
+          const fetched = await getDynamicHospitals(selectedDistrict);
+          setDynamicHospitals(fetched);
+        } catch (e) {
+          setDynamicHospitals([]);
+        } finally {
+          setLoadingHospitals(false);
+        }
       } else {
         setUpazilas([]);
+        setDynamicHospitals([]);
       }
       form.setValue('area', '');
       form.setValue('union', '');
     }
-    loadUpazillas();
+    loadUpazillasAndHospitals();
   }, [selectedDistrict, form]);
 
   useEffect(() => {
@@ -128,7 +146,9 @@ export default function NewRequestPage() {
     }
   }
 
-  const filteredHospitals = HOSPITALS.filter(h => 
+  // Combine static hospital list with dynamically fetched ones
+  const combinedHospitals = Array.from(new Set([...HOSPITALS, ...dynamicHospitals]));
+  const filteredHospitals = combinedHospitals.filter(h => 
     h.toLowerCase().includes(hospitalSearch.toLowerCase())
   );
 
@@ -196,7 +216,10 @@ export default function NewRequestPage() {
                 name="hospitalName"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>হাসপাতালের নাম *</FormLabel>
+                    <FormLabel className="flex items-center justify-between">
+                      <span>হাসপাতালের নাম *</span>
+                      {loadingHospitals && <Badge variant="outline" className="animate-pulse py-0 h-5 text-[10px]">DGHS ডাটা লোড হচ্ছে...</Badge>}
+                    </FormLabel>
                     <Popover open={hospitalPopoverOpen} onOpenChange={setHospitalPopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -208,7 +231,10 @@ export default function NewRequestPage() {
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? field.value : "তালিকা থেকে খুঁজুন বা টাইপ করুন"}
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <Hospital className="h-4 w-4 shrink-0 text-primary" />
+                              <span className="truncate">{field.value ? field.value : "তালিকা থেকে খুঁজুন বা টাইপ করুন"}</span>
+                            </div>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
@@ -218,15 +244,15 @@ export default function NewRequestPage() {
                           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                           <input
                             className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
-                            placeholder="হাসপাতালের নাম লিখুন..."
+                            placeholder="হাসপাতাল বা ক্লিনিকের নাম..."
                             value={hospitalSearch}
                             onChange={(e) => setHospitalSearch(e.target.value)}
                           />
                         </div>
                         <div className="max-h-[300px] overflow-y-auto p-1">
                           {filteredHospitals.length === 0 ? (
-                            <div className="py-2 px-2">
-                              <p className="text-sm text-muted-foreground mb-2">তালিকায় নেই? আপনি যা লিখেছেন তা ব্যবহার করতে পারেন:</p>
+                            <div className="py-4 px-4 text-center">
+                              <p className="text-sm text-muted-foreground mb-3">তালিকায় নেই? আপনি যা লিখেছেন তা ব্যবহার করতে পারেন:</p>
                               <Button 
                                 type="button"
                                 variant="secondary" 
