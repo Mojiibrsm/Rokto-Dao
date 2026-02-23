@@ -7,19 +7,15 @@
  * 3. Click 'Save' and 'Deploy' > 'Manage Deployments'.
  * 4. Edit the current deployment and select 'New Version'.
  * 5. Click 'Deploy'.
- * 
- * NEW FEATURES:
- * - Added 'deleteEntry' action to remove records.
- * - Added 'updateStatus' action to change request/appointment status.
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
 
 const SCHEMA = {
-  'Donors': ['Email', 'Full Name', 'Phone', 'Blood Type', 'Registration Date', 'District', 'Area', 'Last Donation Date', 'Total Donations'],
+  'Donors': ['Email', 'Full Name', 'Phone', 'Blood Type', 'Registration Date', 'District', 'Area', 'Union', 'Last Donation Date', 'Total Donations'],
   'Appointments': ['ID', 'Drive ID', 'Drive Name', 'User Email', 'User Name', 'Date', 'Time', 'Status'],
   'BloodDrives': ['ID', 'Name', 'Location', 'Date', 'Time', 'Distance'],
-  'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At']
+  'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At']
 };
 
 function initSheets() {
@@ -93,21 +89,21 @@ function getSheetData(sheet) {
 
 function registerDonor(data) {
   const sheet = SS.getSheetByName('Donors');
-  sheet.appendRow([data.email, data.fullName, data.phone, data.bloodType, new Date().toISOString(), data.district || '', data.area || '', 'N/A', 0]);
+  sheet.appendRow([data.email, data.fullName, data.phone, data.bloodType, new Date().toISOString(), data.district || '', data.area || '', data.union || '', 'N/A', 0]);
   return jsonResponse({ success: true });
 }
 
 function createBloodRequest(data) {
   const sheet = SS.getSheetByName('Requests');
   const id = Math.random().toString(36).substring(7);
-  sheet.appendRow([id, data.patientName, data.bloodType, data.hospitalName, data.district, data.area, data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Pending', new Date().toISOString()]);
+  sheet.appendRow([id, data.patientName, data.bloodType, data.hospitalName, data.district, data.area, data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Pending', new Date().toISOString()]);
   return jsonResponse({ success: true, id: id });
 }
 
 function updateEntryStatus(data) {
   const sheet = SS.getSheetByName(data.sheetName);
   const rows = sheet.getDataRange().getValues();
-  const idCol = 0; // Assuming ID is first column for Requests/Appointments
+  const idCol = 0;
   
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][idCol].toString() === data.id.toString()) {

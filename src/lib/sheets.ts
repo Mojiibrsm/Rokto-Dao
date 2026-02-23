@@ -32,6 +32,7 @@ export type Donor = {
   registrationDate: string;
   district?: string;
   area?: string;
+  union?: string;
   status?: string;
   totalDonations?: number;
   lastDonationDate?: string;
@@ -44,6 +45,7 @@ export type BloodRequest = {
   hospitalName: string;
   district: string;
   area: string;
+  union: string;
   phone: string;
   neededWhen: string;
   bagsNeeded: string;
@@ -98,13 +100,19 @@ export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
   );
 }
 
-export async function getDonors(filters?: { bloodType?: string; district?: string }): Promise<Donor[]> {
+export async function getDonors(filters?: { bloodType?: string; district?: string; area?: string; union?: string }): Promise<Donor[]> {
   let data = await fetchFromSheets('getDonors');
-  if (filters?.bloodType && filters.bloodType !== 'যেকোনো গ্রুপ') {
+  if (filters?.bloodType) {
     data = data.filter((d: Donor) => d.bloodtype === filters.bloodType);
   }
-  if (filters?.district && filters.district !== 'যেকোনো জেলা') {
+  if (filters?.district) {
     data = data.filter((d: Donor) => d.district?.toLowerCase() === filters.district?.toLowerCase());
+  }
+  if (filters?.area) {
+    data = data.filter((d: Donor) => d.area?.toLowerCase() === filters.area?.toLowerCase());
+  }
+  if (filters?.union) {
+    data = data.filter((d: Donor) => d.union?.toLowerCase() === filters.union?.toLowerCase());
   }
   return data;
 }

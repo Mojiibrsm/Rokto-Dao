@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { Droplet, ArrowLeft, Loader2, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Switch } from '@/components/ui/switch';
 import { createBloodRequest } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
+import { DISTRICTS, BANGLADESH_DATA, getUnions } from '@/lib/bangladesh-data';
 import Link from 'next/link';
 
 const formSchema = z.object({
@@ -23,7 +23,8 @@ const formSchema = z.object({
   bloodType: z.string().min(1, 'রক্তের গ্রুপ নির্বাচন করুন'),
   hospitalName: z.string().min(2, 'হাসপাতালের নাম দিন'),
   district: z.string().min(1, 'জেলা নির্বাচন করুন'),
-  area: z.string().min(2, 'এলাকা/উপজেলা দিন'),
+  area: z.string().min(1, 'উপজেলা নির্বাচন করুন'),
+  union: z.string().min(1, 'ইউনিয়ন নির্বাচন করুন'),
   phone: z.string().min(11, 'সঠিক ফোন নম্বর দিন'),
   neededWhen: z.string().min(2, 'কখন প্রয়োজন তা লিখুন'),
   bagsNeeded: z.string().min(1, 'ব্যাগ সংখ্যা দিন'),
@@ -43,6 +44,7 @@ export default function NewRequestPage() {
       hospitalName: '',
       district: '',
       area: '',
+      union: '',
       phone: '',
       neededWhen: '',
       bagsNeeded: '1',
@@ -50,23 +52,24 @@ export default function NewRequestPage() {
     },
   });
 
+  const selectedDistrict = form.watch('district');
+  const selectedUpazila = form.watch('area');
+
+  const upazilas = selectedDistrict ? BANGLADESH_DATA[selectedDistrict]?.upazilas || [] : [];
+  const unions = selectedUpazila ? getUnions(selectedUpazila) : [];
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      console.log("Submitting request to sheets...");
-      const result = await createBloodRequest(values);
-      
+      const result = await createBloodRequest(values as any);
       if (result && (result.success || result.id)) {
         toast({
           title: "অনুরোধ সফলভাবে জমা হয়েছে!",
           description: "আপনার অনুরোধটি এখন লাইভ দেখা যাচ্ছে।",
         });
         router.push('/requests');
-      } else {
-        throw new Error(result?.error || "Unknown server error");
       }
     } catch (error: any) {
-      console.error("Submission catch error:", error);
       toast({
         variant: "destructive",
         title: "ব্যর্থ হয়েছে",
@@ -150,21 +153,25 @@ export default function NewRequestPage() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-muted/30 rounded-2xl border border-primary/10">
                 <FormField
                   control={form.control}
                   name="district"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>জেলা</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={(val) => {
+                        field.onChange(val);
+                        form.setValue('area', '');
+                        form.setValue('union', '');
+                      }} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="জেলা নির্বাচন করুন" />
+                            <SelectValue placeholder="জেলা" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {['Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'].map(d => (
+                          {DISTRICTS.map(d => (
                             <SelectItem key={d} value={d}>{d}</SelectItem>
                           ))}
                         </SelectContent>
@@ -178,10 +185,44 @@ export default function NewRequestPage() {
                   name="area"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>উপজেলা/এলাকা</FormLabel>
-                      <FormControl>
-                        <Input placeholder="যেমন: শাহবাগ" {...field} />
-                      </FormControl>
+                      <FormLabel>উপজেলা</FormLabel>
+                      <Select onValueChange={(val) => {
+                        field.onChange(val);
+                        form.setValue('union', '');
+                      }} defaultValue={field.value} disabled={!selectedDistrict}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="উপজেলা" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {upazilas.map(u => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="union"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ইউনিয়ন</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedUpazila}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="ইউনিয়ন" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {unions.map(u => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

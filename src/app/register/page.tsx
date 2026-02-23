@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowRight, Loader2 } from 'lucide-react';
+import { Droplet, ArrowRight, Loader2, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { registerDonor } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
+import { DISTRICTS, BANGLADESH_DATA, getUnions } from '@/lib/bangladesh-data';
 import Link from 'next/link';
 
 const formSchema = z.object({
@@ -21,6 +22,9 @@ const formSchema = z.object({
   email: z.string().email('সঠিক ইমেইল ঠিকানা দিন'),
   phone: z.string().min(11, 'সঠিক ফোন নম্বর দিন'),
   bloodType: z.string().min(1, 'রক্তের গ্রুপ নির্বাচন করুন'),
+  district: z.string().min(1, 'জেলা নির্বাচন করুন'),
+  area: z.string().min(1, 'উপজেলা নির্বাচন করুন'),
+  union: z.string().min(1, 'ইউনিয়ন নির্বাচন করুন'),
 });
 
 export default function RegisterPage() {
@@ -35,8 +39,17 @@ export default function RegisterPage() {
       email: '',
       phone: '',
       bloodType: '',
+      district: '',
+      area: '',
+      union: '',
     },
   });
+
+  const selectedDistrict = form.watch('district');
+  const selectedUpazila = form.watch('area');
+
+  const upazilas = selectedDistrict ? BANGLADESH_DATA[selectedDistrict]?.upazilas || [] : [];
+  const unions = selectedUpazila ? getUnions(selectedUpazila) : [];
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -62,10 +75,10 @@ export default function RegisterPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 flex justify-center">
-      <Card className="w-full max-w-lg shadow-xl border-t-4 border-t-primary">
+      <Card className="w-full max-w-2xl shadow-xl border-t-8 border-t-primary rounded-3xl">
         <CardHeader className="text-center">
-          <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <Droplet className="h-6 w-6 text-primary fill-primary" />
+          <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <Droplet className="h-8 w-8 text-primary fill-primary" />
           </div>
           <CardTitle className="text-3xl font-headline">দাতা হিসেবে নিবন্ধন করুন</CardTitle>
           <CardDescription>আপনার তথ্যাবলী পূরণ করে আমাদের সাথে যুক্ত হোন।</CardDescription>
@@ -73,33 +86,36 @@ export default function RegisterPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>পুরো নাম</FormLabel>
-                    <FormControl>
-                      <Input placeholder="আকবর হোসেন" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ইমেইল ঠিকানা</FormLabel>
-                    <FormControl>
-                      <Input placeholder="email@example.com" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>পুরো নাম</FormLabel>
+                      <FormControl>
+                        <Input placeholder="আকবর হোসেন" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ইমেইল ঠিকানা</FormLabel>
+                      <FormControl>
+                        <Input placeholder="email@example.com" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="phone"
@@ -136,23 +152,100 @@ export default function RegisterPage() {
                   )}
                 />
               </div>
-              <Button type="submit" className="w-full bg-primary h-12 text-lg" disabled={isSubmitting}>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-muted/30 rounded-2xl border border-primary/10">
+                <FormField
+                  control={form.control}
+                  name="district"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>জেলা</FormLabel>
+                      <Select onValueChange={(val) => {
+                        field.onChange(val);
+                        form.setValue('area', '');
+                        form.setValue('union', '');
+                      }} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="জেলা" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {DISTRICTS.map(d => (
+                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="area"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>উপজেলা</FormLabel>
+                      <Select onValueChange={(val) => {
+                        field.onChange(val);
+                        form.setValue('union', '');
+                      }} defaultValue={field.value} disabled={!selectedDistrict}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="উপজেলা" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {upazilas.map(u => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="union"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ইউনিয়ন</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedUpazila}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="ইউনিয়ন" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {unions.map(u => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Button type="submit" className="w-full bg-primary h-14 text-xl font-bold rounded-2xl shadow-lg shadow-primary/20" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                     প্রসেসিং হচ্ছে...
                   </>
                 ) : (
                   <>
-                    নিবন্ধন সম্পন্ন করুন <ArrowRight className="ml-2 h-4 w-4" />
+                    নিবন্ধন সম্পন্ন করুন <ArrowRight className="ml-2 h-6 w-6" />
                   </>
                 )}
               </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="justify-center border-t bg-muted/30 py-4">
-          <p className="text-xs text-muted-foreground text-center">
+        <CardFooter className="justify-center border-t bg-muted/30 py-6 rounded-b-3xl">
+          <p className="text-sm text-muted-foreground text-center">
             ইতিমধ্যে একটি একাউন্ট আছে? <Link href="/login" className="text-primary font-bold">লগইন করুন</Link>
           </p>
         </CardFooter>
