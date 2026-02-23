@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -53,18 +54,54 @@ export type BloodRequest = {
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 
 /**
+ * Helper for POST requests to Google Apps Script (bypasses CORS preflight)
+ */
+async function postToSheets(payload: any) {
+  if (!SHEETS_URL) {
+    console.error("NEXT_PUBLIC_SHEETS_URL is not defined in your environment variables.");
+    throw new Error("Backend URL not configured. Please check your .env file.");
+  }
+
+  try {
+    const res = await fetch(SHEETS_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      // We use text/plain to avoid CORS preflight OPTIONS request
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP Error ${res.status}: ${text}`);
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("Sheets POST Error:", error);
+    throw error;
+  }
+}
+
+/**
  * Fetches blood drives from the Google Sheet.
  */
 export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
   if (!SHEETS_URL) return [];
   try {
-    const res = await fetch(`${SHEETS_URL}?action=getDrives`, { cache: 'no-store' });
+    const res = await fetch(`${SHEETS_URL}?action=getDrives`, { 
+      cache: 'no-store',
+      redirect: 'follow'
+    });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
+    if (!Array.isArray(data)) return [];
     if (!query) return data;
     return data.filter((d: BloodDrive) => 
-      d.location.toLowerCase().includes(query.toLowerCase()) || 
-      d.name.toLowerCase().includes(query.toLowerCase())
+      d.location?.toLowerCase().includes(query.toLowerCase()) || 
+      d.name?.toLowerCase().includes(query.toLowerCase())
     );
   } catch (error) {
     console.error("Failed to fetch real-time blood drives:", error);
@@ -76,18 +113,7 @@ export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
  * Registers a new donor.
  */
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
-  if (!SHEETS_URL) throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
-  try {
-    const res = await fetch(SHEETS_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'register', ...data }),
-    });
-    if (!res.ok) throw new Error("Failed to register donor.");
-    return await res.json();
-  } catch (error) {
-    console.error("Registration error:", error);
-    throw error;
-  }
+  return postToSheets({ action: 'register', ...data });
 }
 
 /**
@@ -96,9 +122,13 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
 export async function getBloodRequests(): Promise<BloodRequest[]> {
   if (!SHEETS_URL) return [];
   try {
-    const res = await fetch(`${SHEETS_URL}?action=getRequests`, { cache: 'no-store' });
+    const res = await fetch(`${SHEETS_URL}?action=getRequests`, { 
+      cache: 'no-store',
+      redirect: 'follow'
+    });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Failed to fetch blood requests:", error);
     return [];
@@ -109,36 +139,14 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
  * Creates a new blood request.
  */
 export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
-  if (!SHEETS_URL) throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
-  try {
-    const res = await fetch(SHEETS_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'createRequest', ...data }),
-    });
-    if (!res.ok) throw new Error("Failed to create blood request.");
-    return await res.json();
-  } catch (error) {
-    console.error("Request error:", error);
-    throw error;
-  }
+  return postToSheets({ action: 'createRequest', ...data });
 }
 
 /**
  * Schedules a new donation appointment.
  */
 export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status'>) {
-  if (!SHEETS_URL) throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
-  try {
-    const res = await fetch(SHEETS_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'book', ...data }),
-    });
-    if (!res.ok) throw new Error("Failed to schedule appointment.");
-    return await res.json();
-  } catch (error) {
-    console.error("Booking error:", error);
-    throw error;
-  }
+  return postToSheets({ action: 'book', ...data });
 }
 
 /**
@@ -147,9 +155,13 @@ export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status
 export async function getDonationHistory(email: string): Promise<Appointment[]> {
   if (!SHEETS_URL) return [];
   try {
-    const res = await fetch(`${SHEETS_URL}?action=getHistory&email=${email}`, { cache: 'no-store' });
+    const res = await fetch(`${SHEETS_URL}?action=getHistory&email=${email}`, { 
+      cache: 'no-store',
+      redirect: 'follow'
+    });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Failed to fetch donation history:", error);
     return [];

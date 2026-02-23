@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -52,19 +53,24 @@ export default function NewRequestPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
+      console.log("Submitting request to sheets...");
       const result = await createBloodRequest(values);
-      if (result.success) {
+      
+      if (result && (result.success || result.id)) {
         toast({
           title: "অনুরোধ সফলভাবে জমা হয়েছে!",
           description: "আপনার অনুরোধটি এখন লাইভ দেখা যাচ্ছে।",
         });
         router.push('/requests');
+      } else {
+        throw new Error(result?.error || "Unknown server error");
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Submission catch error:", error);
       toast({
         variant: "destructive",
         title: "ব্যর্থ হয়েছে",
-        description: "কিছু ভুল হয়েছে। আবার চেষ্টা করুন।",
+        description: error.message || "কিছু ভুল হয়েছে। আবার চেষ্টা করুন।",
       });
     } finally {
       setIsSubmitting(false);
