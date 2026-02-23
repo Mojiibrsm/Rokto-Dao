@@ -18,6 +18,18 @@
       "description": "Community center",
       "imageUrl": "https://picsum.photos/seed/lifeline3/600/400",
       "imageHint": "community center"
+    },
+    {
+      "id": "gallery-1",
+      "description": "Blood donation camp",
+      "imageUrl": "https://picsum.photos/seed/rokto_gallery1/600/600",
+      "imageHint": "blood donation"
+    },
+    {
+      "id": "gallery-2",
+      "description": "Donor being treated",
+      "imageUrl": "https://picsum.photos/seed/rokto_gallery2/600/600",
+      "imageHint": "medical donor"
     }
   ]
 }
