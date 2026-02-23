@@ -4,32 +4,32 @@ Lifeline Hub is a blood donation management prototype built with Next.js and int
 
 ## 🚀 Quick Setup: Google Sheets Backend
 
-Follow these steps to move from mock data to a real database using Google Sheets.
-
 ### 1. Create the Google Sheet
-1. Go to [sheets.new](https://sheets.new) to create a new spreadsheet.
-2. **Rename the tabs** at the bottom exactly as follows:
-   - **Donors**: Add headers in row 1: `Email`, `Full Name`, `Phone`, `Blood Type`, `Registration Date`.
-   - **Appointments**: Add headers in row 1: `ID`, `Drive ID`, `Drive Name`, `User Email`, `User Name`, `Date`, `Time`, `Status`.
-   - **BloodDrives**: Add headers in row 1: `ID`, `Name`, `Location`, `Date`, `Time`, `Distance`.
-3. **Add Sample Data**: Fill in a few rows in the `BloodDrives` sheet so you have something to see in the app.
+1. Go to [sheets.new](https://sheets.new).
+2. Rename tabs: **Donors**, **Appointments**, **BloodDrives**.
+3. Add headers in row 1 for each:
+   - **Donors**: `Email`, `Full Name`, `Phone`, `Blood Type`, `Registration Date`.
+   - **Appointments**: `ID`, `Drive ID`, `Drive Name`, `User Email`, `User Name`, `Date`, `Time`, `Status`.
+   - **BloodDrives**: `ID`, `Name`, `Location`, `Date`, `Time`, `Distance`.
+4. **Important**: Add one or two rows of data in the `BloodDrives` tab so you can test it.
 
-### 2. Deploy the Apps Script
-1. In your Google Sheet, go to **Extensions** > **Apps Script**.
-2. Delete any code in the editor and paste the content from `docs/google-sheets-setup.js` found in this project.
-3. Click the **Save** icon and name the project "Lifeline Backend".
-4. Click **Deploy** > **New Deployment**.
-5. Select **Type**: "Web App".
-6. **Description**: "Lifeline Hub API".
-7. **Execute as**: "Me".
-8. **Who has access**: "Anyone".
-9. Click **Deploy**.
-10. **IMPORTANT**: Copy the "Web App URL" (it ends in `/exec`).
+### 2. Deploy Apps Script
+1. Go to **Extensions** > **Apps Script**.
+2. Paste the code from `docs/google-sheets-setup.js`.
+3. Click **Deploy** > **New Deployment** > **Web App**.
+4. Set **Who has access** to **Anyone**.
+5. Copy the **Web App URL**.
 
-### 3. Connect to your App
-1. In this project, open or create a `.env` file.
-2. Add your URL: `NEXT_PUBLIC_SHEETS_URL=your_copied_url_here`
-3. The `src/lib/sheets.ts` file is currently configured to use mock data. To switch to the real sheet, you would update the fetch calls in that file to point to your new URL.
+### 3. Connect to App
+1. Create a `.env` file in the root.
+2. Add: `NEXT_PUBLIC_SHEETS_URL=your_copied_url_here`
+
+## ✅ How to Verify Connection
+1. **Check the Drives Page**: Go to `/drives` in the app.
+2. **Look at the Data**: 
+   - If you see names ending in **"(Mock)"**, it is still using local test data.
+   - If you see the **exact rows** you typed into your Google Sheet, it is successfully connected!
+3. **Check Console**: Open browser inspect (F12) -> Network tab. Look for requests to `script.google.com`. If they return `200 OK`, you are connected.
 
 ## Features
 - **Donor Registration**: Join the community.

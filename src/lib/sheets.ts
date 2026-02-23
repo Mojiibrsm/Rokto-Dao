@@ -1,12 +1,10 @@
 'use server';
 
 /**
- * @fileOverview A mock service layer for interacting with a simulated database (Google Sheets).
+ * @fileOverview Service layer for interacting with Google Sheets (Real or Mock).
  * 
- * - getBloodDrives - Fetches available blood drives.
- * - registerDonor - Registers a new donor.
- * - scheduleAppointment - Schedules a donation appointment.
- * - getDonationHistory - Retrieves appointment history for a user.
+ * If NEXT_PUBLIC_SHEETS_URL is defined in .env, it uses the real API.
+ * Otherwise, it falls back to mock data for prototyping.
  */
 
 export type BloodDrive = {
@@ -37,14 +35,12 @@ export type Donor = {
   registrationDate: string;
 };
 
-// Simulated Database (In-memory for this prototype)
-let donors: Donor[] = [];
-let appointments: Appointment[] = [];
+const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 
 const MOCK_DRIVES: BloodDrive[] = [
   {
     id: '1',
-    name: 'City Community Center',
+    name: 'City Community Center (Mock)',
     location: '123 Main St, Metro City',
     date: '2024-06-15',
     time: '09:00 AM - 04:00 PM',
@@ -52,24 +48,30 @@ const MOCK_DRIVES: BloodDrive[] = [
   },
   {
     id: '2',
-    name: 'Red Cross Mobile Unit',
+    name: 'Red Cross Mobile Unit (Mock)',
     location: 'Park Plaza, Westside',
     date: '2024-06-18',
     time: '10:00 AM - 06:00 PM',
     distance: '3.5 miles',
   },
-  {
-    id: '3',
-    name: 'General Hospital Drive',
-    location: '456 Healthcare Way',
-    date: '2024-06-20',
-    time: '08:00 AM - 02:00 PM',
-    distance: '5.8 miles',
-  },
 ];
 
 export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network latency
+  if (SHEETS_URL) {
+    try {
+      const res = await fetch(`${SHEETS_URL}?action=getDrives`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!query) return data;
+      return data.filter((d: BloodDrive) => 
+        d.location.toLowerCase().includes(query.toLowerCase()) || 
+        d.name.toLowerCase().includes(query.toLowerCase())
+      );
+    } catch (error) {
+      console.error("Failed to fetch real drives, using mocks", error);
+    }
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 500));
   if (!query) return MOCK_DRIVES;
   return MOCK_DRIVES.filter(d => 
     d.location.toLowerCase().includes(query.toLowerCase()) || 
@@ -78,52 +80,63 @@ export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
 }
 
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
+  if (SHEETS_URL) {
+    try {
+      const res = await fetch(SHEETS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'register', ...data }),
+      });
+      return await res.json();
+    } catch (error) {
+      console.error("Failed to register in real sheet", error);
+    }
+  }
+
   await new Promise(resolve => setTimeout(resolve, 800));
-  const newDonor: Donor = {
-    ...data,
-    registrationDate: new Date().toISOString(),
-  };
-  donors.push(newDonor);
-  return { success: true, donor: newDonor };
+  return { success: true, donor: { ...data, registrationDate: new Date().toISOString() } };
 }
 
 export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status'>) {
+  if (SHEETS_URL) {
+    try {
+      const res = await fetch(SHEETS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'book', ...data }),
+      });
+      return await res.json();
+    } catch (error) {
+      console.error("Failed to book in real sheet", error);
+    }
+  }
+
   await new Promise(resolve => setTimeout(resolve, 800));
-  const newAppointment: Appointment = {
-    ...data,
-    id: Math.random().toString(36).substring(7),
-    status: 'Scheduled',
-  };
-  appointments.push(newAppointment);
-  return { success: true, appointment: newAppointment };
+  return { success: true, id: Math.random().toString(36).substring(7) };
 }
 
 export async function getDonationHistory(email: string): Promise<Appointment[]> {
+  if (SHEETS_URL) {
+    try {
+      const res = await fetch(`${SHEETS_URL}?action=getHistory&email=${email}`, { cache: 'no-store' });
+      return await res.json();
+    } catch (error) {
+      console.error("Failed to fetch real history", error);
+    }
+  }
+
   await new Promise(resolve => setTimeout(resolve, 500));
-  // Mock some past donations if it's a test user for demonstration purposes
   if (email === 'test@example.com') {
     return [
       {
         id: 'hist1',
         driveId: 'old1',
-        driveName: 'City Hospital',
+        driveName: 'City Hospital (Mock)',
         userEmail: email,
         userName: 'Test User',
         date: '2023-12-10',
         time: '10:00 AM',
         status: 'Completed',
       },
-      {
-        id: 'hist2',
-        driveId: 'old2',
-        driveName: 'Mobile Unit B',
-        userEmail: email,
-        userName: 'Test User',
-        date: '2024-03-15',
-        time: '02:30 PM',
-        status: 'Completed',
-      },
     ];
   }
-  return appointments.filter(a => a.userEmail === email);
+  return [];
 }
