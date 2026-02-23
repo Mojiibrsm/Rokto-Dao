@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,7 +8,7 @@ import {
   Droplet, Heart, ShieldCheck, MapPin, ArrowRight, Search, Users, 
   CheckCircle, Phone, Share2, Clock, MessageSquare, Loader2, 
   Info, Star, Image as ImageIcon, Smartphone, HandHeart, 
-  HelpCircle, Mail, Globe, Zap, Gift, Shield
+  HelpCircle, Mail, Globe, Zap, Gift, Shield, Quote
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -360,8 +359,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. সফলতার গল্প (Testimonials) */}
-      <section className="py-24 bg-white">
+      {/* 9. পরিচালকের বার্তা */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto bg-primary/5 rounded-[3rem] p-8 md:p-16 border border-primary/10 relative">
+            <Quote className="absolute top-10 right-10 h-24 w-24 text-primary/10 -rotate-12" />
+            <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
+              <div className="shrink-0">
+                <div className="h-48 w-48 rounded-full border-8 border-white shadow-2xl overflow-hidden relative">
+                  <Image 
+                    src="https://picsum.photos/seed/director/400/400" 
+                    fill 
+                    alt="Mujibur Rahman" 
+                    className="object-cover"
+                    data-ai-hint="portrait man"
+                  />
+                </div>
+              </div>
+              <div className="space-y-6 text-center md:text-left">
+                <Badge className="bg-primary text-white mb-2">পরিচালকের বার্তা</Badge>
+                <p className="text-2xl md:text-3xl font-medium italic leading-relaxed text-foreground/80">
+                  "RoktoDao একটি অলাভজনক উদ্যোগ যা রক্তদাতা এবং গ্রহীতাদের মধ্যে একটি সেতুবন্ধন তৈরির লক্ষ্যে কাজ করে। প্রযুক্তি ব্যবহার করে জীবন বাঁচানোর এই যাত্রায় আমাদের সঙ্গী হওয়ার জন্য আপনাকে ধন্যবাদ।"
+                </p>
+                <div className="pt-4">
+                  <h4 className="text-2xl font-bold text-primary">মুজিবুর রহমান</h4>
+                  <p className="text-muted-foreground font-bold uppercase tracking-wider">প্রতিষ্ঠাতা, RoktoDao</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 10. সফলতার গল্প (Testimonials) */}
+      <section className="py-24 bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
             <Badge variant="outline" className="text-primary border-primary">প্রেরণা</Badge>
@@ -374,7 +405,7 @@ export default function Home() {
               { name: "সুমাইয়া জান্নাত", role: "শিক্ষার্থী", text: "প্রথমবার রক্ত দেওয়ার সময় ভয় লেগেছিল, কিন্তু একজনের প্রাণ বাঁচাতে পেরেছি জেনে এখন নিয়মিত রক্ত দেই।" },
               { name: "ডা. আরিফ হাসান", role: "সহযোগী অধ্যাপক", text: "একজন চিকিৎসক হিসেবে আমি জানি রক্ত কতটা মূল্যবান। RoktoDao এর এই উদ্যোগ সত্যিই প্রশংসনীয়।" }
             ].map((test, i) => (
-              <Card key={i} className="rounded-[2.5rem] p-8 bg-muted/20 border-none shadow-sm hover:shadow-xl transition-all">
+              <Card key={i} className="rounded-[2.5rem] p-8 bg-white border-none shadow-sm hover:shadow-xl transition-all">
                 <div className="flex gap-1 mb-6 text-amber-500">
                   {[...Array(5)].map((_, j) => <Star key={j} className="h-5 w-5 fill-current" />)}
                 </div>
@@ -394,8 +425,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. গ্যালারি সেকশন */}
-      <section className="py-24 bg-muted/10 overflow-hidden">
+      {/* 11. গ্যালারি সেকশন */}
+      <section className="py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-16">
             <div className="space-y-4">
@@ -424,7 +455,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 11. মোবাইল অ্যাপ প্রোমো */}
+      {/* 12. মোবাইল অ্যাপ প্রোমো */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="bg-slate-900 rounded-[4rem] overflow-hidden flex flex-col lg:flex-row items-center">
@@ -462,7 +493,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 12. স্বেচ্ছাসেবক হওয়ার আহ্বান */}
+      {/* 13. স্বেচ্ছাসেবক হওয়ার আহ্বান */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4 text-center space-y-10">
           <div className="max-w-3xl mx-auto space-y-6">
@@ -478,7 +509,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 13. আমাদের পার্টনার (Trust indicators) */}
+      {/* 14. আমাদের পার্টনার (Trust indicators) */}
       <section className="py-16 bg-muted/20 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-10">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
@@ -490,7 +521,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 14. কেন RoktoDao বেছে নিবেন? */}
+      {/* 15. কেন RoktoDao বেছে নিবেন? */}
       <section className="container mx-auto px-4 py-24">
         <div className="text-center mb-20 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold font-headline">কেন RoktoDao বেছে নিবেন?</h2>
@@ -516,7 +547,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 15. সাধারণ জিজ্ঞাসা (FAQ) */}
+      {/* 16. সাধারণ জিজ্ঞাসা (FAQ) */}
       <section className="container mx-auto px-4 py-24 max-w-5xl">
         <div className="text-center mb-16 space-y-4">
           <Badge className="bg-primary text-white border-none">সহযোগিতা</Badge>
@@ -541,7 +572,7 @@ export default function Home() {
         </Accordion>
       </section>
 
-      {/* 16. নিউজলেটার সাবস্ক্রিপশন */}
+      {/* 17. নিউজলেটার সাবস্ক্রিপশন */}
       <section className="py-24 bg-primary text-white rounded-[4rem] mx-4 mb-24 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -557,7 +588,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 17. ইমার্জেন্সি সাপোর্ট বার */}
+      {/* 18. ইমার্জেন্সি সাপোর্ট বার */}
       <section className="bg-red-50 py-10 border-t">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4 text-center md:text-left">
