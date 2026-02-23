@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, Loader2, Search, Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Droplet, ArrowLeft, ArrowRight, Loader2, Search, Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -436,7 +436,7 @@ export default function NewRequestPage() {
                   </>
                 ) : (
                   <>
-                    অনুরোধ জমা দিন <ArrowRight className="ml-2 h-6 w-6 rotate-180" />
+                    অনুরোধ জমা দিন <ArrowRight className="ml-2 h-6 w-6" />
                   </>
                 )}
               </Button>
