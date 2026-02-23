@@ -1,8 +1,13 @@
-
 'use server';
 
-// This file mocks interaction with Google Sheets as a database.
-// In a real implementation, you would use the googleapis package and a service account.
+/**
+ * @fileOverview A mock service layer for interacting with a simulated database (Google Sheets).
+ * 
+ * - getBloodDrives - Fetches available blood drives.
+ * - registerDonor - Registers a new donor.
+ * - scheduleAppointment - Schedules a donation appointment.
+ * - getDonationHistory - Retrieves appointment history for a user.
+ */
 
 export type BloodDrive = {
   id: string;
@@ -32,7 +37,7 @@ export type Donor = {
   registrationDate: string;
 };
 
-// Simulated Database
+// Simulated Database (In-memory for this prototype)
 let donors: Donor[] = [];
 let appointments: Appointment[] = [];
 
@@ -64,7 +69,7 @@ const MOCK_DRIVES: BloodDrive[] = [
 ];
 
 export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network
+  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network latency
   if (!query) return MOCK_DRIVES;
   return MOCK_DRIVES.filter(d => 
     d.location.toLowerCase().includes(query.toLowerCase()) || 
@@ -95,7 +100,7 @@ export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status
 
 export async function getDonationHistory(email: string): Promise<Appointment[]> {
   await new Promise(resolve => setTimeout(resolve, 500));
-  // Mock some past donations if it's a test user
+  // Mock some past donations if it's a test user for demonstration purposes
   if (email === 'test@example.com') {
     return [
       {
