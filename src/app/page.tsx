@@ -1,16 +1,17 @@
 import Link from 'next/link';
-import { Droplet, Heart, ShieldCheck, MapPin, ArrowRight, History, Search, Users, CheckCircle, Phone, Share2, Calendar, Clock, MessageSquare, Info } from 'lucide-react';
+import { Droplet, Heart, ShieldCheck, MapPin, ArrowRight, History, Search, Users, CheckCircle, Phone, Share2, Calendar, Clock, Info, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 
 export default function Home() {
   return (
     <div className="flex flex-col gap-12 pb-12 overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="relative w-full py-16 md:py-32 bg-accent/10">
+      {/* 1. Hero Section */}
+      <section className="relative w-full py-16 md:py-32 bg-accent/20">
         <div className="container mx-auto px-4 flex flex-col items-center text-center gap-8">
           <div className="max-w-3xl space-y-6">
             <h1 className="text-4xl md:text-7xl font-bold tracking-tight text-foreground font-headline">
@@ -21,7 +22,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Search Bar */}
           <Card className="w-full max-w-4xl shadow-2xl p-6 md:p-10 border-t-8 border-t-primary rounded-3xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
               <div className="space-y-3 text-left">
@@ -67,101 +67,85 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* 2. Emergency Blood Requests */}
       <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl font-bold font-headline">কিভাবে কাজ করে?</h2>
-          <div className="h-1.5 w-24 bg-primary mx-auto rounded-full"></div>
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <h2 className="text-4xl font-bold font-headline">জরুরি রক্তের রিকোয়েস্ট</h2>
+            <p className="text-muted-foreground mt-2">Live urgent blood requests</p>
+          </div>
+          <Button variant="link" className="text-primary font-bold text-lg" asChild>
+            <Link href="/requests">আরো দেখুন <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
         </div>
-        <div className="grid gap-12 md:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2">
           {[
-            { step: "১", title: "নিবন্ধন করুন", desc: "একজন রক্তদাতা হিসেবে আপনার তথ্য দিয়ে আমাদের প্ল্যাটফর্মে নিবন্ধন সম্পন্ন করুন।" },
-            { step: "২", title: "অনুসন্ধান বা পোস্ট", desc: "আপনার প্রয়োজনীয় রক্তের গ্রুপ ও এলাকা অনুযায়ী রক্তদাতা খুঁজুন অথবা রক্তের জন্য অনুরোধ পোস্ট করুন।" },
-            { step: "৩", title: "সংযোগ ও জীবন বাঁচান", desc: "সঠিক রক্তদাতার সাথে যোগাযোগ করে জরুরি মুহূর্তে জীবন বাঁচাতে সাহায্য করুন।" }
-          ].map((item, idx) => (
-            <div key={idx} className="text-center space-y-6 group">
-              <div className="h-24 w-24 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto text-primary text-4xl font-black group-hover:bg-primary group-hover:text-white transition-all duration-300 transform rotate-3 group-hover:rotate-0 shadow-lg">
-                {item.step}
-              </div>
-              <h3 className="text-2xl font-bold">{item.title}</h3>
-              <p className="text-muted-foreground text-lg">{item.desc}</p>
-            </div>
+            { name: "মেহেরুন্নেসা মুজিব", hospital: "কক্সবাজার সেন্ট্রাল হাসপাতাল", group: "AB+", bags: "1", location: "কক্সবাজার, কক্সবাজার", date: "August 13th, 2025" },
+            { name: "খাইরুল", hospital: "আদ্-দ্বীন সকিনা মেডিকেল কলেজ হাসপাতাল", group: "B-", bags: "1", location: "শরীয়তপুর, শরীয়তপুর", date: "August 13th, 2025" }
+          ].map((req, i) => (
+            <Card key={i} className="overflow-hidden border-none shadow-xl hover:scale-[1.02] transition-transform">
+              <CardHeader className="bg-primary text-white p-6">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-2xl">{req.name}</CardTitle>
+                  <Badge className="bg-red-900/50 text-white border-white/20">URGENT</Badge>
+                </div>
+                <CardDescription className="text-white/80 mt-2 flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> {req.hospital}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-accent/10 p-4 rounded-2xl text-center">
+                    <p className="text-xs text-muted-foreground uppercase font-bold mb-1">রক্তের গ্রুপ</p>
+                    <p className="text-3xl font-black text-primary">{req.group}</p>
+                  </div>
+                  <div className="bg-accent/10 p-4 rounded-2xl text-center">
+                    <p className="text-xs text-muted-foreground uppercase font-bold mb-1">ব্যাগ সংখ্যা</p>
+                    <p className="text-3xl font-black text-primary">{req.bags} ব্যাগ</p>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="p-0 border-t flex">
+                <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg gap-2">
+                  <Phone className="h-5 w-5" /> যোগাযোগ
+                </Button>
+                <Button variant="ghost" className="flex-1 h-14 rounded-none text-lg gap-2">
+                  <Share2 className="h-5 w-5" /> শেয়ার
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       </section>
 
-      {/* Urgent Blood Requests */}
+      {/* 4. How It Works */}
       <section className="bg-muted/30 py-20">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-4xl font-bold font-headline">জরুরি রক্তের রিকোয়েস্ট</h2>
-              <p className="text-muted-foreground mt-2">Live urgent blood requests</p>
-            </div>
-            <Button variant="link" className="text-primary font-bold text-lg" asChild>
-              <Link href="/requests">আরো দেখুন <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl font-bold font-headline">কিভাবে কাজ করে?</h2>
+            <div className="h-1.5 w-24 bg-primary mx-auto rounded-full"></div>
           </div>
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-12 md:grid-cols-3">
             {[
-              { name: "মেহেরুন্নেসা মুজিব", hospital: "কক্সবাজার সেন্ট্রাল হাসপাতাল", group: "AB+", bags: "1", location: "কক্সবাজার, কক্সবাজার", date: "August 13th, 2025" },
-              { name: "খাইরুল", hospital: "আদ্-দ্বীন সকিনা মেডিকেল কলেজ হাসপাতাল", group: "B-", bags: "1", location: "শরীয়তপুর, শরীয়তপুর", date: "August 13th, 2025" }
-            ].map((req, i) => (
-              <Card key={i} className="overflow-hidden border-none shadow-xl hover:scale-[1.02] transition-transform">
-                <CardHeader className="bg-primary text-white p-6">
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-2xl">{req.name}</CardTitle>
-                    <Badge className="bg-green-500 hover:bg-green-600 text-white border-none">Approved</Badge>
-                  </div>
-                  <CardDescription className="text-white/80 mt-2 flex items-center gap-2">
-                    <MapPin className="h-4 w-4" /> {req.hospital}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-accent/10 p-4 rounded-2xl text-center">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-1">রক্তের গ্রুপ</p>
-                      <p className="text-3xl font-black text-primary">{req.group}</p>
-                    </div>
-                    <div className="bg-accent/10 p-4 rounded-2xl text-center">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-1">ব্যাগ সংখ্যা</p>
-                      <p className="text-3xl font-black text-primary">{req.bags} ব্যাগ</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="flex items-center gap-3 text-muted-foreground">
-                      <MapPin className="h-5 w-5 text-primary" /> {req.location}
-                    </p>
-                    <p className="flex items-center gap-3 text-muted-foreground">
-                      <Calendar className="h-5 w-5 text-primary" /> কখন প্রয়োজন: {req.date}
-                    </p>
-                  </div>
-                </CardContent>
-                <CardFooter className="p-0 border-t flex">
-                  <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg gap-2">
-                    <Phone className="h-5 w-5" /> যোগাযোগ
-                  </Button>
-                  <Button variant="ghost" className="flex-1 h-14 rounded-none text-lg gap-2">
-                    <Share2 className="h-5 w-5" /> শেয়ার
-                  </Button>
-                </CardFooter>
-              </Card>
+              { step: "১", title: "নিবন্ধন করুন", desc: "একজন রক্তদাতা হিসেবে আপনার তথ্য দিয়ে আমাদের প্ল্যাটফর্মে নিবন্ধন সম্পন্ন করুন।" },
+              { step: "২", title: "অনুসন্ধান বা পোস্ট", desc: "আপনার প্রয়োজনীয় রক্তের গ্রুপ ও এলাকা অনুযায়ী রক্তদাতা খুঁজুন অথবা রক্তের জন্য অনুরোধ পোস্ট করুন।" },
+              { step: "৩", title: "সংযোগ ও জীবন বাঁচান", desc: "সঠিক রক্তদাতার সাথে যোগাযোগ করে জরুরি মুহূর্তে জীবন বাঁচাতে সাহায্য করুন।" }
+            ].map((item, idx) => (
+              <div key={idx} className="text-center space-y-6 group">
+                <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center mx-auto text-white text-3xl font-black shadow-lg">
+                  {item.step}
+                </div>
+                <h3 className="text-2xl font-bold">{item.title}</h3>
+                <p className="text-muted-foreground text-lg">{item.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Statistics */}
+      {/* 5. Statistics Counter */}
       <section className="bg-primary text-white py-24 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute top-10 left-10 h-32 w-32 border-8 border-white rounded-full"></div>
-          <div className="absolute bottom-10 right-10 h-64 w-64 border-8 border-white rounded-full"></div>
-        </div>
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-bold font-headline">আমাদের পরিসংখ্যান</h2>
-            <div className="h-1.5 w-24 bg-white/30 mx-auto rounded-full"></div>
-          </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 text-center">
             {[
               { val: "১,২৫০+", label: "মোট রক্তদাতা" },
@@ -178,7 +162,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* 6. Why Choose Us */}
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl font-bold font-headline">কেন RoktoDao বেছে নিবেন?</h2>
@@ -193,8 +177,8 @@ export default function Home() {
           ].map((feat, i) => (
             <Card key={i} className="border-none shadow-lg text-center p-8 hover:-translate-y-2 transition-transform duration-300">
               <CardHeader className="p-0 space-y-4">
-                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <feat.icon className="h-10 w-10 text-primary" />
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <feat.icon className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-2xl">{feat.title}</CardTitle>
                 <CardDescription className="text-base leading-relaxed">{feat.desc}</CardDescription>
@@ -204,95 +188,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Donors (Warriors) spotlight */}
-      <section className="bg-muted/30 py-20">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h2 className="text-4xl font-bold font-headline">আমাদের রক্তযোদ্ধারা</h2>
-              <p className="text-muted-foreground mt-2">Our active and available donors</p>
-            </div>
-            <Button className="bg-primary hover:bg-primary/90 text-white font-bold" asChild>
-              <Link href="/donors">সকল ডোনার দেখুন</Link>
+      {/* 7. Become a Donor CTA */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="max-w-4xl mx-auto bg-secondary text-white p-12 md:p-20 rounded-[3rem] shadow-2xl text-center relative overflow-hidden">
+          <div className="relative z-10 space-y-8">
+            <h2 className="text-4xl md:text-5xl font-black font-headline">জীবন বাঁচানোর সম্প্রদায়ে যোগ দিন</h2>
+            <p className="text-xl text-secondary-foreground/90 leading-relaxed max-w-2xl mx-auto">
+              আজই একজন দাতা হিসাবে নিবন্ধন করুন এবং কারো গল্পের নায়ক হয়ে উঠুন। এটি সহজ, নিরাপদ এবং গভীরভাবে প্রভাবশালী।
+            </p>
+            <Button size="lg" asChild className="bg-white text-primary hover:bg-white/90 h-16 px-12 text-xl font-bold rounded-full shadow-xl">
+              <Link href="/register">রক্তদান করতে নিবন্ধন করুন</Link>
             </Button>
           </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              { name: "Mojib Rsm", loc: "রামু, কক্সবাজার", group: "AB+", last: "July 8th, 2025", count: "4", phone: "01601519007" },
-              { name: "Mojibur Rahman", loc: "ফেঞ্চুগঞ্জ, সিলেট", group: "B-", last: "October 15th, 2025", count: "0", phone: "01601519088" },
-              { name: "মিজানুর রহমান", loc: "রামু, কক্সবাজার", group: "B+", last: "N/A", count: "0", phone: "01810260904" }
-            ].map((donor, i) => (
-              <Card key={i} className="shadow-lg border-t-4 border-t-secondary hover:shadow-2xl transition-all">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
-                      {donor.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">{donor.name}</CardTitle>
-                      <CardDescription className="flex items-center gap-1.5 mt-1">
-                        <MapPin className="h-3.5 w-3.5 text-primary" /> {donor.loc}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm">
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span className="font-bold">রক্তের গ্রুপ</span>
-                    <Badge className="bg-primary text-white font-bold text-lg px-3">{donor.group}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b">
-                    <span>স্ট্যাটাস</span>
-                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">উপলব্ধ</Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground">শেষ রক্তদান</p>
-                      <p className="font-medium">{donor.last}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">মোট রক্তদান</p>
-                      <p className="font-medium">{donor.count} বার</p>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full bg-secondary hover:bg-secondary/90 text-white font-bold gap-2">
-                    <Phone className="h-4 w-4" /> {donor.phone}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-           <h2 className="text-4xl font-bold text-center mb-16 font-headline">সফলতার গল্প</h2>
-           <div className="grid md:grid-cols-2 gap-12">
-             {[
-               { text: "আমার মেয়ের জন্য জরুরি রক্তের প্রয়োজন ছিল। RoktoDao-এর মাধ্যমে মাত্র ১ ঘন্টার মধ্যে একজন দাতার সাথে যোগাযোগ করতে পারি। আমি তাদের কাছে চিরকৃতজ্ঞ।", author: "আকবর হোসেন", role: "রোগীর বাবা" },
-               { text: "একজন নিয়মিত রক্তদাতা হিসেবে আমি RoktoDao ব্যবহার করে সহজেই রক্তদানের অনুরোধ খুঁজে পাই। এই প্ল্যাটফর্মটি আসলেই খুব কার্যকরী এবং জীবন বাঁচাতে সাহায্য করছে।", author: "ফারিয়া আহমেদ", role: "স্বেচ্ছাসেবী রক্তদাতা" }
-             ].map((t, i) => (
-               <Card key={i} className="p-10 italic text-muted-foreground bg-accent/5 border-none rounded-3xl relative">
-                 <div className="absolute -top-6 left-10 text-8xl text-primary/20 font-serif">"</div>
-                 <p className="text-xl leading-relaxed relative z-10">{t.text}</p>
-                 <div className="mt-8 flex items-center gap-4">
-                   <div className="h-14 w-14 rounded-full bg-primary/20"></div>
-                   <div>
-                     <div className="font-bold text-foreground text-lg">{t.author}</div>
-                     <div className="text-sm">{t.role}</div>
-                   </div>
-                 </div>
-               </Card>
-             ))}
-           </div>
-        </div>
-      </section>
-
-      {/* FAQ Awareness */}
+      {/* 8. Awareness Section (FAQ) */}
       <section className="container mx-auto px-4 py-20 max-w-4xl">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl font-bold font-headline text-primary">রক্তদান সম্পর্কে জানুন</h2>
@@ -313,15 +224,12 @@ export default function Home() {
             </AccordionItem>
           ))}
         </Accordion>
-        <div className="text-center mt-12">
-           <Button variant="outline" className="rounded-full px-8 h-12 border-primary text-primary font-bold">আরো প্রশ্ন দেখুন</Button>
-        </div>
       </section>
 
-      {/* Partners Marquee */}
+      {/* 9. Partners Marquee */}
       <section className="py-20 bg-muted/20 border-y overflow-hidden">
         <div className="container mx-auto px-4 text-center mb-12">
-          <h2 className="text-2xl font-bold text-muted-foreground">আমাদের সহযোগীরা</h2>
+          <h2 className="text-2xl font-bold text-muted-foreground uppercase tracking-widest">আমাদের সহযোগীরা</h2>
         </div>
         <div className="flex gap-16 animate-marquee-slow hover-pause whitespace-nowrap">
           {['HealthBridge Hospital', 'City Medical Center', 'LifeCare Diagnostics', 'Red Crescent Society', 'Community Health NGO'].map((p, i) => (
@@ -329,7 +237,6 @@ export default function Home() {
               {p}
             </div>
           ))}
-          {/* Duplicate for infinite effect */}
           {['HealthBridge Hospital', 'City Medical Center', 'LifeCare Diagnostics', 'Red Crescent Society', 'Community Health NGO'].map((p, i) => (
             <div key={`dup-${i}`} className="text-3xl font-black text-muted-foreground/40 hover:text-primary transition-colors cursor-default">
               {p}
@@ -338,7 +245,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Blog Preview */}
+      {/* 10. Testimonials */}
+      <section className="container mx-auto px-4 py-24">
+        <h2 className="text-4xl font-bold text-center mb-16 font-headline">সফলতার গল্প</h2>
+        <div className="grid md:grid-cols-2 gap-12">
+          {[
+            { text: "আমার মেয়ের জন্য জরুরি রক্তের প্রয়োজন ছিল। RoktoDao-এর মাধ্যমে মাত্র ১ ঘন্টার মধ্যে একজন দাতার সাথে যোগাযোগ করতে পারি। আমি তাদের কাছে চিরকৃতজ্ঞ।", author: "আকবর হোসেন", role: "রোগীর বাবা" },
+            { text: "একজন নিয়মিত রক্তদাতা হিসেবে আমি RoktoDao ব্যবহার করে সহজেই রক্তদানের অনুরোধ খুঁজে পাই। এই প্ল্যাটফর্মটি আসলেই খুব কার্যকরী এবং জীবন বাঁচাতে সাহায্য করছে।", author: "ফারিয়া আহমেদ", role: "স্বেচ্ছাসেবী রক্তদাতা" }
+          ].map((t, i) => (
+            <Card key={i} className="p-10 italic text-muted-foreground bg-accent/10 border-none rounded-3xl">
+              <p className="text-xl leading-relaxed relative z-10">"{t.text}"</p>
+              <div className="mt-8 flex items-center gap-4">
+                <div className="h-14 w-14 rounded-full bg-primary/20"></div>
+                <div>
+                  <div className="font-bold text-foreground text-lg">{t.author}</div>
+                  <div className="text-sm">{t.role}</div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* 11. Blog Section */}
       <section className="container mx-auto px-4 py-24">
         <div className="flex justify-between items-end mb-16">
           <h2 className="text-4xl font-bold font-headline">আমাদের ব্লগ থেকে পড়ুন</h2>
@@ -366,22 +295,6 @@ export default function Home() {
               </CardFooter>
             </Card>
           ))}
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="container mx-auto px-4 py-24 text-center">
-        <div className="max-w-4xl mx-auto bg-primary text-white p-12 md:p-20 rounded-[3rem] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
-          <div className="relative z-10 space-y-8">
-            <h2 className="text-4xl md:text-5xl font-black font-headline">জীবন বাঁচানোর সম্প্রদায়ে যোগ দিন</h2>
-            <p className="text-xl text-primary-foreground/90 leading-relaxed max-w-2xl mx-auto">
-              আজই একজন দাতা হিসাবে নিবন্ধন করুন এবং কারো গল্পের নায়ক হয়ে উঠুন। এটি সহজ, নিরাপদ এবং গভীরভাবে প্রভাবশালী।
-            </p>
-            <Button size="lg" asChild className="bg-white text-primary hover:bg-white/90 h-16 px-12 text-xl font-bold rounded-full shadow-xl">
-              <Link href="/register">রক্তদান করতে নিবন্ধন করুন</Link>
-            </Button>
-          </div>
         </div>
       </section>
     </div>
