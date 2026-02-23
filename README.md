@@ -1,38 +1,38 @@
-# Lifeline Hub - Setup Guide
+# RoktoDao - Setup Guide
 
-Lifeline Hub is a blood donation management prototype built with Next.js and integrated with Google Sheets as a lightweight backend.
+RoktoDao uses Google Sheets as a lightweight real-time backend. Follow these steps to connect your site.
 
-## 🚀 Quick Setup: Google Sheets Backend
+## 🚀 Easy Setup: Google Sheets Backend
 
-### 1. Create the Google Sheet
+### 1. Create a Blank Sheet
 1. Go to [sheets.new](https://sheets.new).
-2. Rename tabs: **Donors**, **Appointments**, **BloodDrives**.
-3. Add headers in row 1 for each:
-   - **Donors**: `Email`, `Full Name`, `Phone`, `Blood Type`, `Registration Date`.
-   - **Appointments**: `ID`, `Drive ID`, `Drive Name`, `User Email`, `User Name`, `Date`, `Time`, `Status`.
-   - **BloodDrives**: `ID`, `Name`, `Location`, `Date`, `Time`, `Distance`.
-4. **Important**: Add one or two rows of data in the `BloodDrives` tab so you can test it.
+2. Give it a name (e.g., "RoktoDao Data").
+3. **DO NOT** manually create any tabs or headers. The script will do it for you!
 
 ### 2. Deploy Apps Script
 1. Go to **Extensions** > **Apps Script**.
-2. Paste the code from `docs/google-sheets-setup.js`.
-3. Click **Deploy** > **New Deployment** > **Web App**.
-4. Set **Who has access** to **Anyone**.
-5. Copy the **Web App URL**.
+2. Delete any existing code and paste the content from `docs/google-sheets-setup.js`.
+3. Click the **Save** icon.
+4. Click **Deploy** > **New Deployment**.
+5. Select type: **Web App**.
+6. Set **Description** to "RoktoDao API".
+7. Set **Execute as** to "Me".
+8. Set **Who has access** to **Anyone**.
+9. Click **Deploy**. (You will need to authorize permissions for your Google account).
+10. Copy the **Web App URL**.
 
 ### 3. Connect to App
-1. Create a `.env` file in the root.
-2. Add: `NEXT_PUBLIC_SHEETS_URL=your_copied_url_here`
+1. Open your project's `.env` file.
+2. Add your URL: `NEXT_PUBLIC_SHEETS_URL=your_copied_url_here`
+3. Restart your dev server (`npm run dev`).
 
 ## ✅ How to Verify Connection
-1. **Check the Drives Page**: Go to `/drives` in the app.
-2. **Look at the Data**: 
-   - If you see names ending in **"(Mock)"**, it is still using local test data.
-   - If you see the **exact rows** you typed into your Google Sheet, it is successfully connected!
-3. **Check Console**: Open browser inspect (F12) -> Network tab. Look for requests to `script.google.com`. If they return `200 OK`, you are connected.
+1. **Try Posting a Request**: Go to the "রক্তের অনুরোধ" (New Request) page and submit a test request.
+2. **Check Your Google Sheet**: You should see a new tab named **'Requests'** automatically appear with your test data!
+3. **Check Donors**: Registration and searching for donors will also automatically create the **'Donors'** tab.
 
 ## Features
-- **Donor Registration**: Join the community.
-- **Drive Finder**: Locate nearby donation events.
-- **Eligibility Check**: AI-powered preliminary screening.
-- **Impact Tracking**: See your donation history and lives saved.
+- **Donor Registration**: Join the life-saving community.
+- **Urgent Requests**: Post and view live blood requirements.
+- **Real-time Sync**: Data updates instantly in your Google Sheet.
+- **AI Eligibility**: Check if you can donate before going to the center.
