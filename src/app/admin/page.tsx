@@ -1,11 +1,30 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ShieldAlert, BellRing, Settings, Users, BarChart3, ArrowRight } from 'lucide-react';
+import { ShieldAlert, BellRing, Settings, Users, BarChart3, ArrowRight, Loader2, Droplet, CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getGlobalStats } from '@/lib/sheets';
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const data = await getGlobalStats();
+        setStats(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, []);
+
   const tools = [
     {
       title: "Fake Profile Detector",
@@ -32,12 +51,12 @@ export default function AdminDashboard() {
       bgColor: "bg-blue-100"
     },
     {
-      title: "System Analytics",
-      description: "View real-time statistics of requests and donations.",
-      icon: BarChart3,
-      href: "/",
-      color: "text-green-600",
-      bgColor: "bg-green-100"
+      title: "Blood Requests",
+      description: "Review and manage all active blood requests.",
+      icon: Droplet,
+      href: "/requests",
+      color: "text-red-600",
+      bgColor: "bg-red-100"
     }
   ];
 
@@ -48,6 +67,49 @@ export default function AdminDashboard() {
           <Settings className="h-10 w-10 text-primary" /> Admin Panel
         </h1>
         <p className="text-muted-foreground mt-2">Manage the RoktoDao platform and use AI-powered administrative tools.</p>
+      </div>
+
+      {/* Real-time Stats from Google Sheets */}
+      <div className="grid gap-6 md:grid-cols-3 mb-10">
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Donors</p>
+                <h3 className="text-3xl font-bold">
+                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : stats?.totalDonors || 0}
+                </h3>
+              </div>
+              <Users className="h-10 w-10 text-primary opacity-20" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-secondary/5 border-secondary/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Blood Requests</p>
+                <h3 className="text-3xl font-bold">
+                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : stats?.totalRequests || 0}
+                </h3>
+              </div>
+              <Droplet className="h-10 w-10 text-secondary opacity-20" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Appointments</p>
+                <h3 className="text-3xl font-bold">
+                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : stats?.totalAppointments || 0}
+                </h3>
+              </div>
+              <CalendarCheck className="h-10 w-10 text-green-600 opacity-20" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">

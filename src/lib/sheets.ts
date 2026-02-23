@@ -1,11 +1,7 @@
-
 'use server';
 
 /**
  * @fileOverview Service layer for interacting with Google Sheets.
- * 
- * This file handles real-time data sync with Google Sheets via an Apps Script Web App.
- * Requires NEXT_PUBLIC_SHEETS_URL to be defined in .env.
  */
 
 export type BloodDrive = {
@@ -58,30 +54,15 @@ export type BloodRequest = {
 
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 
-/**
- * Helper for POST requests to Google Apps Script (bypasses CORS preflight)
- */
 async function postToSheets(payload: any) {
-  if (!SHEETS_URL) {
-    console.error("NEXT_PUBLIC_SHEETS_URL is not defined in your environment variables.");
-    throw new Error("Backend URL not configured. Please check your .env file.");
-  }
-
+  if (!SHEETS_URL) throw new Error("Backend URL not configured.");
   try {
     const res = await fetch(SHEETS_URL, {
       method: 'POST',
       redirect: 'follow',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8',
-      },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload),
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`HTTP Error ${res.status}: ${text}`);
-    }
-
     return await res.json();
   } catch (error) {
     console.error("Sheets POST Error:", error);
@@ -89,9 +70,6 @@ async function postToSheets(payload: any) {
   }
 }
 
-/**
- * Fetches data based on action
- */
 async function fetchFromSheets(action: string, params: string = "") {
   if (!SHEETS_URL) return [];
   try {
@@ -99,13 +77,16 @@ async function fetchFromSheets(action: string, params: string = "") {
       cache: 'no-store',
       redirect: 'follow'
     });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    return Array.isArray(data) ? data : (data.error ? [] : data);
   } catch (error) {
     console.error(`Failed to fetch ${action}:`, error);
     return [];
   }
+}
+
+export async function getGlobalStats() {
+  return await fetchFromSheets('getStats');
 }
 
 export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
@@ -138,6 +119,14 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
 
 export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
   return postToSheets({ action: 'createRequest', ...data });
+}
+
+export async function updateStatus(sheetName: string, id: string, newStatus: string) {
+  return postToSheets({ action: 'updateStatus', sheetName, id, newStatus });
+}
+
+export async function deleteEntry(sheetName: string, id: string) {
+  return postToSheets({ action: 'deleteEntry', sheetName, id });
 }
 
 export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status'>) {

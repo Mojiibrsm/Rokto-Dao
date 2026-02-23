@@ -1,25 +1,20 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Auto-Setup Version)
+ * RoktoDao - Google Sheets Backend Setup Script (Professional Admin Version)
  * 
  * INSTRUCTIONS:
- * 1. Create a NEW BLANK Google Sheet.
- * 2. Go to 'Extensions' > 'Apps Script'.
- * 3. Delete any code there and paste THIS script.
- * 4. Click the 'Save' icon (Project Name: RoktoDao Backend).
- * 5. Click 'Deploy' > 'New Deployment'.
- *    - Select type: 'Web App'
- *    - Description: 'RoktoDao API'
- *    - Execute as: 'Me'
- *    - Who has access: 'Anyone'
- * 6. Click 'Deploy' and authorize permissions.
- * 7. Copy the 'Web App URL' and add it to your .env file as NEXT_PUBLIC_SHEETS_URL.
+ * 1. Go to your existing Apps Script editor.
+ * 2. Replace the old code with THIS new version.
+ * 3. Click 'Save' and 'Deploy' > 'Manage Deployments'.
+ * 4. Edit the current deployment and select 'New Version'.
+ * 5. Click 'Deploy'.
  * 
- * NOTE: The script will automatically create 'Donors', 'Appointments', 'BloodDrives', and 'Requests' tabs with correct headers on the first request.
+ * NEW FEATURES:
+ * - Added 'deleteEntry' action to remove records.
+ * - Added 'updateStatus' action to change request/appointment status.
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
 
-// Sheet Names and their required Headers
 const SCHEMA = {
   'Donors': ['Email', 'Full Name', 'Phone', 'Blood Type', 'Registration Date', 'District', 'Area', 'Last Donation Date', 'Total Donations'],
   'Appointments': ['ID', 'Drive ID', 'Drive Name', 'User Email', 'User Name', 'Date', 'Time', 'Status'],
@@ -27,35 +22,32 @@ const SCHEMA = {
   'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At']
 };
 
-/**
- * Ensures all required sheets exist and have the correct headers.
- */
 function initSheets() {
   Object.keys(SCHEMA).forEach(name => {
     let sheet = SS.getSheetByName(name);
     if (!sheet) {
       sheet = SS.insertSheet(name);
       sheet.appendRow(SCHEMA[name]);
-      // Format header row (Bold)
-      sheet.getRange(1, 1, 1, SCHEMA[name].length).setFontWeight('bold');
+      sheet.getRange(1, 1, 1, SCHEMA[name].length).setFontWeight('bold').setBackground('#fce4ec');
     }
   });
 }
 
 function doGet(e) {
-  initSheets(); // Auto-create tabs if missing
+  initSheets();
   const action = e.parameter.action;
   
   if (action === 'getDrives') return getBloodDrives();
   if (action === 'getDonors') return getDonors();
   if (action === 'getRequests') return getBloodRequests();
   if (action === 'getHistory') return getDonationHistory(e.parameter.email);
+  if (action === 'getStats') return getGlobalStats();
   
   return jsonResponse({ error: 'Invalid action' });
 }
 
 function doPost(e) {
-  initSheets(); // Auto-create tabs if missing
+  initSheets();
   let data;
   try {
     data = JSON.parse(e.postData.contents);
@@ -67,67 +59,29 @@ function doPost(e) {
   if (action === 'register') return registerDonor(data);
   if (action === 'book') return scheduleAppointment(data);
   if (action === 'createRequest') return createBloodRequest(data);
+  if (action === 'updateStatus') return updateEntryStatus(data);
+  if (action === 'deleteEntry') return deleteEntry(data);
   
   return jsonResponse({ error: 'Invalid action' });
 }
 
-// Data Fetching Functions
-function getBloodDrives() { return getSheetData(SS.getSheetByName('BloodDrives')); }
-function getDonors() { return getSheetData(SS.getSheetByName('Donors')); }
-function getBloodRequests() { return getSheetData(SS.getSheetByName('Requests')); }
-
-function getDonationHistory(email) {
-  const data = getSheetData(SS.getSheetByName('Appointments'));
-  if (data.error) return jsonResponse(data);
-  return jsonResponse(data.filter(item => item.useremail === email));
+function getGlobalStats() {
+  const donors = SS.getSheetByName('Donors').getLastRow() - 1;
+  const requests = SS.getSheetByName('Requests').getLastRow() - 1;
+  const appointments = SS.getSheetByName('Appointments').getLastRow() - 1;
+  return jsonResponse({
+    totalDonors: Math.max(0, donors),
+    totalRequests: Math.max(0, requests),
+    totalAppointments: Math.max(0, appointments)
+  });
 }
 
-// Data Writing Functions
-function registerDonor(data) {
-  const sheet = SS.getSheetByName('Donors');
-  const row = [
-    data.email,
-    data.fullName,
-    data.phone,
-    data.bloodType,
-    new Date().toISOString(),
-    data.district || '',
-    data.area || '',
-    'N/A',
-    0
-  ];
-  sheet.appendRow(row);
-  return jsonResponse({ success: true });
-}
-
-function scheduleAppointment(data) {
-  const sheet = SS.getSheetByName('Appointments');
-  const id = Math.random().toString(36).substring(7);
-  const row = [id, data.driveId, data.driveName, data.userEmail, data.userName, data.date, data.time, 'Scheduled'];
-  sheet.appendRow(row);
-  return jsonResponse({ success: true, id: id });
-}
-
-function createBloodRequest(data) {
-  const sheet = SS.getSheetByName('Requests');
-  const id = Math.random().toString(36).substring(7);
-  const row = [
-    id, data.patientName, data.bloodType, data.hospitalName, data.district, data.area, 
-    data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', 
-    new Date().toISOString()
-  ];
-  sheet.appendRow(row);
-  return jsonResponse({ success: true, id: id });
-}
-
-// Utilities
 function getSheetData(sheet) {
   if (!sheet) return { error: 'Sheet not found' };
   const data = sheet.getDataRange().getValues();
-  if (data.length <= 1) return []; // Only header exists
-  
+  if (data.length <= 1) return [];
   const headers = data.shift();
-  const result = data.map(row => {
+  return data.map(row => {
     let obj = {};
     headers.forEach((header, i) => {
       const key = header.toLowerCase().replace(/\s/g, '');
@@ -135,10 +89,58 @@ function getSheetData(sheet) {
     });
     return obj;
   });
-  return jsonResponse(result);
+}
+
+function registerDonor(data) {
+  const sheet = SS.getSheetByName('Donors');
+  sheet.appendRow([data.email, data.fullName, data.phone, data.bloodType, new Date().toISOString(), data.district || '', data.area || '', 'N/A', 0]);
+  return jsonResponse({ success: true });
+}
+
+function createBloodRequest(data) {
+  const sheet = SS.getSheetByName('Requests');
+  const id = Math.random().toString(36).substring(7);
+  sheet.appendRow([id, data.patientName, data.bloodType, data.hospitalName, data.district, data.area, data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Pending', new Date().toISOString()]);
+  return jsonResponse({ success: true, id: id });
+}
+
+function updateEntryStatus(data) {
+  const sheet = SS.getSheetByName(data.sheetName);
+  const rows = sheet.getDataRange().getValues();
+  const idCol = 0; // Assuming ID is first column for Requests/Appointments
+  
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][idCol].toString() === data.id.toString()) {
+      const statusCol = SCHEMA[data.sheetName].indexOf('Status') + 1;
+      sheet.getRange(i + 1, statusCol).setValue(data.newStatus);
+      return jsonResponse({ success: true });
+    }
+  }
+  return jsonResponse({ error: 'Entry not found' });
+}
+
+function deleteEntry(data) {
+  const sheet = SS.getSheetByName(data.sheetName);
+  const rows = sheet.getDataRange().getValues();
+  const idCol = 0;
+  
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][idCol].toString() === data.id.toString()) {
+      sheet.deleteRow(i + 1);
+      return jsonResponse({ success: true });
+    }
+  }
+  return jsonResponse({ error: 'Entry not found' });
+}
+
+function getBloodDrives() { return jsonResponse(getSheetData(SS.getSheetByName('BloodDrives'))); }
+function getDonors() { return jsonResponse(getSheetData(SS.getSheetByName('Donors'))); }
+function getBloodRequests() { return jsonResponse(getSheetData(SS.getSheetByName('Requests'))); }
+function getDonationHistory(email) {
+  const data = getSheetData(SS.getSheetByName('Appointments'));
+  return jsonResponse(data.filter(item => item.useremail === email));
 }
 
 function jsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }
