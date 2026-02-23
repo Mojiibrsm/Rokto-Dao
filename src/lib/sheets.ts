@@ -144,3 +144,7 @@ export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status
 export async function getDonationHistory(email: string): Promise<Appointment[]> {
   return await fetchFromSheets('getHistory', `&email=${email}`);
 }
+
+export async function seedLocationData(rows: string[][]) {
+  return postToSheets({ action: 'seedLocations', rows });
+}

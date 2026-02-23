@@ -15,7 +15,8 @@ const SCHEMA = {
   'Donors': ['Email', 'Full Name', 'Phone', 'Blood Type', 'Registration Date', 'District', 'Area', 'Union', 'Last Donation Date', 'Total Donations'],
   'Appointments': ['ID', 'Drive ID', 'Drive Name', 'User Email', 'User Name', 'Date', 'Time', 'Status'],
   'BloodDrives': ['ID', 'Name', 'Location', 'Date', 'Time', 'Distance'],
-  'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At']
+  'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At'],
+  'Locations': ['District', 'Upazila', 'Union']
 };
 
 function initSheets() {
@@ -38,6 +39,7 @@ function doGet(e) {
   if (action === 'getRequests') return getBloodRequests();
   if (action === 'getHistory') return getDonationHistory(e.parameter.email);
   if (action === 'getStats') return getGlobalStats();
+  if (action === 'getLocations') return getLocations();
   
   return jsonResponse({ error: 'Invalid action' });
 }
@@ -57,6 +59,7 @@ function doPost(e) {
   if (action === 'createRequest') return createBloodRequest(data);
   if (action === 'updateStatus') return updateEntryStatus(data);
   if (action === 'deleteEntry') return deleteEntry(data);
+  if (action === 'seedLocations') return seedLocations(data.rows);
   
   return jsonResponse({ error: 'Invalid action' });
 }
@@ -98,6 +101,23 @@ function createBloodRequest(data) {
   const id = Math.random().toString(36).substring(7);
   sheet.appendRow([id, data.patientName, data.bloodType, data.hospitalName, data.district, data.area, data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Pending', new Date().toISOString()]);
   return jsonResponse({ success: true, id: id });
+}
+
+function seedLocations(rows) {
+  const sheet = SS.getSheetByName('Locations');
+  // Clear existing except header
+  if (sheet.getLastRow() > 1) {
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, SCHEMA.Locations.length).clearContent();
+  }
+  
+  if (rows && rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+  }
+  return jsonResponse({ success: true, count: rows.length });
+}
+
+function getLocations() {
+  return jsonResponse(getSheetData(SS.getSheetByName('Locations')));
 }
 
 function updateEntryStatus(data) {
