@@ -3,14 +3,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Droplet, Heart, ShieldCheck, MapPin, ArrowRight, History, Search, Users, CheckCircle, Phone, Share2, Calendar, Clock, Info, MessageSquare, Star, Loader2 } from 'lucide-react';
+import { Droplet, Heart, ShieldCheck, MapPin, ArrowRight, Search, Users, CheckCircle, Phone, Share2, Clock, MessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Image from 'next/image';
 import { getBloodRequests, type BloodRequest } from '@/lib/sheets';
+import { DISTRICTS } from '@/lib/bangladesh-data';
 
 export default function Home() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
@@ -19,9 +19,14 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       setLoadingRequests(true);
-      const data = await getBloodRequests();
-      setRequests(data.slice(0, 4)); // Show only latest 4 on home
-      setLoadingRequests(false);
+      try {
+        const data = await getBloodRequests();
+        setRequests(data.slice(0, 4)); // Show only latest 4 on home
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingRequests(false);
+      }
     }
     loadData();
   }, []);
@@ -72,7 +77,8 @@ export default function Home() {
                     <SelectValue placeholder="যেকোনো জেলা" />
                   </SelectTrigger>
                   <SelectContent>
-                    {['Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'].map(d => (
+                    <SelectItem value="all">যেকোনো জেলা</SelectItem>
+                    {DISTRICTS.map(d => (
                       <SelectItem key={d} value={d}>{d}</SelectItem>
                     ))}
                   </SelectContent>
@@ -122,7 +128,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. জরুরি রক্তের রিকোয়েস্ট (রিয়েল-টাইম) */}
+      {/* 3. জরুরি রক্তের রিকোয়েস্ট */}
       <section className="bg-muted/30 py-24 border-y">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6 text-center md:text-left">
@@ -239,23 +245,6 @@ export default function Home() {
               </CardHeader>
             </Card>
           ))}
-        </div>
-      </section>
-
-      {/* 6. রক্তদাতা হোন */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="max-w-6xl mx-auto bg-slate-900 text-white p-12 md:p-24 rounded-[4rem] shadow-2xl text-center relative overflow-hidden group">
-          <div className="relative z-10 space-y-10">
-            <h2 className="text-4xl md:text-6xl font-black font-headline leading-tight">জীবন বাঁচানোর এই <span className="text-primary">মহৎ কাজে</span> আমাদের সঙ্গী হোন</h2>
-            <p className="text-xl md:text-2xl text-slate-300 leading-relaxed max-w-3xl mx-auto">
-              আজই একজন দাতা হিসাবে নিবন্ধন করুন এবং কারো গল্পের নায়ক হয়ে উঠুন। এটি সম্পূর্ণ নিরাপদ এবং একটি মহৎ দায়িত্ব।
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Button size="lg" asChild className="bg-primary text-white hover:bg-primary/90 h-16 px-12 text-2xl font-bold rounded-full shadow-2xl shadow-primary/20 transition-all hover:scale-105">
-                <Link href="/register">রক্তদান করতে নিবন্ধন করুন</Link>
-              </Button>
-            </div>
-          </div>
         </div>
       </section>
 
