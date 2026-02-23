@@ -57,9 +57,14 @@ export default function RegisterPage() {
   useEffect(() => {
     async function loadDistricts() {
       setLoadingLocations(prev => ({ ...prev, districts: true }));
-      const data = await getDistricts();
-      setDistricts(data);
-      setLoadingLocations(prev => ({ ...prev, districts: false }));
+      try {
+        const data = await getDistricts();
+        setDistricts(data);
+      } catch (e) {
+        console.error("Failed to load districts", e);
+      } finally {
+        setLoadingLocations(prev => ({ ...prev, districts: false }));
+      }
     }
     loadDistricts();
   }, []);
@@ -70,9 +75,14 @@ export default function RegisterPage() {
       const districtObj = districts.find(d => d.bn_name === selectedDistrictName);
       if (districtObj) {
         setLoadingLocations(prev => ({ ...prev, upazilas: true }));
-        const data = await getUpazillas(districtObj.id);
-        setUpazilas(data);
-        setLoadingLocations(prev => ({ ...prev, upazilas: false }));
+        try {
+          const data = await getUpazillas(districtObj.id);
+          setUpazilas(data);
+        } catch (e) {
+          console.error("Failed to load upazilas", e);
+        } finally {
+          setLoadingLocations(prev => ({ ...prev, upazilas: false }));
+        }
       } else {
         setUpazilas([]);
       }
@@ -88,9 +98,14 @@ export default function RegisterPage() {
       const upazilaObj = upazilas.find(u => u.bn_name === selectedUpazilaName);
       if (upazilaObj) {
         setLoadingLocations(prev => ({ ...prev, unions: true }));
-        const data = await getUnionsApi(upazilaObj.id);
-        setUnions(data);
-        setLoadingLocations(prev => ({ ...prev, unions: false }));
+        try {
+          const data = await getUnionsApi(upazilaObj.id);
+          setUnions(data);
+        } catch (e) {
+          console.error("Failed to load unions", e);
+        } finally {
+          setLoadingLocations(prev => ({ ...prev, unions: false }));
+        }
       } else {
         setUnions([]);
       }
@@ -123,7 +138,7 @@ export default function RegisterPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 flex justify-center">
-      <Card className="w-full max-w-2xl shadow-xl border-t-8 border-t-primary rounded-3xl">
+      <Card className="w-full max-w-2xl shadow-xl border-t-8 border-t-primary rounded-3xl overflow-hidden">
         <CardHeader className="text-center">
           <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <Droplet className="h-8 w-8 text-primary fill-primary" />
@@ -201,7 +216,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-muted/30 rounded-2xl border border-primary/10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-primary/10">
                 <FormField
                   control={form.control}
                   name="district"
@@ -213,7 +228,7 @@ export default function RegisterPage() {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="জেলা" />
+                            <SelectValue placeholder={loadingLocations.districts ? "লোড হচ্ছে..." : "জেলা"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -234,10 +249,10 @@ export default function RegisterPage() {
                       <FormLabel className="flex items-center gap-2">
                         উপজেলা {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrictName}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrictName || loadingLocations.upazilas}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="উপজেলা" />
+                            <SelectValue placeholder={loadingLocations.upazilas ? "লোড হচ্ছে..." : "উপজেলা"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -258,10 +273,10 @@ export default function RegisterPage() {
                       <FormLabel className="flex items-center gap-2">
                         ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazilaName}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazilaName || loadingLocations.unions}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="ইউনিয়ন" />
+                            <SelectValue placeholder={loadingLocations.unions ? "লোড হচ্ছে..." : "ইউনিয়ন"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -291,7 +306,7 @@ export default function RegisterPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="justify-center border-t bg-muted/30 py-6 rounded-b-3xl">
+        <CardFooter className="justify-center border-t bg-muted/30 py-6">
           <p className="text-sm text-muted-foreground text-center">
             ইতিমধ্যে একটি একাউন্ট আছে? <Link href="/login" className="text-primary font-bold">লগইন করুন</Link>
           </p>
