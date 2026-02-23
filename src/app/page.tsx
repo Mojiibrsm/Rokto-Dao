@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Droplet, Heart, ShieldCheck, MapPin, ArrowRight, Search, Users, CheckCircle, Phone, Share2, Clock, MessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -15,6 +16,9 @@ import { DISTRICTS } from '@/lib/bangladesh-data';
 export default function Home() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
+  const [selectedBloodType, setSelectedBloodType] = useState<string>('যেকোনো গ্রুপ');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>('যেকোনো জেলা');
+  const router = useRouter();
 
   useEffect(() => {
     async function loadData() {
@@ -30,6 +34,13 @@ export default function Home() {
     }
     loadData();
   }, []);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (selectedBloodType !== 'যেকোনো গ্রুপ') params.set('bloodType', selectedBloodType);
+    if (selectedDistrict !== 'যেকোনো জেলা' && selectedDistrict !== 'all') params.set('district', selectedDistrict);
+    router.push(`/donors?${params.toString()}`);
+  };
 
   return (
     <div className="flex flex-col gap-0 pb-12 overflow-x-hidden">
@@ -57,11 +68,12 @@ export default function Home() {
                 <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                   <Droplet className="h-4 w-4 text-primary" /> রক্তের গ্রুপ
                 </label>
-                <Select>
+                <Select value={selectedBloodType} onValueChange={setSelectedBloodType}>
                   <SelectTrigger className="h-14 text-lg border-2 focus:ring-primary">
                     <SelectValue placeholder="যেকোনো গ্রুপ" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="যেকোনো গ্রুপ">যেকোনো গ্রুপ</SelectItem>
                     {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(g => (
                       <SelectItem key={g} value={g}>{g}</SelectItem>
                     ))}
@@ -72,19 +84,22 @@ export default function Home() {
                 <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" /> জেলা
                 </label>
-                <Select>
+                <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
                   <SelectTrigger className="h-14 text-lg border-2 focus:ring-primary">
                     <SelectValue placeholder="যেকোনো জেলা" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">যেকোনো জেলা</SelectItem>
+                    <SelectItem value="যেকোনো জেলা">যেকোনো জেলা</SelectItem>
                     {DISTRICTS.map(d => (
                       <SelectItem key={d} value={d}>{d}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="bg-primary hover:bg-primary/90 h-14 text-xl font-bold gap-3 rounded-xl shadow-lg shadow-primary/20 w-full transition-all hover:scale-[1.02]">
+              <Button 
+                onClick={handleSearch}
+                className="bg-primary hover:bg-primary/90 h-14 text-xl font-bold gap-3 rounded-xl shadow-lg shadow-primary/20 w-full transition-all hover:scale-[1.02]"
+              >
                 <Search className="h-6 w-6" /> অনুসন্ধান করুন
               </Button>
             </div>

@@ -1,6 +1,8 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { getDonors, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,11 +11,12 @@ import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck } from 'luci
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
-export default function DonorsPage() {
+function DonorsContent() {
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
   const [upazilas, setUpazilas] = useState<string[]>([]);
   const [unions, setUnions] = useState<string[]>([]);
+  const searchParams = useSearchParams();
 
   const [filters, setFilters] = useState({
     bloodType: 'যেকোনো গ্রুপ',
@@ -22,6 +25,20 @@ export default function DonorsPage() {
     union: 'যেকোনো ইউনিয়ন'
   });
 
+  // Initialize filters from search parameters
+  useEffect(() => {
+    const bloodType = searchParams.get('bloodType');
+    const district = searchParams.get('district');
+    
+    if (bloodType || district) {
+      setFilters(prev => ({
+        ...prev,
+        bloodType: bloodType || 'যেকোনো গ্রুপ',
+        district: district || 'যেকোনো জেলা'
+      }));
+    }
+  }, [searchParams]);
+
   // Load Upazillas when District changes
   useEffect(() => {
     if (filters.district !== 'যেকোনো জেলা' && BANGLADESH_DATA[filters.district]) {
@@ -29,7 +46,7 @@ export default function DonorsPage() {
     } else {
       setUpazilas([]);
     }
-    setFilters(f => ({ ...f, area: 'যেকোনো উপজেলা', union: 'যেকোনো ইউনিয়ন' }));
+    // Only reset sub-locations if manually changing from UI
   }, [filters.district]);
 
   // Load Unions when Upazilla changes
@@ -39,7 +56,6 @@ export default function DonorsPage() {
     } else {
       setUnions([]);
     }
-    setFilters(f => ({ ...f, union: 'যেকোনো ইউনিয়ন' }));
   }, [filters.area, filters.district]);
 
   const loadDonorsData = async () => {
@@ -61,7 +77,7 @@ export default function DonorsPage() {
 
   useEffect(() => {
     loadDonorsData();
-  }, []);
+  }, [filters.bloodType, filters.district]); // Trigger when initial params set
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +114,7 @@ export default function DonorsPage() {
             <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
               <MapPin className="h-3 w-3 text-primary" /> জেলা
             </label>
-            <Select value={filters.district} onValueChange={(val) => setFilters(f => ({ ...f, district: val }))}>
+            <Select value={filters.district} onValueChange={(val) => setFilters(f => ({ ...f, district: val, area: 'যেকোনো উপজেলা', union: 'যেকোনো ইউনিয়ন' }))}>
               <SelectTrigger className="h-12 border-2">
                 <SelectValue placeholder="যেকোনো জেলা" />
               </SelectTrigger>
@@ -115,7 +131,7 @@ export default function DonorsPage() {
             <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
                উপজেলা
             </label>
-            <Select value={filters.area} onValueChange={(val) => setFilters(f => ({ ...f, area: val }))} disabled={filters.district === 'যেকোনো জেলা'}>
+            <Select value={filters.area} onValueChange={(val) => setFilters(f => ({ ...f, area: val, union: 'যেকোনো ইউনিয়ন' }))} disabled={filters.district === 'যেকোনো জেলা'}>
               <SelectTrigger className="h-12 border-2">
                 <SelectValue placeholder="উপজেলা" />
               </SelectTrigger>
@@ -210,5 +226,13 @@ export default function DonorsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DonorsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>}>
+      <DonorsContent />
+    </Suspense>
   );
 }
