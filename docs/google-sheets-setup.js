@@ -1,5 +1,5 @@
 /**
- * Lifeline Hub - Google Sheets Backend Setup Script
+ * Lifeline Hub (RoktoDao) - Google Sheets Backend Setup Script
  * 
  * INSTRUCTIONS:
  * 1. Create a new Google Sheet.
@@ -7,6 +7,7 @@
  *    - Rename 'Sheet1' to 'Donors'. Add headers: Email, Full Name, Phone, Blood Type, Registration Date.
  *    - Create a new sheet 'Appointments'. Add headers: ID, Drive ID, Drive Name, User Email, User Name, Date, Time, Status.
  *    - Create a new sheet 'BloodDrives'. Add headers: ID, Name, Location, Date, Time, Distance.
+ *    - Create a new sheet 'Requests'. Add headers: ID, Patient Name, Blood Type, Hospital Name, District, Area, Phone, Needed When, Bags Needed, Is Urgent, Status, Created At.
  * 3. Open 'Extensions' > 'Apps Script'.
  * 4. Delete any existing code and paste this script.
  * 5. Click 'Deploy' > 'New Deployment'.
@@ -20,6 +21,7 @@ const SS = SpreadsheetApp.getActiveSpreadsheet();
 const DONORS_SHEET = SS.getSheetByName('Donors');
 const APPOINTMENTS_SHEET = SS.getSheetByName('Appointments');
 const DRIVES_SHEET = SS.getSheetByName('BloodDrives');
+const REQUESTS_SHEET = SS.getSheetByName('Requests');
 
 /**
  * Handles GET requests (Read operations)
@@ -34,6 +36,10 @@ function doGet(e) {
   if (action === 'getHistory') {
     const email = e.parameter.email;
     return getDonationHistory(email);
+  }
+
+  if (action === 'getRequests') {
+    return getBloodRequests();
   }
   
   return jsonResponse({ error: 'Invalid action' });
@@ -59,39 +65,25 @@ function doPost(e) {
   if (action === 'book') {
     return scheduleAppointment(data);
   }
+
+  if (action === 'createRequest') {
+    return createBloodRequest(data);
+  }
   
   return jsonResponse({ error: 'Invalid action' });
 }
 
 function getBloodDrives() {
-  const data = DRIVES_SHEET.getDataRange().getValues();
-  const headers = data.shift();
-  const drives = data.map(row => {
-    let drive = {};
-    headers.forEach((header, i) => {
-      // Convert "Drive ID" to "driveid" etc.
-      const key = header.toLowerCase().replace(/\s/g, '');
-      drive[key] = row[i];
-    });
-    return drive;
-  });
-  return jsonResponse(drives);
+  return getSheetData(DRIVES_SHEET);
+}
+
+function getBloodRequests() {
+  return getSheetData(REQUESTS_SHEET);
 }
 
 function getDonationHistory(email) {
-  const data = APPOINTMENTS_SHEET.getDataRange().getValues();
-  const headers = data.shift();
-  const history = data
-    .filter(row => row[3] === email) // User Email column index 3
-    .map(row => {
-      let appt = {};
-      headers.forEach((header, i) => {
-        const key = header.toLowerCase().replace(/\s/g, '');
-        appt[key] = row[i];
-      });
-      return appt;
-    });
-  return jsonResponse(history);
+  const data = getSheetData(APPOINTMENTS_SHEET);
+  return jsonResponse(data.filter(item => item.useremail === email));
 }
 
 function registerDonor(data) {
@@ -120,6 +112,40 @@ function scheduleAppointment(data) {
   ];
   APPOINTMENTS_SHEET.appendRow(row);
   return jsonResponse({ success: true, id: id });
+}
+
+function createBloodRequest(data) {
+  const id = Math.random().toString(36).substring(7);
+  const row = [
+    id,
+    data.patientName,
+    data.bloodType,
+    data.hospitalName,
+    data.district,
+    data.area,
+    data.phone,
+    data.neededWhen,
+    data.bagsNeeded,
+    data.isUrgent ? 'Yes' : 'No',
+    'Approved',
+    new Date().toISOString()
+  ];
+  REQUESTS_SHEET.appendRow(row);
+  return jsonResponse({ success: true, id: id });
+}
+
+function getSheetData(sheet) {
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+  const result = data.map(row => {
+    let obj = {};
+    headers.forEach((header, i) => {
+      const key = header.toLowerCase().replace(/\s/g, '');
+      obj[key] = row[i];
+    });
+    return obj;
+  });
+  return jsonResponse(result);
 }
 
 function jsonResponse(data) {

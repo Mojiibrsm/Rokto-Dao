@@ -35,25 +35,33 @@ export type Donor = {
   registrationDate: string;
 };
 
+export type BloodRequest = {
+  id: string;
+  patientName: string;
+  bloodType: string;
+  hospitalName: string;
+  district: string;
+  area: string;
+  phone: string;
+  neededWhen: string;
+  bagsNeeded: string;
+  isUrgent: boolean;
+  status: 'Pending' | 'Approved' | 'Fullfilled';
+  createdAt: string;
+};
+
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 
 /**
  * Fetches blood drives from the Google Sheet.
- * @param query Optional search query to filter results.
  */
 export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
-  if (!SHEETS_URL) {
-    console.error("NEXT_PUBLIC_SHEETS_URL is not configured in environment variables.");
-    return [];
-  }
-
+  if (!SHEETS_URL) return [];
   try {
     const res = await fetch(`${SHEETS_URL}?action=getDrives`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    
     if (!query) return data;
-    
     return data.filter((d: BloodDrive) => 
       d.location.toLowerCase().includes(query.toLowerCase()) || 
       d.name.toLowerCase().includes(query.toLowerCase())
@@ -65,20 +73,16 @@ export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
 }
 
 /**
- * Registers a new donor in the Google Sheet.
+ * Registers a new donor.
  */
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
-  if (!SHEETS_URL) {
-    throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
-  }
-
+  if (!SHEETS_URL) throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
   try {
     const res = await fetch(SHEETS_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'register', ...data }),
     });
-    
-    if (!res.ok) throw new Error("Failed to register donor in sheet.");
+    if (!res.ok) throw new Error("Failed to register donor.");
     return await res.json();
   } catch (error) {
     console.error("Registration error:", error);
@@ -87,20 +91,49 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
 }
 
 /**
- * Schedules a new donation appointment in the Google Sheet.
+ * Fetches all blood requests.
+ */
+export async function getBloodRequests(): Promise<BloodRequest[]> {
+  if (!SHEETS_URL) return [];
+  try {
+    const res = await fetch(`${SHEETS_URL}?action=getRequests`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.error("Failed to fetch blood requests:", error);
+    return [];
+  }
+}
+
+/**
+ * Creates a new blood request.
+ */
+export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
+  if (!SHEETS_URL) throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
+  try {
+    const res = await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'createRequest', ...data }),
+    });
+    if (!res.ok) throw new Error("Failed to create blood request.");
+    return await res.json();
+  } catch (error) {
+    console.error("Request error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Schedules a new donation appointment.
  */
 export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status'>) {
-  if (!SHEETS_URL) {
-    throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
-  }
-
+  if (!SHEETS_URL) throw new Error("NEXT_PUBLIC_SHEETS_URL is not configured.");
   try {
     const res = await fetch(SHEETS_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'book', ...data }),
     });
-    
-    if (!res.ok) throw new Error("Failed to schedule appointment in sheet.");
+    if (!res.ok) throw new Error("Failed to schedule appointment.");
     return await res.json();
   } catch (error) {
     console.error("Booking error:", error);
@@ -109,20 +142,16 @@ export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status
 }
 
 /**
- * Fetches donation history for a specific email from the Google Sheet.
+ * Fetches donation history.
  */
 export async function getDonationHistory(email: string): Promise<Appointment[]> {
-  if (!SHEETS_URL) {
-    console.error("NEXT_PUBLIC_SHEETS_URL is not configured.");
-    return [];
-  }
-
+  if (!SHEETS_URL) return [];
   try {
     const res = await fetch(`${SHEETS_URL}?action=getHistory&email=${email}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     return await res.json();
   } catch (error) {
-    console.error("Failed to fetch real-time donation history:", error);
+    console.error("Failed to fetch donation history:", error);
     return [];
   }
 }
