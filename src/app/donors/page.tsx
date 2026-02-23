@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -170,7 +169,7 @@ export default function DonorsPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-primary/20">
-                      {donor.fullName.substring(0, 1)}
+                      {(donor.fullName || 'D').substring(0, 1)}
                     </div>
                     <div>
                       <CardTitle className="text-xl">{donor.fullName}</CardTitle>
