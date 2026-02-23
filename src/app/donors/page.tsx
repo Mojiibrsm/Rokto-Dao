@@ -4,15 +4,19 @@ import { useState, useEffect } from 'react';
 import { getDonors, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, User, Heart, ShieldCheck } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { DISTRICTS, BANGLADESH_DATA, getUnions } from '@/lib/bangladesh-data';
+import { getDistricts, getUpazillas, getUnionsApi, type LocationEntry } from '@/lib/bangladesh-api';
 
 export default function DonorsPage() {
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [districts, setDistricts] = useState<LocationEntry[]>([]);
+  const [upazilas, setUpazilas] = useState<LocationEntry[]>([]);
+  const [unions, setUnions] = useState<LocationEntry[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false, unions: false });
+
   const [filters, setFilters] = useState({
     bloodType: 'যেকোনো গ্রুপ',
     district: 'যেকোনো জেলা',
@@ -20,8 +24,50 @@ export default function DonorsPage() {
     union: 'যেকোনো ইউনিয়ন'
   });
 
-  const upazilas = filters.district !== 'যেকোনো জেলা' ? BANGLADESH_DATA[filters.district]?.upazilas || [] : [];
-  const unions = filters.area !== 'যেকোনো উপজেলা' ? getUnions(filters.area) : [];
+  // Load Districts
+  useEffect(() => {
+    async function loadDistricts() {
+      setLoadingLocations(prev => ({ ...prev, districts: true }));
+      const data = await getDistricts();
+      setDistricts(data);
+      setLoadingLocations(prev => ({ ...prev, districts: false }));
+    }
+    loadDistricts();
+  }, []);
+
+  // Load Upazillas
+  useEffect(() => {
+    async function loadUpazillas() {
+      const districtObj = districts.find(d => d.bn_name === filters.district);
+      if (districtObj) {
+        setLoadingLocations(prev => ({ ...prev, upazilas: true }));
+        const data = await getUpazillas(districtObj.id);
+        setUpazilas(data);
+        setLoadingLocations(prev => ({ ...prev, upazilas: false }));
+      } else {
+        setUpazilas([]);
+      }
+      setFilters(f => ({ ...f, area: 'যেকোনো উপজেলা', union: 'যেকোনো ইউনিয়ন' }));
+    }
+    loadUpazillas();
+  }, [filters.district, districts]);
+
+  // Load Unions
+  useEffect(() => {
+    async function loadUnions() {
+      const upazilaObj = upazilas.find(u => u.bn_name === filters.area);
+      if (upazilaObj) {
+        setLoadingLocations(prev => ({ ...prev, unions: true }));
+        const data = await getUnionsApi(upazilaObj.id);
+        setUnions(data);
+        setLoadingLocations(prev => ({ ...prev, unions: false }));
+      } else {
+        setUnions([]);
+      }
+      setFilters(f => ({ ...f, union: 'যেকোনো ইউনিয়ন' }));
+    }
+    loadUnions();
+  }, [filters.area, upazilas]);
 
   const loadDonorsData = async () => {
     setLoading(true);
@@ -77,16 +123,16 @@ export default function DonorsPage() {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
-              <MapPin className="h-3 w-3 text-primary" /> জেলা
+              <MapPin className="h-3 w-3 text-primary" /> জেলা {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin inline ml-1" />}
             </label>
-            <Select value={filters.district} onValueChange={(val) => setFilters(f => ({ ...f, district: val, area: 'যেকোনো উপজেলা', union: 'যেকোনো ইউনিয়ন' }))}>
+            <Select value={filters.district} onValueChange={(val) => setFilters(f => ({ ...f, district: val }))}>
               <SelectTrigger className="h-12 border-2">
                 <SelectValue placeholder="যেকোনো জেলা" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="যেকোনো জেলা">যেকোনো জেলা</SelectItem>
-                {DISTRICTS.map(d => (
-                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                {districts.map(d => (
+                  <SelectItem key={d.id} value={d.bn_name}>{d.bn_name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -94,16 +140,16 @@ export default function DonorsPage() {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
-               উপজেলা
+               উপজেলা {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin inline ml-1" />}
             </label>
-            <Select value={filters.area} onValueChange={(val) => setFilters(f => ({ ...f, area: val, union: 'যেকোনো ইউনিয়ন' }))} disabled={filters.district === 'যেকোনো জেলা'}>
+            <Select value={filters.area} onValueChange={(val) => setFilters(f => ({ ...f, area: val }))} disabled={filters.district === 'যেকোনো জেলা'}>
               <SelectTrigger className="h-12 border-2">
                 <SelectValue placeholder="উপজেলা" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="যেকোনো উপজেলা">যেকোনো উপজেলা</SelectItem>
                 {upazilas.map(u => (
-                  <SelectItem key={u} value={u}>{u}</SelectItem>
+                  <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -111,7 +157,7 @@ export default function DonorsPage() {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
-               ইউনিয়ন
+               ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin inline ml-1" />}
             </label>
             <Select value={filters.union} onValueChange={(val) => setFilters(f => ({ ...f, union: val }))} disabled={filters.area === 'যেকোনো উপজেলা'}>
               <SelectTrigger className="h-12 border-2">
@@ -120,7 +166,7 @@ export default function DonorsPage() {
               <SelectContent>
                 <SelectItem value="যেকোনো ইউনিয়ন">যেকোনো ইউনিয়ন</SelectItem>
                 {unions.map(u => (
-                  <SelectItem key={u} value={u}>{u}</SelectItem>
+                  <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

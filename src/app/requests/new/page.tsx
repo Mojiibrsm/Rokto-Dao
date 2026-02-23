@@ -1,21 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, Loader2, MapPin } from 'lucide-react';
+import { Droplet, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { createBloodRequest } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
-import { DISTRICTS, BANGLADESH_DATA, getUnions } from '@/lib/bangladesh-data';
+import { getDistricts, getUpazillas, getUnionsApi, type LocationEntry } from '@/lib/bangladesh-api';
 import Link from 'next/link';
 
 const formSchema = z.object({
@@ -33,6 +32,11 @@ const formSchema = z.object({
 
 export default function NewRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [districts, setDistricts] = useState<LocationEntry[]>([]);
+  const [upazilas, setUpazilas] = useState<LocationEntry[]>([]);
+  const [unions, setUnions] = useState<LocationEntry[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false, unions: false });
+
   const router = useRouter();
   const { toast } = useToast();
 
@@ -52,11 +56,51 @@ export default function NewRequestPage() {
     },
   });
 
-  const selectedDistrict = form.watch('district');
-  const selectedUpazila = form.watch('area');
+  const selectedDistrictName = form.watch('district');
+  const selectedUpazilaName = form.watch('area');
 
-  const upazilas = selectedDistrict ? BANGLADESH_DATA[selectedDistrict]?.upazilas || [] : [];
-  const unions = selectedUpazila ? getUnions(selectedUpazila) : [];
+  useEffect(() => {
+    async function loadDistricts() {
+      setLoadingLocations(prev => ({ ...prev, districts: true }));
+      const data = await getDistricts();
+      setDistricts(data);
+      setLoadingLocations(prev => ({ ...prev, districts: false }));
+    }
+    loadDistricts();
+  }, []);
+
+  useEffect(() => {
+    async function loadUpazillas() {
+      const districtObj = districts.find(d => d.bn_name === selectedDistrictName);
+      if (districtObj) {
+        setLoadingLocations(prev => ({ ...prev, upazilas: true }));
+        const data = await getUpazillas(districtObj.id);
+        setUpazilas(data);
+        setLoadingLocations(prev => ({ ...prev, upazilas: false }));
+      } else {
+        setUpazilas([]);
+      }
+      form.setValue('area', '');
+      form.setValue('union', '');
+    }
+    loadUpazillas();
+  }, [selectedDistrictName, districts, form]);
+
+  useEffect(() => {
+    async function loadUnions() {
+      const upazilaObj = upazilas.find(u => u.bn_name === selectedUpazilaName);
+      if (upazilaObj) {
+        setLoadingLocations(prev => ({ ...prev, unions: true }));
+        const data = await getUnionsApi(upazilaObj.id);
+        setUnions(data);
+        setLoadingLocations(prev => ({ ...prev, unions: false }));
+      } else {
+        setUnions([]);
+      }
+      form.setValue('union', '');
+    }
+    loadUnions();
+  }, [selectedUpazilaName, upazilas, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -121,7 +165,7 @@ export default function NewRequestPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>প্রয়োজনীয় রক্তের গ্রুপ</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="গ্রুপ নির্বাচন করুন" />
@@ -159,20 +203,18 @@ export default function NewRequestPage() {
                   name="district"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>জেলা</FormLabel>
-                      <Select onValueChange={(val) => {
-                        field.onChange(val);
-                        form.setValue('area', '');
-                        form.setValue('union', '');
-                      }} defaultValue={field.value}>
+                      <FormLabel className="flex items-center gap-2">
+                        জেলা {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin" />}
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="জেলা" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DISTRICTS.map(d => (
-                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                          {districts.map(d => (
+                            <SelectItem key={d.id} value={d.bn_name}>{d.bn_name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -185,11 +227,10 @@ export default function NewRequestPage() {
                   name="area"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>উপজেলা</FormLabel>
-                      <Select onValueChange={(val) => {
-                        field.onChange(val);
-                        form.setValue('union', '');
-                      }} defaultValue={field.value} disabled={!selectedDistrict}>
+                      <FormLabel className="flex items-center gap-2">
+                        উপজেলা {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrictName}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="উপজেলা" />
@@ -197,7 +238,7 @@ export default function NewRequestPage() {
                         </FormControl>
                         <SelectContent>
                           {upazilas.map(u => (
-                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                            <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -210,8 +251,10 @@ export default function NewRequestPage() {
                   name="union"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ইউনিয়ন</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedUpazila}>
+                      <FormLabel className="flex items-center gap-2">
+                        ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazilaName}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="ইউনিয়ন" />
@@ -219,7 +262,7 @@ export default function NewRequestPage() {
                         </FormControl>
                         <SelectContent>
                           {unions.map(u => (
-                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                            <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
