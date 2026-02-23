@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Droplet, User, Bell, Menu, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import { useRouter } from 'next/navigation';
 
 export function Navigation() {
@@ -98,7 +98,16 @@ export function Navigation() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                  <div className="flex flex-col gap-6 mt-12">
+                  <SheetHeader className="text-left border-b pb-4 mb-4">
+                    <SheetTitle className="text-xl font-bold flex items-center gap-2">
+                      <Droplet className="h-6 w-6 text-primary fill-primary" />
+                      RoktoDao
+                    </SheetTitle>
+                    <SheetDescription>
+                      জীবন বাঁচাতে আমাদের সাথে যুক্ত থাকুন।
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-6 mt-4">
                     <Link href="/" onClick={() => setIsOpen(false)} className="text-lg font-bold">হোম</Link>
                     {navLinks.map((link) => (
                       <Link 
