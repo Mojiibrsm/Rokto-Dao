@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'rokto-dao.vercel.app',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

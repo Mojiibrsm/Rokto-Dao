@@ -368,11 +368,10 @@ export default function Home() {
               <div className="shrink-0">
                 <div className="h-48 w-48 rounded-full border-8 border-white shadow-2xl overflow-hidden relative">
                   <Image 
-                    src="https://picsum.photos/seed/director/400/400" 
+                    src="https://rokto-dao.vercel.app/files/Mojib_Rsm.jpg" 
                     fill 
                     alt="Mujibur Rahman" 
                     className="object-cover"
-                    data-ai-hint="portrait man"
                   />
                 </div>
               </div>
