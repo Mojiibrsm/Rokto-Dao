@@ -5,16 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowRight, Loader2 } from 'lucide-react';
+import { Droplet, ArrowRight, Loader2, Check, ChevronsUpDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { registerDonor } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 import { getDistricts, getUpazillas, getUnionsApi, type LocationEntry } from '@/lib/bangladesh-api';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 const formSchema = z.object({
@@ -33,6 +35,8 @@ export default function RegisterPage() {
   const [upazilas, setUpazilas] = useState<LocationEntry[]>([]);
   const [unions, setUnions] = useState<LocationEntry[]>([]);
   const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false, unions: false });
+  const [districtSearch, setDistrictSearch] = useState('');
+  const [popoverOpen, setPopoverOpen] = useState(false);
   
   const router = useRouter();
   const { toast } = useToast();
@@ -116,6 +120,10 @@ export default function RegisterPage() {
     }
   }
 
+  const filteredDistricts = districts.filter(d => 
+    d.bn_name.toLowerCase().includes(districtSearch.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto px-4 py-12 flex justify-center">
       <Card className="w-full max-w-2xl shadow-xl border-t-8 border-t-primary rounded-3xl overflow-hidden">
@@ -197,30 +205,75 @@ export default function RegisterPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-primary/10">
+                {/* Searchable District Dropdown */}
                 <FormField
                   control={form.control}
                   name="district"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        জেলা {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin" />}
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="জেলা" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {districts.map(d => (
-                            <SelectItem key={d.id} value={d.bn_name}>{d.bn_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="mb-1">জেলা {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin inline-block ml-1" />}</FormLabel>
+                      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between bg-white",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? districts.find((d) => d.bn_name === field.value)?.bn_name
+                                : "জেলা খুঁজুন"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0" align="start">
+                          <div className="flex items-center border-b px-3 bg-muted/20">
+                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                            <input
+                              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                              placeholder="জেলার নাম টাইপ করুন..."
+                              value={districtSearch}
+                              onChange={(e) => setDistrictSearch(e.target.value)}
+                            />
+                          </div>
+                          <div className="max-h-[300px] overflow-y-auto p-1">
+                            {filteredDistricts.length === 0 ? (
+                              <div className="py-6 text-center text-sm">কোনো জেলা পাওয়া যায়নি।</div>
+                            ) : (
+                              filteredDistricts.map((d) => (
+                                <div
+                                  key={d.id}
+                                  className={cn(
+                                    "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-primary hover:text-white",
+                                    field.value === d.bn_name && "bg-primary/10 text-primary"
+                                  )}
+                                  onClick={() => {
+                                    form.setValue("district", d.bn_name);
+                                    setPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === d.bn_name ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {d.bn_name}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="area"
@@ -231,7 +284,7 @@ export default function RegisterPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrict}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white">
                             <SelectValue placeholder="উপজেলা" />
                           </SelectTrigger>
                         </FormControl>
@@ -255,7 +308,7 @@ export default function RegisterPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-white">
                             <SelectValue placeholder="ইউনিয়ন" />
                           </SelectTrigger>
                         </FormControl>
