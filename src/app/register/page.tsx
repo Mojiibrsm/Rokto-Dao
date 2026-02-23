@@ -25,8 +25,8 @@ const formSchema = z.object({
   phone: z.string().min(11, 'সঠিক ফোন নম্বর দিন'),
   bloodType: z.string().min(1, 'রক্তের গ্রুপ নির্বাচন করুন'),
   district: z.string().min(1, 'জেলা নির্বাচন করুন'),
-  area: z.string().min(1, 'উপজেলা নির্বাচন করুন'),
-  union: z.string().min(1, 'ইউনিয়ন নির্বাচন করুন'),
+  area: z.string().optional(),
+  union: z.string().optional(),
 });
 
 export default function RegisterPage() {
@@ -101,9 +101,8 @@ export default function RegisterPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const result = await registerDonor(values);
+      const result = await registerDonor(values as any);
       if (result.success) {
-        // Save session locally
         localStorage.setItem('roktodao_user', JSON.stringify({
           email: values.email,
           fullName: values.fullName,
@@ -115,7 +114,7 @@ export default function RegisterPage() {
           description: "আপনি এখন আমাদের জীবন রক্ষাকারী সম্প্রদায়ের অংশ।",
         });
         
-        window.dispatchEvent(new Event('storage')); // Update navigation
+        window.dispatchEvent(new Event('storage'));
         router.push('/dashboard');
       }
     } catch (error) {
@@ -152,7 +151,7 @@ export default function RegisterPage() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>পুরো নাম</FormLabel>
+                      <FormLabel>পুরো নাম *</FormLabel>
                       <FormControl>
                         <Input placeholder="আপনার নাম লিখুন" {...field} />
                       </FormControl>
@@ -165,7 +164,7 @@ export default function RegisterPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ইমেইল ঠিকানা</FormLabel>
+                      <FormLabel>ইমেইল ঠিকানা *</FormLabel>
                       <FormControl>
                         <Input placeholder="email@example.com" type="email" {...field} />
                       </FormControl>
@@ -181,7 +180,7 @@ export default function RegisterPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ফোন নম্বর</FormLabel>
+                      <FormLabel>ফোন নম্বর *</FormLabel>
                       <FormControl>
                         <Input placeholder="01XXXXXXXXX" {...field} />
                       </FormControl>
@@ -194,7 +193,7 @@ export default function RegisterPage() {
                   name="bloodType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>রক্তের গ্রুপ</FormLabel>
+                      <FormLabel>রক্তের গ্রুপ *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -219,7 +218,7 @@ export default function RegisterPage() {
                   name="district"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel className="mb-1">জেলা {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin inline-block ml-1" />}</FormLabel>
+                      <FormLabel className="mb-1">জেলা * {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin inline-block ml-1" />}</FormLabel>
                       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -288,15 +287,16 @@ export default function RegisterPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        উপজেলা {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
+                        উপজেলা (ঐচ্ছিক) {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrict}>
                         <FormControl>
                           <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="উপজেলা" />
+                            <SelectValue placeholder="সিলেক্ট করুন" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="N/A">জানি না / নেই</SelectItem>
                           {upazilas.map(u => (
                             <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}
@@ -312,15 +312,16 @@ export default function RegisterPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
+                        ইউনিয়ন (ঐচ্ছিক) {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila || selectedUpazila === 'N/A'}>
                         <FormControl>
                           <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="ইউনিয়ন" />
+                            <SelectValue placeholder="সিলেক্ট করুন" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="N/A">জানি না / নেই</SelectItem>
                           {unions.map(u => (
                             <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}

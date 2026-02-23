@@ -22,8 +22,8 @@ const formSchema = z.object({
   bloodType: z.string().min(1, 'রক্তের গ্রুপ নির্বাচন করুন'),
   hospitalName: z.string().min(2, 'হাসপাতালের নাম দিন'),
   district: z.string().min(1, 'জেলা নির্বাচন করুন'),
-  area: z.string().min(1, 'উপজেলা নির্বাচন করুন'),
-  union: z.string().min(1, 'ইউনিয়ন নির্বাচন করুন'),
+  area: z.string().optional(),
+  union: z.string().optional(),
   phone: z.string().min(11, 'সঠিক ফোন নম্বর দিন'),
   neededWhen: z.string().min(2, 'কখন প্রয়োজন তা লিখুন'),
   bagsNeeded: z.string().min(1, 'ব্যাগ সংখ্যা দিন'),
@@ -87,7 +87,7 @@ export default function NewRequestPage() {
 
   useEffect(() => {
     async function loadUnions() {
-      if (selectedDistrict && selectedUpazila) {
+      if (selectedDistrict && selectedUpazila && selectedUpazila !== 'N/A') {
         setLoadingLocations(prev => ({ ...prev, unions: true }));
         const data = await getUnionsApi(selectedUpazila, selectedDistrict);
         setUnions(data);
@@ -149,7 +149,7 @@ export default function NewRequestPage() {
                   name="patientName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>রোগীর নাম/অবস্থা</FormLabel>
+                      <FormLabel>রোগীর নাম/অবস্থা *</FormLabel>
                       <FormControl>
                         <Input placeholder="যেমন: থ্যালাসেমিয়া রোগী" {...field} />
                       </FormControl>
@@ -162,7 +162,7 @@ export default function NewRequestPage() {
                   name="bloodType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>প্রয়োজনীয় রক্তের গ্রুপ</FormLabel>
+                      <FormLabel>প্রয়োজনীয় রক্তের গ্রুপ *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -186,7 +186,7 @@ export default function NewRequestPage() {
                 name="hospitalName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>হাসপাতালের নাম</FormLabel>
+                    <FormLabel>হাসপাতালের নাম *</FormLabel>
                     <FormControl>
                       <Input placeholder="হাসপাতালের পুরো নাম" {...field} />
                     </FormControl>
@@ -202,7 +202,7 @@ export default function NewRequestPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        জেলা {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin" />}
+                        জেলা * {loadingLocations.districts && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -226,15 +226,16 @@ export default function NewRequestPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        উপজেলা {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
+                        উপজেলা (ঐচ্ছিক) {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrict}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="উপজেলা" />
+                            <SelectValue placeholder="সিলেক্ট করুন" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="N/A">জানি না / নেই</SelectItem>
                           {upazilas.map(u => (
                             <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}
@@ -250,15 +251,16 @@ export default function NewRequestPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
+                        ইউনিয়ন (ঐচ্ছিক) {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila || selectedUpazila === 'N/A'}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="ইউনিয়ন" />
+                            <SelectValue placeholder="সিলেক্ট করুন" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="N/A">জানি না / নেই</SelectItem>
                           {unions.map(u => (
                             <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}
@@ -276,7 +278,7 @@ export default function NewRequestPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>যোগাযোগের নম্বর</FormLabel>
+                      <FormLabel>যোগাযোগের নম্বর *</FormLabel>
                       <FormControl>
                         <Input placeholder="01XXXXXXXXX" {...field} />
                       </FormControl>
@@ -289,7 +291,7 @@ export default function NewRequestPage() {
                   name="bagsNeeded"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ব্যাগ সংখ্যা</FormLabel>
+                      <FormLabel>ব্যাগ সংখ্যা *</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -304,7 +306,7 @@ export default function NewRequestPage() {
                 name="neededWhen"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>কখন প্রয়োজন?</FormLabel>
+                    <FormLabel>কখন প্রয়োজন? *</FormLabel>
                     <FormControl>
                       <Input placeholder="যেমন: জরুরি ভিত্তিতে / আগামীকাল সকাল ১০টায়" {...field} />
                     </FormControl>
@@ -342,7 +344,7 @@ export default function NewRequestPage() {
                   </>
                 ) : (
                   <>
-                    অনুরোধ জমা দিন <ArrowLeft className="ml-2 h-6 w-6 rotate-180" />
+                    অনুরোধ জমা দিন <ArrowRight className="ml-2 h-6 w-6 rotate-180" />
                   </>
                 )}
               </Button>
