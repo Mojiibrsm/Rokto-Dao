@@ -34,6 +34,11 @@ export type Donor = {
   phone: string;
   bloodType: string;
   registrationDate: string;
+  district?: string;
+  area?: string;
+  status?: string;
+  totalDonations?: number;
+  lastDonationDate?: string;
 };
 
 export type BloodRequest = {
@@ -66,7 +71,6 @@ async function postToSheets(payload: any) {
     const res = await fetch(SHEETS_URL, {
       method: 'POST',
       redirect: 'follow',
-      // We use text/plain to avoid CORS preflight OPTIONS request
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
@@ -86,84 +90,60 @@ async function postToSheets(payload: any) {
 }
 
 /**
- * Fetches blood drives from the Google Sheet.
+ * Fetches data based on action
  */
-export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
+async function fetchFromSheets(action: string, params: string = "") {
   if (!SHEETS_URL) return [];
   try {
-    const res = await fetch(`${SHEETS_URL}?action=getDrives`, { 
+    const res = await fetch(`${SHEETS_URL}?action=${action}${params}`, { 
       cache: 'no-store',
       redirect: 'follow'
     });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    if (!Array.isArray(data)) return [];
-    if (!query) return data;
-    return data.filter((d: BloodDrive) => 
-      d.location?.toLowerCase().includes(query.toLowerCase()) || 
-      d.name?.toLowerCase().includes(query.toLowerCase())
-    );
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Failed to fetch real-time blood drives:", error);
+    console.error(`Failed to fetch ${action}:`, error);
     return [];
   }
 }
 
-/**
- * Registers a new donor.
- */
+export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
+  const data = await fetchFromSheets('getDrives');
+  if (!query) return data;
+  return data.filter((d: BloodDrive) => 
+    d.location?.toLowerCase().includes(query.toLowerCase()) || 
+    d.name?.toLowerCase().includes(query.toLowerCase())
+  );
+}
+
+export async function getDonors(filters?: { bloodType?: string; district?: string }): Promise<Donor[]> {
+  let data = await fetchFromSheets('getDonors');
+  if (filters?.bloodType && filters.bloodType !== 'যেকোনো গ্রুপ') {
+    data = data.filter((d: Donor) => d.bloodtype === filters.bloodType);
+  }
+  if (filters?.district && filters.district !== 'যেকোনো জেলা') {
+    data = data.filter((d: Donor) => d.district?.toLowerCase() === filters.district?.toLowerCase());
+  }
+  return data;
+}
+
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   return postToSheets({ action: 'register', ...data });
 }
 
-/**
- * Fetches all blood requests.
- */
 export async function getBloodRequests(): Promise<BloodRequest[]> {
-  if (!SHEETS_URL) return [];
-  try {
-    const res = await fetch(`${SHEETS_URL}?action=getRequests`, { 
-      cache: 'no-store',
-      redirect: 'follow'
-    });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error("Failed to fetch blood requests:", error);
-    return [];
-  }
+  return await fetchFromSheets('getRequests');
 }
 
-/**
- * Creates a new blood request.
- */
 export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
   return postToSheets({ action: 'createRequest', ...data });
 }
 
-/**
- * Schedules a new donation appointment.
- */
 export async function scheduleAppointment(data: Omit<Appointment, 'id' | 'status'>) {
   return postToSheets({ action: 'book', ...data });
 }
 
-/**
- * Fetches donation history.
- */
 export async function getDonationHistory(email: string): Promise<Appointment[]> {
-  if (!SHEETS_URL) return [];
-  try {
-    const res = await fetch(`${SHEETS_URL}?action=getHistory&email=${email}`, { 
-      cache: 'no-store',
-      redirect: 'follow'
-    });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error("Failed to fetch donation history:", error);
-    return [];
-  }
+  return await fetchFromSheets('getHistory', `&email=${email}`);
 }
