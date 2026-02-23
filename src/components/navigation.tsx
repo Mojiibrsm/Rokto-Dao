@@ -1,51 +1,89 @@
-
 'use client';
 
 import Link from 'next/link';
-import { Droplet, MapPin, ClipboardCheck, History, User, Bell } from 'lucide-react';
+import { Droplet, MapPin, ClipboardCheck, History, User, Bell, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export function Navigation() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const navLinks = [
+    { href: '/donors', label: 'রক্তদাতা খুঁজুন', icon: User },
+    { href: '/requests', label: 'রক্তের অনুরোধ', icon: Droplet },
+    { href: '/gallery', label: 'গ্যালারি', icon: History },
+    { href: '/about', label: 'আমাদের সম্পর্কে', icon: ClipboardCheck },
+    { href: '/team', label: 'আমাদের টিম', icon: User },
+    { href: '/contact', label: 'যোগাযোগ', icon: Bell },
+  ];
+
   return (
     <header className="sticky top-0 z-50 w-full flex flex-col">
-      {/* Urgent Notification Bar */}
-      <div className="bg-primary text-white py-2 px-4 text-center text-sm font-medium flex items-center justify-center gap-2">
-        <Bell className="h-4 w-4 animate-bounce" />
-        <span>জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন।</span>
-        <Link href="/requests" className="underline font-bold ml-2">আরো দেখুন</Link>
+      {/* Urgent Notification Bar - Marquee style */}
+      <div className="bg-primary text-white py-2 overflow-hidden whitespace-nowrap">
+        <div className="inline-block animate-marquee hover-pause px-4">
+          <span className="mx-8">জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
+          <span className="mx-8">কক্সবাজার-এ AB+ রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
+          <span className="mx-8">জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
+          <span className="mx-8">কক্সবাজার-এ AB+ রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
+        </div>
       </div>
 
-      <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-primary text-xl">
-            <Droplet className="h-6 w-6 fill-primary" />
-            <span className="tracking-tight font-headline">RoktoDao</span>
+            <Droplet className="h-8 w-8 fill-primary" />
+            <span className="tracking-tight font-headline text-2xl">RoktoDao</span>
           </Link>
           
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/donors" className="text-sm font-medium hover:text-primary flex items-center gap-1.5">
-              <User className="h-4 w-4" />
-              রক্তদাতা খুঁজুন
-            </Link>
-            <Link href="/requests" className="text-sm font-medium hover:text-primary flex items-center gap-1.5">
-              <Droplet className="h-4 w-4" />
-              রক্তের অনুরোধ
-            </Link>
-            <Link href="/eligibility" className="text-sm font-medium hover:text-primary flex items-center gap-1.5">
-              <ClipboardCheck className="h-4 w-4" />
-              যোগ্যতা যাচাই
-            </Link>
-            <Link href="/dashboard" className="text-sm font-medium hover:text-primary flex items-center gap-1.5">
-              <History className="h-4 w-4" />
-              ইতিহাস
-            </Link>
+          <div className="hidden lg:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.href} 
+                href={link.href} 
+                className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1.5"
+              >
+                <link.icon className="h-4 w-4" />
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium hidden sm:block">লগইন</Link>
-            <Button size="sm" asChild className="bg-primary hover:bg-primary/90 text-white">
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="text-sm font-medium hidden sm:block hover:text-primary">লগইন</Link>
+            <Button size="sm" asChild className="bg-primary hover:bg-primary/90 text-white rounded-full px-6">
               <Link href="/register">রেজিস্ট্রেশন</Link>
             </Button>
+            
+            {/* Mobile Menu */}
+            <div className="lg:hidden">
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <div className="flex flex-col gap-6 mt-12">
+                    <Link href="/" onClick={() => setIsOpen(false)} className="text-lg font-bold">হোম</Link>
+                    {navLinks.map((link) => (
+                      <Link 
+                        key={link.href} 
+                        href={link.href} 
+                        onClick={() => setIsOpen(false)}
+                        className="text-lg font-medium flex items-center gap-3"
+                      >
+                        <link.icon className="h-5 w-5 text-primary" />
+                        {link.label}
+                      </Link>
+                    ))}
+                    <hr />
+                    <Link href="/login" onClick={() => setIsOpen(false)} className="text-lg font-medium">লগইন</Link>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </nav>
