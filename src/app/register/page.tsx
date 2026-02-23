@@ -50,39 +50,26 @@ export default function RegisterPage() {
     },
   });
 
-  const selectedDistrictName = form.watch('district');
-  const selectedUpazilaName = form.watch('area');
+  const selectedDistrict = form.watch('district');
+  const selectedUpazila = form.watch('area');
 
-  // Load Districts on mount
   useEffect(() => {
     async function loadDistricts() {
       setLoadingLocations(prev => ({ ...prev, districts: true }));
-      try {
-        const data = await getDistricts();
-        setDistricts(data);
-      } catch (e) {
-        console.error("Failed to load districts", e);
-      } finally {
-        setLoadingLocations(prev => ({ ...prev, districts: false }));
-      }
+      const data = await getDistricts();
+      setDistricts(data);
+      setLoadingLocations(prev => ({ ...prev, districts: false }));
     }
     loadDistricts();
   }, []);
 
-  // Load Upazillas when District changes
   useEffect(() => {
     async function loadUpazillas() {
-      const districtObj = districts.find(d => d.bn_name === selectedDistrictName);
-      if (districtObj) {
+      if (selectedDistrict) {
         setLoadingLocations(prev => ({ ...prev, upazilas: true }));
-        try {
-          const data = await getUpazillas(districtObj.id);
-          setUpazilas(data);
-        } catch (e) {
-          console.error("Failed to load upazilas", e);
-        } finally {
-          setLoadingLocations(prev => ({ ...prev, upazilas: false }));
-        }
+        const data = await getUpazillas(selectedDistrict);
+        setUpazilas(data);
+        setLoadingLocations(prev => ({ ...prev, upazilas: false }));
       } else {
         setUpazilas([]);
       }
@@ -90,29 +77,22 @@ export default function RegisterPage() {
       form.setValue('union', '');
     }
     loadUpazillas();
-  }, [selectedDistrictName, districts, form]);
+  }, [selectedDistrict, form]);
 
-  // Load Unions when Upazilla changes
   useEffect(() => {
     async function loadUnions() {
-      const upazilaObj = upazilas.find(u => u.bn_name === selectedUpazilaName);
-      if (upazilaObj) {
+      if (selectedDistrict && selectedUpazila) {
         setLoadingLocations(prev => ({ ...prev, unions: true }));
-        try {
-          const data = await getUnionsApi(upazilaObj.id);
-          setUnions(data);
-        } catch (e) {
-          console.error("Failed to load unions", e);
-        } finally {
-          setLoadingLocations(prev => ({ ...prev, unions: false }));
-        }
+        const data = await getUnionsApi(selectedUpazila, selectedDistrict);
+        setUnions(data);
+        setLoadingLocations(prev => ({ ...prev, unions: false }));
       } else {
         setUnions([]);
       }
       form.setValue('union', '');
     }
     loadUnions();
-  }, [selectedUpazilaName, upazilas, form]);
+  }, [selectedUpazila, selectedDistrict, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -228,7 +208,7 @@ export default function RegisterPage() {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={loadingLocations.districts ? "লোড হচ্ছে..." : "জেলা"} />
+                            <SelectValue placeholder="জেলা" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -249,10 +229,10 @@ export default function RegisterPage() {
                       <FormLabel className="flex items-center gap-2">
                         উপজেলা {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrictName || loadingLocations.upazilas}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrict}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={loadingLocations.upazilas ? "লোড হচ্ছে..." : "উপজেলা"} />
+                            <SelectValue placeholder="উপজেলা" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -273,10 +253,10 @@ export default function RegisterPage() {
                       <FormLabel className="flex items-center gap-2">
                         ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazilaName || loadingLocations.unions}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={loadingLocations.unions ? "লোড হচ্ছে..." : "ইউনিয়ন"} />
+                            <SelectValue placeholder="ইউনিয়ন" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

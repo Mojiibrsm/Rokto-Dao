@@ -56,8 +56,8 @@ export default function NewRequestPage() {
     },
   });
 
-  const selectedDistrictName = form.watch('district');
-  const selectedUpazilaName = form.watch('area');
+  const selectedDistrict = form.watch('district');
+  const selectedUpazila = form.watch('area');
 
   useEffect(() => {
     async function loadDistricts() {
@@ -71,10 +71,9 @@ export default function NewRequestPage() {
 
   useEffect(() => {
     async function loadUpazillas() {
-      const districtObj = districts.find(d => d.bn_name === selectedDistrictName);
-      if (districtObj) {
+      if (selectedDistrict) {
         setLoadingLocations(prev => ({ ...prev, upazilas: true }));
-        const data = await getUpazillas(districtObj.id);
+        const data = await getUpazillas(selectedDistrict);
         setUpazilas(data);
         setLoadingLocations(prev => ({ ...prev, upazilas: false }));
       } else {
@@ -84,14 +83,13 @@ export default function NewRequestPage() {
       form.setValue('union', '');
     }
     loadUpazillas();
-  }, [selectedDistrictName, districts, form]);
+  }, [selectedDistrict, form]);
 
   useEffect(() => {
     async function loadUnions() {
-      const upazilaObj = upazilas.find(u => u.bn_name === selectedUpazilaName);
-      if (upazilaObj) {
+      if (selectedDistrict && selectedUpazila) {
         setLoadingLocations(prev => ({ ...prev, unions: true }));
-        const data = await getUnionsApi(upazilaObj.id);
+        const data = await getUnionsApi(selectedUpazila, selectedDistrict);
         setUnions(data);
         setLoadingLocations(prev => ({ ...prev, unions: false }));
       } else {
@@ -100,7 +98,7 @@ export default function NewRequestPage() {
       form.setValue('union', '');
     }
     loadUnions();
-  }, [selectedUpazilaName, upazilas, form]);
+  }, [selectedUpazila, selectedDistrict, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -230,7 +228,7 @@ export default function NewRequestPage() {
                       <FormLabel className="flex items-center gap-2">
                         উপজেলা {loadingLocations.upazilas && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrictName}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistrict}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="উপজেলা" />
@@ -254,7 +252,7 @@ export default function NewRequestPage() {
                       <FormLabel className="flex items-center gap-2">
                         ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazilaName}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="ইউনিয়ন" />
