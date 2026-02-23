@@ -1,0 +1,23 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-blood-donation",
+      "description": "Heartfelt blood donation illustration",
+      "imageUrl": "https://picsum.photos/seed/lifeline1/1200/600",
+      "imageHint": "blood donation"
+    },
+    {
+      "id": "blood-drive-1",
+      "description": "Modern medical facility",
+      "imageUrl": "https://picsum.photos/seed/lifeline2/600/400",
+      "imageHint": "hospital building"
+    },
+    {
+      "id": "blood-drive-2",
+      "description": "Community center",
+      "imageUrl": "https://picsum.photos/seed/lifeline3/600/400",
+      "imageHint": "community center"
+    }
+  ]
+}
