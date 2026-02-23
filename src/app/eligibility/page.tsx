@@ -43,7 +43,7 @@ export default function EligibilityPage() {
         <Button variant="ghost" size="icon" asChild>
           <Link href="/"><ArrowLeft className="h-5 w-5" /></Link>
         </Button>
-        <h1 className="text-3xl font-bold font-headline">Eligibility Checker</h1>
+        <h1 className="text-3xl font-bold font-headline">রক্তদানের যোগ্যতা যাচাই</h1>
       </div>
 
       {!result ? (
@@ -51,17 +51,17 @@ export default function EligibilityPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardCheck className="h-6 w-6 text-secondary" />
-              Quick Assessment
+              দ্রুত যাচাইকরণ
             </CardTitle>
             <CardDescription>
-              Answer these questions for a preliminary AI-powered determination of your eligibility.
+              রক্তদানের প্রাথমিক যোগ্যতার জন্য এই প্রশ্নগুলোর উত্তর দিন (AI ভিত্তিক)।
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="age">Age (years)</Label>
+                  <Label htmlFor="age">বয়স (বছর)</Label>
                   <Input 
                     id="age" 
                     type="number" 
@@ -70,19 +70,19 @@ export default function EligibilityPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="weight">Weight (lbs)</Label>
+                  <Label htmlFor="weight">ওজন (কেজি)</Label>
                   <Input 
                     id="weight" 
                     type="number" 
-                    value={formData.weightLbs} 
-                    onChange={e => setFormData(prev => ({ ...prev, weightLbs: parseInt(e.target.value) }))}
+                    value={formData.weightLbs / 2.2} // Converting to KG for display if needed
+                    onChange={e => setFormData(prev => ({ ...prev, weightLbs: parseInt(e.target.value) * 2.2 }))}
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                  <Label htmlFor="sick" className="flex-1 cursor-pointer">Felt sick recently (last 7 days)?</Label>
+                  <Label htmlFor="sick" className="flex-1 cursor-pointer">সম্প্রতি অসুস্থ বোধ করেছেন? (গত ৭ দিন)</Label>
                   <Switch 
                     id="sick" 
                     checked={formData.feltSickRecently} 
@@ -90,7 +90,7 @@ export default function EligibilityPage() {
                   />
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                  <Label htmlFor="meds" className="flex-1 cursor-pointer">Taking prescription medications?</Label>
+                  <Label htmlFor="meds" className="flex-1 cursor-pointer">কোনো প্রেসক্রিপশন ওষুধ খাচ্ছেন?</Label>
                   <Switch 
                     id="meds" 
                     checked={formData.takingMedications} 
@@ -98,7 +98,7 @@ export default function EligibilityPage() {
                   />
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                  <Label htmlFor="tattoo" className="flex-1 cursor-pointer">New tattoo or piercing (last 4 months)?</Label>
+                  <Label htmlFor="tattoo" className="flex-1 cursor-pointer">ট্যাটু বা পিয়ার্সিং করেছেন? (গত ৪ মাস)</Label>
                   <Switch 
                     id="tattoo" 
                     checked={formData.receivedTattooOrPiercing} 
@@ -106,7 +106,7 @@ export default function EligibilityPage() {
                   />
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                  <Label htmlFor="travel" className="flex-1 cursor-pointer">Traveled to malaria-risk area (3 yrs)?</Label>
+                  <Label htmlFor="travel" className="flex-1 cursor-pointer">ম্যালেরিয়া ঝুকিপূর্ণ এলাকায় ভ্রমণ করেছেন? (৩ বছর)</Label>
                   <Switch 
                     id="travel" 
                     checked={formData.traveledToMalariaRiskArea} 
@@ -119,9 +119,9 @@ export default function EligibilityPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Checking Eligibility...
+                    যাচাই করা হচ্ছে...
                   </>
-                ) : 'Check My Eligibility'}
+                ) : 'আমার যোগ্যতা যাচাই করুন'}
               </Button>
             </form>
           </CardContent>
@@ -137,23 +137,23 @@ export default function EligibilityPage() {
               )}
             </div>
             <CardTitle className="text-2xl">
-              {result.isEligible ? 'You appear eligible!' : 'Review Required'}
+              {result.isEligible ? 'আপনি রক্তদান করতে পারেন!' : 'পর্যবেক্ষণ প্রয়োজন'}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-lg text-muted-foreground">{result.reason}</p>
             <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground text-left">
-              <strong>Note:</strong> This is a preliminary assessment powered by AI. A final determination will be made by a medical professional at the donation site during your full screening.
+              <strong>বিঃদ্রঃ:</strong> এটি একটি প্রাথমিক AI ভিত্তিক মূল্যায়ন। রক্তদান কেন্দ্রে একজন পেশাদার চিকিৎসক দ্বারা আপনার চূড়ান্ত শারীরিক পরীক্ষা করা হবে।
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             {result.isEligible && (
               <Button asChild className="w-full bg-primary h-12 text-lg">
-                <Link href="/drives">Schedule an Appointment</Link>
+                <Link href="/drives">রক্তদাতার তালিকা দেখুন</Link>
               </Button>
             )}
             <Button variant="outline" className="w-full h-12" onClick={() => setResult(null)}>
-              Start Over
+              আবার শুরু করুন
             </Button>
           </CardFooter>
         </Card>

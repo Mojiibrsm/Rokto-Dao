@@ -17,10 +17,10 @@ import { registerDonor } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
-  fullName: z.string().min(2, 'Name is too short'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Invalid phone number'),
-  bloodType: z.string().min(1, 'Please select a blood type'),
+  fullName: z.string().min(2, 'নাম খুবই ছোট'),
+  email: z.string().email('সঠিক ইমেইল ঠিকানা দিন'),
+  phone: z.string().min(11, 'সঠিক ফোন নম্বর দিন'),
+  bloodType: z.string().min(1, 'রক্তের গ্রুপ নির্বাচন করুন'),
 });
 
 export default function RegisterPage() {
@@ -44,16 +44,16 @@ export default function RegisterPage() {
       const result = await registerDonor(values);
       if (result.success) {
         toast({
-          title: "Registration Successful!",
-          description: "You are now part of our lifesaving community.",
+          title: "নিবন্ধন সফল!",
+          description: "আপনি এখন আমাদের জীবন রক্ষাকারী সম্প্রদায়ের অংশ।",
         });
         router.push('/dashboard');
       }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Registration Failed",
-        description: "Something went wrong. Please try again.",
+        title: "নিবন্ধন ব্যর্থ",
+        description: "কিছু ভুল হয়েছে। আবার চেষ্টা করুন।",
       });
     } finally {
       setIsSubmitting(false);
@@ -67,8 +67,8 @@ export default function RegisterPage() {
           <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <Droplet className="h-6 w-6 text-primary fill-primary" />
           </div>
-          <CardTitle className="text-3xl font-headline">Join Lifeline Hub</CardTitle>
-          <CardDescription>Your information is safe and will only be used for donation coordination.</CardDescription>
+          <CardTitle className="text-3xl font-headline">দাতা হিসেবে নিবন্ধন করুন</CardTitle>
+          <CardDescription>আপনার তথ্যাবলী পূরণ করে আমাদের সাথে যুক্ত হোন।</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -78,9 +78,9 @@ export default function RegisterPage() {
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>পুরো নাম</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input placeholder="আকবর হোসেন" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -91,9 +91,9 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel>ইমেইল ঠিকানা</FormLabel>
                     <FormControl>
-                      <Input placeholder="john@example.com" type="email" {...field} />
+                      <Input placeholder="email@example.com" type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -105,9 +105,9 @@ export default function RegisterPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>ফোন নম্বর</FormLabel>
                       <FormControl>
-                        <Input placeholder="(555) 000-0000" {...field} />
+                        <Input placeholder="01XXXXXXXXX" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -118,15 +118,15 @@ export default function RegisterPage() {
                   name="bloodType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Blood Type</FormLabel>
+                      <FormLabel>রক্তের গ্রুপ</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder="গ্রুপ নির্বাচন করুন" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'].map(type => (
+                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(type => (
                             <SelectItem key={type} value={type}>{type}</SelectItem>
                           ))}
                         </SelectContent>
@@ -140,11 +140,11 @@ export default function RegisterPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    প্রসেসিং হচ্ছে...
                   </>
                 ) : (
                   <>
-                    Complete Registration <ArrowRight className="ml-2 h-4 w-4" />
+                    নিবন্ধন সম্পন্ন করুন <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -153,7 +153,7 @@ export default function RegisterPage() {
         </CardContent>
         <CardFooter className="justify-center border-t bg-muted/30 py-4">
           <p className="text-xs text-muted-foreground text-center">
-            By registering, you agree to our terms of service and privacy policy regarding your medical information.
+            ইতিমধ্যে একটি একাউন্ট আছে? <Link href="/login" className="text-primary font-bold">লগইন করুন</Link>
           </p>
         </CardFooter>
       </Card>
