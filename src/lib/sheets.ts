@@ -34,6 +34,7 @@ export type Donor = {
   district?: string;
   area?: string;
   union?: string;
+  organization?: string;
   status?: string;
   totalDonations?: number;
   lastDonationDate?: string;
@@ -165,6 +166,7 @@ export async function getDonors(filters?: { bloodType?: string; district?: strin
     district: d.district || '',
     area: d.area || '',
     union: d.union || '',
+    organization: d.organization || '',
     status: d.status || 'Available',
     totalDonations: parseInt(d.totaldonations || d.totalDonations || '0'),
     lastDonationDate: d.lastdonationdate || d.lastDonationDate || 'N/A'

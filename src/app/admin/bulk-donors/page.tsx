@@ -125,7 +125,7 @@ export default function BulkDonorsPage() {
               <div>
                 <CardTitle className="text-3xl">AI Data Parser</CardTitle>
                 <CardDescription className="text-lg">
-                  যেকোনো অগোছালো ডাটা পেস্ট করুন। AI নিজ থেকেই সব ঠিক করে নেবে।
+                  যেকোনো অগোছালো ডাটা পেস্ট করুন। AI সংগঠন বা টিমের নামসহ সব ঠিক করে নেবে।
                 </CardDescription>
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function BulkDonorsPage() {
               <Info className="h-5 w-5 text-blue-600" />
               <AlertTitle className="text-blue-800 font-bold mb-1">স্মার্ট ইনপুট সাপোর্ট!</AlertTitle>
               <AlertDescription className="text-blue-700">
-                আপনি নাম, রক্তের গ্রুপ এবং মোবাইল নম্বর সম্বলিত যেকোনো টেক্সট এখানে দিতে পারেন। AI স্বয়ংক্রিয়ভাবে ইংরেজি জেলাকে বাংলায় রূপান্তর করবে এবং উপজেলা খুঁজে নেবে।
+                AI স্বয়ংক্রিয়ভাবে সংগঠন বা টিমের নাম (যেমন: Sandhani, Red Crescent) এবং উপজেলা খুঁজে নেবে এবং বাংলায় রূপান্তর করবে।
               </AlertDescription>
             </Alert>
 
@@ -143,7 +143,7 @@ export default function BulkDonorsPage() {
               <Label htmlFor="bulkData" className="text-lg font-bold">ইনপুট এরিয়া</Label>
               <Textarea 
                 id="bulkData" 
-                placeholder="যেমন: Faisal, B+, 01815... Coxbazar PS Maheshkhali" 
+                placeholder="যেমন: Faisal, B+, 01815... Coxbazar PS Maheshkhali, Org: Sandhani" 
                 className="min-h-[350px] font-mono text-base rounded-3xl bg-muted/20 focus:bg-white transition-all p-6 border-2 focus:border-primary"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
@@ -191,8 +191,8 @@ export default function BulkDonorsPage() {
                   <thead className="bg-muted">
                     <tr>
                       <th className="px-6 py-4 text-left font-bold">নাম</th>
-                      <th className="px-6 py-4 text-left font-bold">ফোন</th>
-                      <th className="px-6 py-4 text-left font-bold">রক্তের গ্রুপ</th>
+                      <th className="px-6 py-4 text-left font-bold">ফোন ও গ্রুপ</th>
+                      <th className="px-6 py-4 text-left font-bold">সংগঠন</th>
                       <th className="px-6 py-4 text-left font-bold">অবস্থান</th>
                     </tr>
                   </thead>
@@ -200,11 +200,20 @@ export default function BulkDonorsPage() {
                     {preview.map((d, i) => (
                       <tr key={i} className="hover:bg-muted/30 transition-colors">
                         <td className="px-6 py-4 font-bold">{d.fullName}</td>
-                        <td className="px-6 py-4 font-mono text-sm text-muted-foreground">{d.phone}</td>
                         <td className="px-6 py-4">
-                          <Badge className="bg-primary h-10 w-10 flex items-center justify-center text-lg font-black rounded-lg">
-                            {d.bloodType}
-                          </Badge>
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-primary h-8 w-8 flex items-center justify-center font-black rounded-lg">
+                              {d.bloodType}
+                            </Badge>
+                            <span className="font-mono text-sm text-muted-foreground">{d.phone}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {d.organization ? (
+                            <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 flex items-center gap-1.5 w-fit">
+                              <Users className="h-3 w-3" /> {d.organization}
+                            </Badge>
+                          ) : <span className="text-muted-foreground italic text-sm">নেই</span>}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">

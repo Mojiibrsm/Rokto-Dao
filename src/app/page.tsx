@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -165,7 +164,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 4. আমাদের রক্তযোদ্ধারা (New Section) */}
+      {/* 4. আমাদের রক্তযোদ্ধারা */}
       <section className="py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
@@ -199,6 +198,11 @@ export default function Home() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-4">
+                    {donor.organization && (
+                      <Badge variant="secondary" className="bg-secondary/10 text-secondary border-none flex items-center gap-1.5 w-fit font-bold">
+                        <Users className="h-3 w-3" /> {donor.organization}
+                      </Badge>
+                    )}
                     <div className="flex items-center gap-2 text-green-600 font-bold text-sm bg-green-50 p-2 rounded-lg border border-green-100 w-fit">
                       <ShieldCheck className="h-4 w-4" /> ভেরিফাইড রক্তদাতা
                     </div>
@@ -595,7 +599,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 15. আমাদের পার্টনার (Trust indicators) */}
+      {/* 15. আমাদের পার্টনার */}
       <section className="py-16 bg-muted/20 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-10">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>

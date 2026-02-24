@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowRight, Loader2, Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Droplet, ArrowRight, Loader2, Check, ChevronsUpDown, Search, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,7 @@ const formSchema = z.object({
   district: z.string().min(1, 'জেলা নির্বাচন করুন'),
   area: z.string().optional(),
   union: z.string().optional(),
+  organization: z.string().optional(),
 });
 
 export default function RegisterPage() {
@@ -51,6 +52,7 @@ export default function RegisterPage() {
       district: '',
       area: '',
       union: '',
+      organization: '',
     },
   });
 
@@ -332,6 +334,22 @@ export default function RegisterPage() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="organization"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary" /> সংগঠন বা টিমের নাম (ঐচ্ছিক)
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="যেমন: রেড ক্রিসেন্ট / আপনার ব্লাড ক্লাব" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <Button type="submit" className="w-full bg-primary h-14 text-xl font-bold rounded-2xl shadow-lg shadow-primary/20" disabled={isSubmitting}>
                 {isSubmitting ? (

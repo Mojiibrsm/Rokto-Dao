@@ -12,7 +12,7 @@
 const SS = SpreadsheetApp.getActiveSpreadsheet();
 
 const SCHEMA = {
-  'Donors': ['Email', 'Full Name', 'Phone', 'Blood Type', 'Registration Date', 'District', 'Area', 'Union', 'Last Donation Date', 'Total Donations'],
+  'Donors': ['Email', 'Full Name', 'Phone', 'Blood Type', 'Registration Date', 'District', 'Area', 'Union', 'Organization', 'Last Donation Date', 'Total Donations'],
   'Appointments': ['ID', 'Drive ID', 'Drive Name', 'User Email', 'User Name', 'Date', 'Time', 'Status'],
   'BloodDrives': ['ID', 'Name', 'Location', 'Date', 'Time', 'Distance'],
   'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At'],
@@ -93,7 +93,19 @@ function getSheetData(sheet) {
 
 function registerDonor(data) {
   const sheet = SS.getSheetByName('Donors');
-  sheet.appendRow([data.email || '', data.fullName || '', data.phone || '', data.bloodType || '', new Date().toISOString(), data.district || '', data.area || '', data.union || '', 'N/A', 0]);
+  sheet.appendRow([
+    data.email || '', 
+    data.fullName || '', 
+    data.phone || '', 
+    data.bloodType || '', 
+    new Date().toISOString(), 
+    data.district || '', 
+    data.area || '', 
+    data.union || '', 
+    data.organization || '',
+    'N/A', 
+    0
+  ]);
   return jsonResponse({ success: true });
 }
 
@@ -111,13 +123,14 @@ function bulkRegisterDonors(data) {
     d.district || '', 
     d.area || '', 
     d.union || '', 
+    d.organization || '',
     'N/A', 
     0
   ]);
   
   if (rows.length > 0) {
     const startRow = sheet.getLastRow() + 1;
-    sheet.getRange(startRow, 1, rows.length, 10).setValues(rows);
+    sheet.getRange(startRow, 1, rows.length, 11).setValues(rows);
   }
   
   return jsonResponse({ success: true, count: rows.length });

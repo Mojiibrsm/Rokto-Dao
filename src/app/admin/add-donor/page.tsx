@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, Loader2, Plus, CheckCircle2 } from 'lucide-react';
+import { Droplet, ArrowLeft, Loader2, Plus, CheckCircle2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,7 @@ const formSchema = z.object({
   district: z.string().min(1, 'জেলা নির্বাচন করুন'),
   area: z.string().optional(),
   union: z.string().optional(),
+  organization: z.string().optional(),
 });
 
 export default function AdminAddDonorPage() {
@@ -44,6 +45,7 @@ export default function AdminAddDonorPage() {
       district: '',
       area: '',
       union: '',
+      organization: '',
     },
   });
 
@@ -242,6 +244,22 @@ export default function AdminAddDonorPage() {
                 />
               </div>
 
+              <FormField
+                control={form.control}
+                name="organization"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary" /> সংগঠন/টিম (ঐচ্ছিক)
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="সংগঠনের নাম লিখুন" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button type="submit" className="w-full bg-primary h-14 text-xl font-bold rounded-2xl shadow-lg shadow-primary/20" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
@@ -259,7 +277,7 @@ export default function AdminAddDonorPage() {
         </CardContent>
         <CardFooter className="bg-green-50/50 py-4 px-8 border-t">
           <p className="text-sm text-green-700 font-medium flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" /> ফর্ম সাবমিট করার পর এটি অটো রিসেট হবে, ফলে আপনি আনলিমিটেড দাতা যোগ করতে পারবেন।
+            <CheckCircle2 className="h-4 w-4" /> ফর্ম সাবমিট করার পর এটি অটো রিসেট হবে।
           </p>
         </CardFooter>
       </Card>

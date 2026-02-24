@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -7,7 +6,7 @@ import { getDonors, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
@@ -46,7 +45,6 @@ function DonorsContent() {
     } else {
       setUpazilas([]);
     }
-    // Only reset sub-locations if manually changing from UI
   }, [filters.district]);
 
   // Load Unions when Upazilla changes
@@ -77,7 +75,7 @@ function DonorsContent() {
 
   useEffect(() => {
     loadDonorsData();
-  }, [filters.bloodType, filters.district]); // Trigger when initial params set
+  }, [filters.bloodType, filters.district]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +84,6 @@ function DonorsContent() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      {/* New Hero Section */}
       <div className="text-center mb-16 space-y-6">
         <div className="flex justify-center mb-4">
           <Badge className="bg-primary/10 text-primary border-primary/20 px-6 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold">
@@ -206,7 +203,7 @@ function DonorsContent() {
                     <div>
                       <CardTitle className="text-xl">{donor.fullName}</CardTitle>
                       <CardDescription className="flex items-center gap-1 mt-0.5 text-xs">
-                        <MapPin className="h-3 w-3" /> {donor.union}, {donor.area}, {donor.district}
+                        <MapPin className="h-3 w-3" /> {donor.union ? donor.union + ', ' : ''} {donor.area}, {donor.district}
                       </CardDescription>
                     </div>
                   </div>
@@ -216,6 +213,12 @@ function DonorsContent() {
                 </div>
               </CardHeader>
               <CardContent className="pt-8 space-y-6">
+                {donor.organization && (
+                  <Badge variant="secondary" className="bg-secondary/10 text-secondary border-none px-4 py-1.5 rounded-full flex items-center gap-2 w-fit font-bold">
+                    <Users className="h-4 w-4" /> {donor.organization}
+                  </Badge>
+                )}
+                
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="p-4 bg-muted/30 rounded-2xl border">
                     <p className="text-muted-foreground uppercase text-[10px] font-black mb-1">শেষ রক্তদান</p>
