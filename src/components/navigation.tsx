@@ -32,6 +32,7 @@ export function Navigation() {
   const handleLogout = () => {
     localStorage.removeItem('roktodao_user');
     setUser(null);
+    window.dispatchEvent(new Event('storage'));
     router.push('/');
   };
 
@@ -71,7 +72,9 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-3">
-            {mounted && user ? (
+            {!mounted ? (
+              <div className="h-10 w-24 bg-muted animate-pulse rounded-full" />
+            ) : user ? (
               <div className="flex items-center gap-4">
                 <Link href="/dashboard" className="text-sm font-black flex items-center gap-2 text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/20">
                   <LayoutDashboard className="h-4 w-4" />
@@ -81,15 +84,13 @@ export function Navigation() {
                   <LogOut className="h-4 w-4 mr-1" /> লগআউট
                 </Button>
               </div>
-            ) : mounted ? (
+            ) : (
               <>
                 <Link href="/login" className="text-[15px] font-bold hidden sm:block hover:text-primary text-foreground px-4 py-2 rounded-lg transition-colors">লগইন</Link>
                 <Button size="default" asChild className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 font-black shadow-lg shadow-primary/20 hover:scale-105 transition-all">
                   <Link href="/register">রেজিস্ট্রেশন</Link>
                 </Button>
               </>
-            ) : (
-              <div className="h-10 w-24 bg-muted animate-pulse rounded-full" />
             )}
             
             <div className="lg:hidden">
@@ -123,7 +124,9 @@ export function Navigation() {
                       </Link>
                     ))}
                     <div className="h-px bg-primary/10 w-full" />
-                    {mounted && user ? (
+                    {!mounted ? (
+                      <div className="h-10 w-full bg-muted animate-pulse rounded-lg" />
+                    ) : user ? (
                       <>
                         <Link href="/dashboard" onClick={() => setIsOpen(false)} className="text-xl font-black text-primary flex items-center gap-3">
                           <LayoutDashboard className="h-6 w-6" /> ড্যাশবোর্ড

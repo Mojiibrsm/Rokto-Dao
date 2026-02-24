@@ -20,22 +20,7 @@ export const metadata: Metadata = {
   description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি সারা বাংলাদেশের যেকোনো প্রান্ত থেকে জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন এবং নিজে রক্তদাতার তালিকায় নাম নিবন্ধন করে জীবন বাঁচাতে পারেন।',
   keywords: [
     'রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান', 'Blood Donation Bangladesh', 
-    'Find Blood Donor', 'Emergency Blood', 'রক্তদান অ্যাপ', 'জীবন বাঁচান', 'ব্লাড ডোনার',
-    'Cox’s Bazar blood donor', 'রামু রক্তদাতা', 'Cox’s Bazar রক্তদান', 'রামু ব্লাড ডোনার', 
-    'urgent blood Cox’s Bazar', 'রক্ত প্রয়োজন Cox’s Bazar', 'Ramu blood donation', 
-    'রামু রক্ত সাহায্য', 'Cox’s Bazar O+ donor', 'রামু O+ রক্তদাতা', 
-    'blood donor near me Cox’s Bazar', 'রামু ব্লাড নেটওয়ার্ক', 'Cox’s Bazar A+ donor', 
-    'রামু A+ রক্ত', 'emergency blood Ramu', 'রক্ত দান Cox’s Bazar', 'Cox’s Bazar blood app', 
-    'রামু ব্লাড সেন্টার', 'volunteer blood Cox’s Bazar', 'রামু রক্তপ্রদাতা', 
-    'blood request Cox’s Bazar', 'রামু ব্লাড ডোনেশন', 'Cox’s Bazar rare blood', 
-    'রামু অরজেন্ট রক্ত', 'donate blood Cox’s Bazar', 'রক্তদাতা খুঁজুন রামু', 
-    'Cox’s Bazar plasma donor', 'রামু রক্তদান সাহায্য', 'Cox’s Bazar B+ donor', 
-    'রামু B+ রক্ত', 'Cox’s Bazar AB+ donor', 'রামু AB+ রক্ত', 
-    'blood donation camp Cox’s Bazar', 'রামু ব্লাড ক্যাম্প', 'find blood donor Ramu', 
-    'রামু রক্ত খুঁজুন', 'Cox’s Bazar emergency donor', 'রামু জরুরি রক্ত', 
-    'blood network Cox’s Bazar', 'রামু রক্ত নেটওয়ার্ক', 'Cox’s Bazar A- donor', 
-    'রামু A- রক্ত', 'urgent blood help Cox’s Bazar', 'রামু অরজেন্ট ব্লাড', 
-    'Cox’s Bazar B- donor', 'রামু B- রক্ত'
+    'Find Blood Donor', 'Emergency Blood', 'রক্তদান অ্যাপ', 'জীবন বাঁচান', 'ব্লাড ডোনার'
   ],
   authors: [{ name: 'RoktoDao Team' }],
   creator: 'RoktoDao',
