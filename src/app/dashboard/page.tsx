@@ -6,7 +6,7 @@ import { getDonationHistory, type Appointment, getDonors, updateDonorProfile } f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ExternalLink, MessageSquare } from 'lucide-react';
+import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ExternalLink, MessageSquare, HeartPulse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,7 +31,8 @@ export default function DashboardPage() {
     district: '',
     area: '',
     union: '',
-    organization: ''
+    organization: '',
+    totalDonations: 0
   });
 
   const router = useRouter();
@@ -77,7 +78,8 @@ export default function DashboardPage() {
             district: currentDonor.district || '',
             area: currentDonor.area || '',
             union: currentDonor.union || '',
-            organization: currentDonor.organization || ''
+            organization: currentDonor.organization || '',
+            totalDonations: currentDonor.totalDonations || 0
           });
         }
       } catch (error) {
@@ -113,7 +115,10 @@ export default function DashboardPage() {
     try {
       // Find the donor by their original email or phone (stored in 'user' state)
       const originalKey = user.email || user.phone;
-      const result = await updateDonorProfile(originalKey, formData);
+      const result = await updateDonorProfile(originalKey, {
+        ...formData,
+        totalDonations: Number(formData.totalDonations)
+      });
       
       if (result.success) {
         toast({ title: "সফল!", description: "আপনার প্রোফাইল আপডেট করা হয়েছে।" });
@@ -121,6 +126,9 @@ export default function DashboardPage() {
         const updatedUser = { ...user, fullName: formData.fullName, email: formData.email, phone: formData.phone };
         localStorage.setItem('roktodao_user', JSON.stringify(updatedUser));
         setUser(updatedUser);
+        
+        // Refresh local data to show updated stats in sidebar
+        setDonorDetails(prev => ({ ...prev, ...formData, totalDonations: Number(formData.totalDonations) }));
       }
     } catch (error) {
       toast({ variant: "destructive", title: "ব্যর্থ!", description: "তথ্য আপডেট করা যায়নি।" });
@@ -179,7 +187,7 @@ export default function DashboardPage() {
                 </Card>
                 <Card className="p-3 text-center">
                   <div className="text-[10px] text-muted-foreground uppercase font-bold">মোট রক্তদান</div>
-                  <div className="text-2xl font-black">{donorDetails?.totalDonations || past.length || 0}</div>
+                  <div className="text-2xl font-black">{donorDetails?.totalDonations || 0}</div>
                 </Card>
               </div>
               
@@ -251,12 +259,25 @@ export default function DashboardPage() {
             <TabsContent value="history" className="mt-6">
               {loading ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
-              ) : past.length === 0 ? (
+              ) : (donorDetails?.totalDonations === 0 && past.length === 0) ? (
                 <Card className="border-dashed py-12 text-center">
                   <CardContent><p className="text-muted-foreground">আপনি এখনো রক্তদান করেননি। আজই শুরু করুন!</p></CardContent>
                 </Card>
               ) : (
                 <div className="space-y-4">
+                  {/* Manual/Legacy total show as a summary card */}
+                  <Card className="bg-primary/5 border-primary/20">
+                    <CardContent className="py-6 flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <HeartPulse className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-lg">মোট রক্তদান: {donorDetails?.totalDonations || 0} বার</h4>
+                        <p className="text-sm text-muted-foreground">আপনি সফলভাবে অনেক মানুষের জীবন বাঁচাতে সাহায্য করেছেন।</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   {past.map(app => (
                     <Card key={app.id} className="border-l-4 border-l-primary/30 shadow-sm opacity-90">
                       <CardHeader className="py-4">
@@ -366,13 +387,24 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>সংগঠন বা টিমের নাম</Label>
-                      <Input 
-                        value={formData.organization} 
-                        onChange={e => setFormData({...formData, organization: e.target.value})} 
-                        placeholder="যেমন: রেড ক্রিসেন্ট"
-                      />
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>সংগঠন বা টিমের নাম</Label>
+                        <Input 
+                          value={formData.organization} 
+                          onChange={e => setFormData({...formData, organization: e.target.value})} 
+                          placeholder="যেমন: রেড ক্রিসেন্ট"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2"><HeartPulse className="h-4 w-4 text-primary" /> মোট কতবার রক্ত দিয়েছেন?</Label>
+                        <Input 
+                          type="number"
+                          value={formData.totalDonations} 
+                          onChange={e => setFormData({...formData, totalDonations: parseInt(e.target.value) || 0})} 
+                          placeholder="0"
+                        />
+                      </div>
                     </div>
 
                     <Button type="submit" className="w-full bg-primary h-12 text-lg font-bold" disabled={isUpdating}>

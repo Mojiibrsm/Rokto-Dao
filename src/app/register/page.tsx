@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowRight, Loader2, Check, ChevronsUpDown, Search, Users } from 'lucide-react';
+import { Droplet, ArrowRight, Loader2, Check, ChevronsUpDown, Search, Users, HeartPulse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,7 @@ const formSchema = z.object({
   area: z.string().optional(),
   union: z.string().optional(),
   organization: z.string().optional(),
+  totalDonations: z.string().optional().default('0'),
 });
 
 export default function RegisterPage() {
@@ -53,6 +54,7 @@ export default function RegisterPage() {
       area: '',
       union: '',
       organization: '',
+      totalDonations: '0',
     },
   });
 
@@ -108,7 +110,8 @@ export default function RegisterPage() {
         localStorage.setItem('roktodao_user', JSON.stringify({
           email: values.email,
           fullName: values.fullName,
-          bloodType: values.bloodType
+          bloodType: values.bloodType,
+          phone: values.phone
         }));
         
         toast({
@@ -335,21 +338,38 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="organization"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-primary" /> সংগঠন বা টিমের নাম (ঐচ্ছিক)
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="যেমন: রেড ক্রিসেন্ট / আপনার ব্লাড ক্লাব" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="organization"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" /> সংগঠন বা টিমের নাম (ঐচ্ছিক)
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="যেমন: রেড ক্রিসেন্ট / আপনার ব্লাড ক্লাব" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="totalDonations"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <HeartPulse className="h-4 w-4 text-primary" /> মোট কতবার রক্ত দিয়েছেন?
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="0" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <Button type="submit" className="w-full bg-primary h-14 text-xl font-bold rounded-2xl shadow-lg shadow-primary/20" disabled={isSubmitting}>
                 {isSubmitting ? (

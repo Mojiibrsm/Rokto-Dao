@@ -106,7 +106,7 @@ function registerDonor(data) {
     data.union || '', 
     data.organization || '',
     'N/A', 
-    0
+    data.totalDonations || 0
   ]);
   return jsonResponse({ success: true });
 }
@@ -124,7 +124,6 @@ function updateDonorProfile(data) {
     if (rows[i][emailCol].toString().toLowerCase() === searchKey.toLowerCase() || 
         rows[i][phoneCol].toString() === searchKey.toString()) {
       
-      // Found the row, update fields
       const rowNum = i + 1;
       if (data.fullName) sheet.getRange(rowNum, headers.indexOf('Full Name') + 1).setValue(data.fullName);
       if (data.phone) sheet.getRange(rowNum, headers.indexOf('Phone') + 1).setValue(data.phone);
@@ -133,6 +132,7 @@ function updateDonorProfile(data) {
       if (data.area) sheet.getRange(rowNum, headers.indexOf('Area') + 1).setValue(data.area);
       if (data.union) sheet.getRange(rowNum, headers.indexOf('Union') + 1).setValue(data.union);
       if (data.organization) sheet.getRange(rowNum, headers.indexOf('Organization') + 1).setValue(data.organization);
+      if (data.totalDonations !== undefined) sheet.getRange(rowNum, headers.indexOf('Total Donations') + 1).setValue(data.totalDonations);
       
       return jsonResponse({ success: true });
     }
@@ -156,7 +156,7 @@ function bulkRegisterDonors(data) {
     d.union || '', 
     d.organization || '',
     'N/A', 
-    0
+    d.totalDonations || 0
   ]);
   
   if (rows.length > 0) {
