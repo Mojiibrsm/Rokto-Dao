@@ -26,6 +26,13 @@ function initSheets() {
       sheet = SS.insertSheet(name);
       sheet.appendRow(SCHEMA[name]);
       sheet.getRange(1, 1, 1, SCHEMA[name].length).setFontWeight('bold').setBackground('#fce4ec');
+    } else {
+      // Update headers if missing Organization
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      if (!headers.includes('Organization')) {
+        sheet.insertColumnBefore(9);
+        sheet.getRange(1, 9).setValue('Organization').setFontWeight('bold').setBackground('#fce4ec');
+      }
     }
   });
 }
@@ -61,6 +68,7 @@ function doPost(e) {
   if (action === 'updateStatus') return updateEntryStatus(data);
   if (action === 'deleteEntry') return deleteEntry(data);
   if (action === 'seedLocations') return seedLocations(data.rows);
+  if (action === 'createDrive') return createDrive(data);
   
   return jsonResponse({ error: 'Invalid action' });
 }
@@ -143,28 +151,29 @@ function createBloodRequest(data) {
   return jsonResponse({ success: true, id: id });
 }
 
+function createDrive(data) {
+  const sheet = SS.getSheetByName('BloodDrives');
+  sheet.appendRow([data.id, data.name, data.location, data.date, data.time, data.distance]);
+  return jsonResponse({ success: true });
+}
+
 function seedLocations(rows) {
   const sheet = SS.getSheetByName('Locations');
-  // Clear existing except header
   if (sheet.getLastRow() > 1) {
     sheet.getRange(2, 1, sheet.getLastRow() - 1, SCHEMA.Locations.length).clearContent();
   }
-  
   if (rows && rows.length > 0) {
     sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
   }
   return jsonResponse({ success: true, count: rows.length });
 }
 
-function getLocations() {
-  return jsonResponse(getSheetData(SS.getSheetByName('Locations')));
-}
+function getLocations() { return jsonResponse(getSheetData(SS.getSheetByName('Locations'))); }
 
 function updateEntryStatus(data) {
   const sheet = SS.getSheetByName(data.sheetName);
   const rows = sheet.getDataRange().getValues();
   const idCol = 0;
-  
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][idCol].toString() === data.id.toString()) {
       const statusCol = SCHEMA[data.sheetName].indexOf('Status') + 1;
@@ -179,7 +188,6 @@ function deleteEntry(data) {
   const sheet = SS.getSheetByName(data.sheetName);
   const rows = sheet.getDataRange().getValues();
   const idCol = 0;
-  
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][idCol].toString() === data.id.toString()) {
       sheet.deleteRow(i + 1);

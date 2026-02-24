@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Service layer for interacting with Google Sheets.
- * Optimized with better error handling to prevent "unexpected response" errors.
+ * Optimized with better mapping for Organization/Team features.
  */
 
 export type BloodDrive = {
@@ -168,8 +168,8 @@ export async function getDonors(filters?: { bloodType?: string; district?: strin
     union: d.union || '',
     organization: d.organization || '',
     status: d.status || 'Available',
-    totalDonations: parseInt(d.totaldonations || d.totalDonations || '0'),
-    lastDonationDate: d.lastdonationdate || d.lastDonationDate || 'N/A'
+    totalDonations: isNaN(parseInt(d.totaldonations)) ? 0 : parseInt(d.totaldonations),
+    lastDonationDate: d.lastdonationdate || 'N/A'
   }));
 
   let filtered = normalized;
