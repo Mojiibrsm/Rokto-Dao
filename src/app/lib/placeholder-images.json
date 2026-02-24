@@ -54,6 +54,18 @@
       "description": "Contact Us hero image with founder",
       "imageUrl": "https://image.mojib.me/uploads/General/1771909565_contact%20us%20roktodao.png",
       "imageHint": "contact person"
+    },
+    {
+      "id": "privacy-policy-img",
+      "description": "Privacy Policy Illustration",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771910091_privacy%20policy%20Roktodao.png",
+      "imageHint": "privacy security"
+    },
+    {
+      "id": "terms-conditions-img",
+      "description": "Terms and Conditions Illustration",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771910140_Terms%20RoktoDao.png",
+      "imageHint": "terms agreement"
     }
   ]
 }
