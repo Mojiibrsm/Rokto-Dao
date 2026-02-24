@@ -259,12 +259,12 @@ export default function Home() {
             <div className="relative">
               <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
               <Image 
-                src="https://picsum.photos/seed/benefits/800/600" 
+                src="https://rokto-dao.vercel.app/files/Why_Donate_Blood.jpg" 
                 width={800} 
                 height={600} 
                 alt="Blood donation benefits" 
                 className="rounded-[3rem] shadow-2xl"
-                data-ai-hint="blood donation"
+                data-ai-hint="blood donation benefits"
               />
               <div className="absolute -bottom-8 -right-8 bg-white p-8 rounded-3xl shadow-xl border max-w-[250px] hidden md:block">
                 <p className="text-primary font-black text-4xl mb-1">১টি</p>
