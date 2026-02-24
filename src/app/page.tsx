@@ -200,7 +200,7 @@ export default function Home() {
           <div className="grid gap-8 md:grid-cols-3">
             {[
               { title: "নিবন্ধন", desc: "আপনার সঠিক তথ্য দিয়ে আমাদের জীবন রক্ষাকারী দেশব্যাপী ডেটাবেজে যুক্ত হোন।", icon: Users },
-              { title: "অনুরোধ বা অনুসন্ধান", desc: "জরুরি প্রয়োজনে পোস্ট দিন অথবা সরাসরি নিকটবর্তী দাতার সাথে যোগাযোগ করুন।", icon: Search },
+              { title: "অনুরোধ বা অনুসন্ধান", desc: "জরুরি প্রয়োজনে পোস্ট দিন অথবা সরাসরি দাতার সাথে যোগাযোগ করুন।", icon: Search },
               { title: "জীবন বাঁচান", desc: "হাসপাতালে গিয়ে নিরাপদ রক্তদানের মাধ্যমে একজন মুম্মুর্ষু রোগীর প্রাণ বাঁচান।", icon: Heart }
             ].map((item, idx) => (
               <div key={idx} className="relative p-6 rounded-[2.5rem] border border-muted hover:border-primary/20 transition-all group bg-white shadow-sm hover:shadow-md text-center">
@@ -280,7 +280,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative h-[300px] lg:h-[450px] rounded-[3rem] overflow-hidden shadow-2xl">
-              <Image src="https://image.mojib.me/uploads/General/1771907154_%E0%A6%95%E0%A7%87%E0%A6%A8%20%E0%A6%B0%E0%A6%95%E0%A7%8D%E0%A6%A4%20%E0%A6%A6%E0%A7%87%E0%A6%AC%E0%A7%87%E0%A6%A8.png" fill alt="রক্তদানের স্বাস্থ্য উপকারিতা" className="object-cover" />
+              <Image src={PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || "https://picsum.photos/seed/benefits/800/600"} fill alt="রক্তদানের স্বাস্থ্য উপকারিতা" className="object-cover" data-ai-hint="blood donation benefits" />
             </div>
             <div className="space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold font-headline leading-tight">রক্তদানের <span className="text-primary">স্বাস্থ্য উপকারিতা</span></h2>
@@ -301,9 +301,47 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <Button size="lg" className="rounded-full px-10 h-12 text-lg font-bold bg-primary" asChild>
+              <Button size="lg" className="rounded-full px-10 h-12 text-lg font-bold bg-primary shadow-lg shadow-primary/20" asChild>
                 <NextLink href="/register">রক্তদাতা হতে চাই</NextLink>
               </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Eligibility Quiz Banner (Improved based on screenshot) */}
+      <section className="container mx-auto px-4 py-8">
+        <div className="bg-slate-950 rounded-[3rem] p-8 md:p-16 overflow-hidden relative group border border-white/5">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4"></div>
+          
+          <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
+            <div className="space-y-8 text-center md:text-left">
+              <h2 className="text-3xl md:text-5xl font-black font-headline text-white leading-[1.1]">
+                আপনি কি আজ রক্তদান করতে পারবেন?
+              </h2>
+              <p className="text-xl text-slate-400 max-w-lg leading-relaxed font-medium">
+                আমাদের AI ভিত্তিক কুইজের মাধ্যমে মাত্র ১ মিনিটে আপনার শারীরিক যোগ্যতা যাচাই করুন।
+              </p>
+              <Button size="lg" className="bg-primary hover:bg-primary/90 h-16 px-10 rounded-full text-xl font-bold gap-3 group shadow-2xl shadow-primary/30 transition-all active:scale-95" asChild>
+                <NextLink href="/eligibility">
+                  আমার যোগ্যতা যাচাই করুন <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform" />
+                </NextLink>
+              </Button>
+            </div>
+            
+            <div className="relative flex justify-center md:justify-end">
+              <div className="relative w-full max-w-[380px] aspect-[3/4] rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-[6px] border-white/5 group-hover:scale-[1.03] transition-transform duration-700 ease-out">
+                <Image 
+                  src={PlaceHolderImages.find(img => img.id === 'can-you-donate')?.imageUrl || "https://picsum.photos/seed/eligibility/600/800"} 
+                  fill 
+                  alt="Can You Donate Blood Today?" 
+                  className="object-cover"
+                  data-ai-hint="blood donor"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -392,13 +430,13 @@ export default function Home() {
               </div>
             </div>
             <div className="relative h-[400px] hidden lg:block drop-shadow-2xl">
-              <Image src="https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png" fill alt="App Preview" className="object-contain" />
+              <Image src={PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || "https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png"} fill alt="App Preview" className="object-contain" data-ai-hint="mobile app" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ & CTA Section */}
+      {/* FAQ Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-12">
