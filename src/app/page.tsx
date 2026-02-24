@@ -16,14 +16,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getBloodRequests, type BloodRequest } from '@/lib/sheets';
+import { getBloodRequests, getDonors, type BloodRequest, type Donor } from '@/lib/sheets';
 import { DISTRICTS } from '@/lib/bangladesh-data';
 import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
+  const [donors, setDonors] = useState<Donor[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
+  const [loadingDonors, setLoadingDonors] = useState(true);
   const [selectedBloodType, setSelectedBloodType] = useState<string>('যেকোনো গ্রুপ');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('যেকোনো জেলা');
   const router = useRouter();
@@ -31,13 +33,19 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       setLoadingRequests(true);
+      setLoadingDonors(true);
       try {
-        const data = await getBloodRequests();
-        setRequests(data.slice(0, 4)); // Show only latest 4 on home
+        const [requestsData, donorsData] = await Promise.all([
+          getBloodRequests(),
+          getDonors()
+        ]);
+        setRequests(requestsData.slice(0, 4)); // Show only latest 4 requests
+        setDonors(donorsData.slice(0, 6)); // Show only latest 6 donors
       } catch (error) {
         console.error(error);
       } finally {
         setLoadingRequests(false);
+        setLoadingDonors(false);
       }
     }
     loadData();
@@ -157,8 +165,69 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 4. কিভাবে কাজ করে */}
-      <section className="bg-white py-24">
+      {/* 4. আমাদের রক্তযোদ্ধারা (New Section) */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-headline">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
+            <p className="text-xl text-muted-foreground font-medium italic">"Our active and available donors"</p>
+            <div className="h-1.5 w-24 bg-primary mx-auto rounded-full"></div>
+          </div>
+
+          {loadingDonors ? (
+            <div className="flex justify-center py-12"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
+          ) : (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
+              {donors.map((donor, idx) => (
+                <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-[2.5rem] group border-t-4 border-t-primary/20 bg-muted/5">
+                  <CardHeader className="bg-primary/5 pb-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-primary/20">
+                          {(donor.fullName || 'D').substring(0, 1)}
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl">{donor.fullName}</CardTitle>
+                          <CardDescription className="flex items-center gap-1 mt-0.5 text-xs">
+                            <MapPin className="h-3 w-3" /> {donor.district}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge className="bg-primary text-white text-xl font-black h-12 w-12 flex items-center justify-center p-0 rounded-xl shadow-md">
+                        {donor.bloodType}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-center gap-2 text-green-600 font-bold text-sm bg-green-50 p-2 rounded-lg border border-green-100 w-fit">
+                      <ShieldCheck className="h-4 w-4" /> ভেরিফাইড রক্তদাতা
+                    </div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" /> {donor.area || 'N/A'}, {donor.district}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="p-0 border-t">
+                    <Button className="w-full h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
+                      <a href={`tel:${donor.phone}`}>
+                        <Phone className="h-5 w-5" /> যোগাযোগ করুন
+                      </a>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+          
+          <div className="text-center">
+            <Button size="lg" variant="outline" className="rounded-full px-10 h-14 text-lg border-primary text-primary hover:bg-primary/5" asChild>
+              <NextLink href="/donors">সব রক্তদাতা দেখুন <ArrowRight className="ml-2 h-5 w-5" /></NextLink>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. কিভাবে কাজ করে */}
+      <section className="bg-muted/10 py-24 border-y">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
             <Badge variant="outline" className="text-primary border-primary">প্রক্রিয়া</Badge>
@@ -186,8 +255,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. জরুরি রক্তের রিকোয়েস্ট */}
-      <section className="bg-muted/20 py-24 border-y">
+      {/* 6. জরুরি রক্তের রিকোয়েস্ট */}
+      <section className="bg-white py-24">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
             <div className="text-center md:text-left">
@@ -210,7 +279,7 @@ export default function Home() {
           ) : (
             <div className="grid gap-8 md:grid-cols-2">
               {requests.map((req) => (
-                <Card key={req.id} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-3xl bg-white group">
+                <Card key={req.id} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-3xl bg-white group border">
                   <div className={`h-2 ${req.isUrgent ? 'bg-primary' : 'bg-slate-800'}`}></div>
                   <CardHeader className="p-8 pb-4">
                     <div className="flex justify-between items-start">
@@ -225,9 +294,6 @@ export default function Home() {
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardDescription className="px-8 flex items-center gap-2 font-medium">
-                    <MapPin className="h-4 w-4 text-primary" /> {req.hospitalName}
-                  </CardDescription>
                   <CardContent className="px-8 pb-8">
                     <div className="flex items-center gap-6 py-4 border-y border-dashed my-4">
                       <div className="text-center">
@@ -261,8 +327,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. রক্তদানের উপকারিতা */}
-      <section className="py-24 bg-white">
+      {/* 7. রক্তদানের উপকারিতা */}
+      <section className="py-24 bg-muted/5">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="relative">
@@ -309,7 +375,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. রক্তদাতার যোগ্যতা কুইজ প্রোমো */}
+      {/* 8. রক্তদাতার যোগ্যতা কুইজ প্রোমো */}
       <section className="bg-slate-900 py-20">
         <div className="container mx-auto px-4">
           <div className="bg-gradient-to-r from-primary to-secondary rounded-[3rem] p-10 md:p-16 text-white text-center md:text-left flex flex-col md:flex-row items-center gap-10">
@@ -339,7 +405,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. রক্তের গ্রুপের সামঞ্জস্যতা টেবিল */}
+      {/* 9. রক্তের গ্রুপের সামঞ্জস্যতা টেবিল */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center mb-16 space-y-4">
@@ -380,7 +446,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. পরিচালকের বার্তা */}
+      {/* 10. পরিচালকের বার্তা */}
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto bg-primary/5 rounded-[3rem] p-8 md:p-16 border border-primary/10 relative">
@@ -411,7 +477,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. সফলতার গল্প (Testimonials) */}
+      {/* 11. সফলতার গল্প (Testimonials) */}
       <section className="py-24 bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
@@ -445,7 +511,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 11. গ্যালারি সেকশন */}
+      {/* 12. গ্যালারি সেকশন */}
       <section className="py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-16">
@@ -475,7 +541,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 12. মোবাইল অ্যাপ প্রোমো */}
+      {/* 13. মোবাইল অ্যাপ প্রোমো */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="bg-slate-900 rounded-[4rem] overflow-hidden flex flex-col lg:flex-row items-center">
@@ -513,7 +579,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 13. স্বেচ্ছাসেবক হওয়ার আহ্বান */}
+      {/* 14. স্বেচ্ছাসেবক হওয়ার আহ্বান */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4 text-center space-y-10">
           <div className="max-w-3xl mx-auto space-y-6">
@@ -529,7 +595,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 14. আমাদের পার্টনার (Trust indicators) */}
+      {/* 15. আমাদের পার্টনার (Trust indicators) */}
       <section className="py-16 bg-muted/20 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-10">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
@@ -541,7 +607,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 15. কেন RoktoDao বেছে নিবেন? */}
+      {/* 16. কেন RoktoDao বেছে নিবেন? */}
       <section className="container mx-auto px-4 py-24">
         <div className="text-center mb-20 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold font-headline">কেন RoktoDao বেছে নিবেন?</h2>
@@ -567,7 +633,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 16. সাধারণ জিজ্ঞাসা (FAQ) */}
+      {/* 17. সাধারণ জিজ্ঞাসা (FAQ) */}
       <section className="container mx-auto px-4 py-24 max-w-5xl">
         <div className="text-center mb-16 space-y-4">
           <Badge className="bg-primary text-white border-none">সহযোগিতা</Badge>
@@ -592,7 +658,7 @@ export default function Home() {
         </Accordion>
       </section>
 
-      {/* 17. নিউজলেটার সাবস্ক্রিপশন */}
+      {/* 18. নিউজলেটার সাবস্ক্রিপশন */}
       <section className="py-24 bg-primary text-white rounded-[4rem] mx-4 mb-24 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -608,7 +674,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 18. ইমার্জেন্সি সাপোর্ট বার */}
+      {/* 19. ইমার্জেন্সি সাপোর্ট বার */}
       <section className="bg-red-50 py-10 border-t">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4 text-center md:text-left">
