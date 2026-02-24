@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function loadRequests() {
@@ -21,6 +23,27 @@ export default function RequestsPage() {
     }
     loadRequests();
   }, []);
+
+  const handleShare = (req: BloodRequest) => {
+    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
+
+🩸 রক্তের গ্রুপ: *${req.bloodType}*
+👤 রোগী: ${req.patientName}
+🏥 হাসপাতাল: ${req.hospitalName}
+📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}
+🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ
+⏰ কখন প্রয়োজন: ${req.neededWhen}
+📞 যোগাযোগ করুন: ${req.phone}
+
+🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।
+🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
+
+    navigator.clipboard.writeText(shareText);
+    toast({
+      title: "কপি হয়েছে!",
+      description: "রক্তের অনুরোধটি শেয়ার করার জন্য কপি করা হয়েছে।",
+    });
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -94,7 +117,7 @@ export default function RequestsPage() {
                     <Phone className="h-5 w-5" /> যোগাযোগ
                   </a>
                 </Button>
-                <Button variant="ghost" className="flex-1 h-14 rounded-none text-lg font-bold gap-3 hover:bg-primary/5">
+                <Button onClick={() => handleShare(req)} variant="ghost" className="flex-1 h-14 rounded-none text-lg font-bold gap-3 hover:bg-primary/5">
                   <Share2 className="h-5 w-5" /> শেয়ার
                 </Button>
               </CardFooter>

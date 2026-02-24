@@ -18,6 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { getBloodRequests, getDonors, type BloodRequest, type Donor } from '@/lib/sheets';
 import { DISTRICTS } from '@/lib/bangladesh-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
@@ -27,6 +28,7 @@ export default function Home() {
   const [selectedBloodType, setSelectedBloodType] = useState<string>('যেকোনো গ্রুপ');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('যেকোনো জেলা');
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function loadData() {
@@ -54,6 +56,27 @@ export default function Home() {
     if (selectedBloodType !== 'যেকোনো গ্রুপ') params.set('bloodType', selectedBloodType);
     if (selectedDistrict !== 'যেকোনো জেলা') params.set('district', selectedDistrict);
     router.push(`/donors?${params.toString()}`);
+  };
+
+  const handleShare = (req: BloodRequest) => {
+    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
+
+🩸 রক্তের গ্রুপ: *${req.bloodType}*
+👤 রোগী: ${req.patientName}
+🏥 হাসপাতাল: ${req.hospitalName}
+📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}
+🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ
+⏰ কখন প্রয়োজন: ${req.neededWhen}
+📞 যোগাযোগ করুন: ${req.phone}
+
+🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।
+🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
+
+    navigator.clipboard.writeText(shareText);
+    toast({
+      title: "কপি হয়েছে!",
+      description: "রক্তের অনুরোধটি শেয়ার করার জন্য কপি করা হয়েছে।",
+    });
   };
 
   const bloodTable = [
@@ -265,7 +288,7 @@ export default function Home() {
                     </div>
                     <div className="flex gap-3">
                       <Button className="flex-1 bg-primary hover:bg-primary/90 rounded-xl h-11 gap-2 text-sm font-bold shadow-lg shadow-primary/10" asChild><a href={`tel:${req.phone}`}><Phone className="h-4 w-4" /> যোগাযোগ</a></Button>
-                      <Button variant="secondary" size="icon" className="h-11 w-11 rounded-xl"><Share2 className="h-4 w-4" /></Button>
+                      <Button onClick={() => handleShare(req)} variant="secondary" size="icon" className="h-11 w-11 rounded-xl"><Share2 className="h-4 w-4" /></Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -309,7 +332,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Eligibility Quiz Banner (Improved based on screenshot) */}
+      {/* Eligibility Quiz Banner */}
       <section className="container mx-auto px-4 py-8">
         <div className="bg-slate-950 rounded-[3rem] p-8 md:p-16 overflow-hidden relative group border border-white/5">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
