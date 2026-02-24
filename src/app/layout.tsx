@@ -88,14 +88,6 @@ export default function RootLayout({
         
         <main className="flex-grow">{children}</main>
 
-        {/* Floating Action Button */}
-        <div className="fixed bottom-6 right-6 z-40">
-           <Link href="/requests/new" className="bg-primary text-white px-6 py-3.5 rounded-full shadow-2xl font-bold hover:bg-primary/90 transition-all flex items-center gap-3 transform hover:scale-105 active:scale-95 group">
-             <Droplet className="h-5 w-5 fill-white group-hover:animate-bounce" />
-             <span className="text-base">রক্তের অনুরোধ</span>
-           </Link>
-        </div>
-
         {/* Footer */}
         <footer className="bg-slate-900 text-white pt-12 pb-8">
           <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
