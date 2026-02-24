@@ -37,23 +37,44 @@ export default function SendNotificationPage() {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Generation Failed",
-        description: "Could not generate notification message."
+        title: "ব্যর্থ হয়েছে",
+        description: "মেসেজ জেনারেট করা সম্ভব হয়নি।"
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
     if (!result) return;
-    navigator.clipboard.writeText(result.message);
-    setCopied(true);
-    toast({
-      title: "Copied!",
-      description: "Notification text copied to clipboard."
-    });
-    setTimeout(() => setCopied(false), 2000);
+    
+    try {
+      // Modern way
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(result.message);
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = result.message;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      
+      setCopied(true);
+      toast({
+        title: "কপি হয়েছে!",
+        description: "মেসেজটি ক্লিপবোর্ডে কপি করা হয়েছে।"
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "ব্যর্থ হয়েছে",
+        description: "দুঃখিত, লেখাটি কপি করা সম্ভব হয়নি।"
+      });
+    }
   };
 
   return (
@@ -62,7 +83,7 @@ export default function SendNotificationPage() {
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin"><ArrowLeft className="h-5 w-5" /></Link>
         </Button>
-        <h1 className="text-3xl font-bold font-headline">Notification Generator</h1>
+        <h1 className="text-3xl font-bold font-headline">নোটিফিকেশন জেনারেটর</h1>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
@@ -70,31 +91,31 @@ export default function SendNotificationPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BellRing className="h-6 w-6 text-primary" />
-              Request Details
+              অনুরোধের বিস্তারিত
             </CardTitle>
             <CardDescription>
-              Fill in the request details to generate a personalized Bengali message.
+              রক্তদাতার জন্য একটি পারসোনালাইজড মেসেজ তৈরি করতে নিচের ফর্মটি পূরণ করুন।
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="donorName">Donor Name (Personalization)</Label>
+                <Label htmlFor="donorName">দাতার নাম (সম্বোধনের জন্য)</Label>
                 <Input 
                   id="donorName" 
                   value={formData.donorName} 
                   onChange={e => setFormData(prev => ({ ...prev, donorName: e.target.value }))}
-                  placeholder="e.g. Akbar Hossain"
+                  placeholder="যেমন: আকবর হোসেন"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Required Blood</Label>
+                  <Label>প্রয়োজনীয় গ্রুপ</Label>
                   <Select onValueChange={val => setFormData(prev => ({ ...prev, bloodType: val }))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select" />
+                      <SelectValue placeholder="সিলেক্ট" />
                     </SelectTrigger>
                     <SelectContent>
                       {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(t => (
@@ -104,41 +125,41 @@ export default function SendNotificationPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="patientName">Patient/Case</Label>
+                  <Label htmlFor="patientName">রোগীর তথ্য/কেস</Label>
                   <Input 
                     id="patientName" 
                     value={formData.patientName} 
                     onChange={e => setFormData(prev => ({ ...prev, patientName: e.target.value }))}
-                    placeholder="e.g. Surgery patient"
+                    placeholder="যেমন: থ্যালাসেমিয়া রোগী"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hospital">Hospital Name</Label>
+                <Label htmlFor="hospital">হাসপাতালের নাম</Label>
                 <Input 
                   id="hospital" 
                   value={formData.hospitalName} 
                   onChange={e => setFormData(prev => ({ ...prev, hospitalName: e.target.value }))}
-                  placeholder="e.g. Dhaka Medical College"
+                  placeholder="যেমন: ঢাকা মেডিকেল কলেজ"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location (Area)</Label>
+                  <Label htmlFor="location">স্থান (এলাকা)</Label>
                   <Input 
                     id="location" 
                     value={formData.location} 
                     onChange={e => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="e.g. Shahbag, Dhaka"
+                    placeholder="যেমন: শাহবাগ, ঢাকা"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contact">Contact Phone</Label>
+                  <Label htmlFor="contact">যোগাযোগের নম্বর</Label>
                   <Input 
                     id="contact" 
                     value={formData.contactPhone} 
@@ -149,15 +170,15 @@ export default function SendNotificationPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-12 text-lg bg-primary" disabled={loading}>
+              <Button type="submit" className="w-full h-12 text-lg bg-primary hover:bg-primary/90" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Generating...
+                    জেনারেট হচ্ছে...
                   </>
                 ) : (
                   <>
-                    Generate Bengali Message <Send className="ml-2 h-4 w-4" />
+                    মেসেজ তৈরি করুন <Send className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -167,9 +188,9 @@ export default function SendNotificationPage() {
 
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Preview Notification</CardTitle>
+            <CardTitle>মেসেজ প্রিভিউ</CardTitle>
             <CardDescription>
-              Copy the generated message to send via SMS or WhatsApp.
+              মেসেজটি কপি করে এসএমএস বা হোয়াটসঅ্যাপে পাঠান।
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col">
@@ -181,23 +202,23 @@ export default function SendNotificationPage() {
                 <Button 
                   size="icon" 
                   variant="secondary" 
-                  className="absolute top-2 right-2"
+                  className="absolute top-2 right-2 bg-primary text-white hover:bg-primary/90 shadow-lg"
                   onClick={copyToClipboard}
                 >
-                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
             ) : (
               <div className="flex-grow flex flex-col items-center justify-center text-center p-12 bg-muted/20 rounded-xl border-2 border-dashed">
                 <BellRing className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-                <p className="text-muted-foreground">Fill the form and click generate to see the message here.</p>
+                <p className="text-muted-foreground">তথ্য পূরণ করে বাটনটি ক্লিক করলে এখানে মেসেজ দেখা যাবে।</p>
               </div>
             )}
           </CardContent>
           {result && (
             <CardFooter>
               <Button className="w-full" variant="outline" onClick={() => setResult(null)}>
-                Clear and New
+                নতুন মেসেজ তৈরি করুন
               </Button>
             </CardFooter>
           )}
