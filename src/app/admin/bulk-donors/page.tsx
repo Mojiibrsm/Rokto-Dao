@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { bulkRegisterDonors } from '@/lib/sheets';
+import { bulkRegisterDonors, getDonors } from '@/lib/sheets';
 import { correctLocations } from '@/ai/flows/location-correction-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Users, FileJson, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -19,8 +19,65 @@ export default function BulkDonorsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
+  const [duplicatesCount, setDuplicatesCount] = useState(0);
   const { toast } = useToast();
   const router = useRouter();
+
+  const normalizeBloodGroup = (text: string) => {
+    const bg = text.toLowerCase();
+    if (bg.includes('a') && bg.includes('positive')) return 'A+';
+    if (bg.includes('a') && bg.includes('negative')) return 'A-';
+    if (bg.includes('b') && bg.includes('positive')) return 'B+';
+    if (bg.includes('b') && bg.includes('negative')) return 'B-';
+    if (bg.includes('o') && bg.includes('positive')) return 'O+';
+    if (bg.includes('o') && bg.includes('negative')) return 'O-';
+    if (bg.includes('ab') && bg.includes('positive')) return 'AB+';
+    if (bg.includes('ab') && bg.includes('negative')) return 'AB-';
+    return text.trim().toUpperCase();
+  };
+
+  const parseInput = (text: string) => {
+    const blocks = text.trim().split(/\n\s*\n/);
+    const parsed: any[] = [];
+
+    // Check if it's the structured format (Name \n Blood Group... \n Mobile...)
+    if (text.includes('Blood Group') && text.includes('Mobile')) {
+      blocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length >= 3) {
+          const donor: any = { fullName: lines[0] };
+          
+          lines.forEach(line => {
+            if (line.includes('Blood Group')) donor.bloodType = normalizeBloodGroup(line.split('Blood Group')[1]);
+            if (line.includes('Mobile')) donor.phone = line.split('Mobile')[1].trim();
+            if (line.includes('District')) {
+              const parts = line.split(/District|PS/i);
+              donor.district = parts[1]?.trim() || '';
+              donor.area = parts[2]?.trim() || ''; // PS is Upozila/Area
+            }
+          });
+
+          if (donor.fullName && donor.phone) parsed.push(donor);
+        }
+      });
+    } else {
+      // Fallback to CSV/Tab format
+      const lines = text.trim().split('\n');
+      lines.forEach(line => {
+        const parts = line.split(/[,\t]/);
+        if (parts.length >= 2) {
+          parsed.push({
+            fullName: parts[0]?.trim() || '',
+            phone: parts[1]?.trim() || '',
+            bloodType: parts[2]?.trim() || '',
+            district: parts[3]?.trim() || '',
+            area: parts[4]?.trim() || '',
+          });
+        }
+      });
+    }
+    return parsed;
+  };
 
   const handleParse = async () => {
     if (inputText.trim() === '') {
@@ -29,32 +86,41 @@ export default function BulkDonorsPage() {
     }
 
     setIsAnalyzing(true);
+    setDuplicatesCount(0);
     try {
-      const lines = inputText.trim().split('\n');
-      const parsed = lines.map(line => {
-        const parts = line.split(/[,\t]/);
-        return {
-          fullName: parts[0]?.trim() || '',
-          phone: parts[1]?.trim() || '',
-          bloodType: parts[2]?.trim() || '',
-          district: parts[3]?.trim() || '',
-          email: parts[4]?.trim() || '',
-        };
-      }).filter(d => d.fullName && d.phone);
+      const parsedData = parseInput(inputText);
 
-      if (parsed.length === 0) {
-        toast({ variant: "destructive", title: "Parsing failed", description: "Format: Name, Phone, BloodType, District" });
+      if (parsedData.length === 0) {
+        toast({ variant: "destructive", title: "Parsing failed", description: "Check input format." });
         setIsAnalyzing(false);
         return;
       }
 
-      // AI Correction Step
-      const uniqueRawDistricts = Array.from(new Set(parsed.map(d => d.district).filter(Boolean)));
+      // Check for duplicates from existing database
+      const existingDonors = await getDonors();
+      const uniqueNewData: any[] = [];
+      let dupes = 0;
+
+      parsedData.forEach(newDonor => {
+        const isDuplicate = existingDonors.some(
+          ext => ext.fullName.toLowerCase() === newDonor.fullName.toLowerCase() && 
+                 ext.phone.replace(/\s/g, '') === newDonor.phone.replace(/\s/g, '')
+        );
+        if (isDuplicate) {
+          dupes++;
+        } else {
+          uniqueNewData.push(newDonor);
+        }
+      });
+
+      setDuplicatesCount(dupes);
+
+      // AI Correction Step for locations
+      const uniqueRawDistricts = Array.from(new Set(uniqueNewData.map(d => d.district).filter(Boolean)));
       if (uniqueRawDistricts.length > 0) {
         const { corrections } = await correctLocations({ rawLocations: uniqueRawDistricts });
         
-        // Apply corrections to the parsed data
-        const correctedData = parsed.map(donor => {
+        const correctedData = uniqueNewData.map(donor => {
           const match = corrections.find(c => c.original === donor.district);
           return {
             ...donor,
@@ -64,12 +130,12 @@ export default function BulkDonorsPage() {
         });
         setPreview(correctedData);
       } else {
-        setPreview(parsed);
+        setPreview(uniqueNewData);
       }
 
       toast({
         title: "Analysis Complete",
-        description: `Successfully parsed ${parsed.length} records. AI standardizing locations.`,
+        description: `Parsed ${parsedData.length} records. Found ${dupes} duplicates.`,
       });
     } catch (e) {
       toast({ variant: "destructive", title: "Analysis error", description: "Could not process data." });
@@ -87,7 +153,7 @@ export default function BulkDonorsPage() {
       if (result.success) {
         toast({
           title: "Import Successful!",
-          description: `${result.count} donors have been added.`,
+          description: `${result.count} new donors added.`,
         });
         router.push('/admin');
       }
@@ -104,7 +170,7 @@ export default function BulkDonorsPage() {
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin"><ArrowLeft className="h-5 w-5" /></Link>
         </Button>
-        <h1 className="text-3xl font-bold font-headline">Bulk Donor Import</h1>
+        <h1 className="text-3xl font-bold font-headline">Smart Bulk Import</h1>
       </div>
 
       <div className="grid gap-8">
@@ -115,32 +181,35 @@ export default function BulkDonorsPage() {
                 <Users className="h-8 w-8" />
               </div>
               <div>
-                <CardTitle>Batch Donor Upload</CardTitle>
+                <CardTitle>Intelligent Import</CardTitle>
                 <CardDescription>
-                  Paste list from Excel or Sheets. 
+                  Supports multi-line, CSV, or Tab formats. 
                   <span className="text-primary font-bold ml-1 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" /> AI will auto-correct district names.
+                    <ShieldCheck className="h-3 w-3" /> Duplicate protection active.
                   </span>
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-8 space-y-6">
-            <Alert className="bg-blue-50 border-blue-200">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-800 font-bold">Format Guide:</AlertTitle>
-              <AlertDescription className="text-blue-700">
-                Name, Phone, Blood, District (e.g. Alex, 01711223344, A+, Dhaka)<br />
-                <span className="text-xs italic">*AI can handle English or misspelled districts like 'Daka' or 'Sylet'.</span>
+            <Alert className="bg-amber-50 border-amber-200">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800 font-bold">New Format Supported!</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                You can now paste blocks like: <br />
+                <strong>Name</strong> <br />
+                <strong>Blood Group B Positive</strong> <br />
+                <strong>Mobile 01XXXXXXXXX</strong> <br />
+                <strong>District Coxbazar PS Maheshkhali</strong>
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="bulkData">Donor List (CSV or Tab separated)</Label>
+              <Label htmlFor="bulkData">Donor Data Area</Label>
               <Textarea 
                 id="bulkData" 
-                placeholder="Name, Phone, Blood, District..." 
-                className="min-h-[250px] font-mono text-sm rounded-2xl bg-muted/20 focus:bg-white transition-colors"
+                placeholder="Paste donor info here..." 
+                className="min-h-[300px] font-mono text-sm rounded-2xl bg-muted/20 focus:bg-white transition-colors"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
               />
@@ -152,23 +221,33 @@ export default function BulkDonorsPage() {
               className="w-full h-14 bg-purple-600 hover:bg-purple-700 rounded-xl font-bold text-lg gap-2"
             >
               {isAnalyzing ? (
-                <><Loader2 className="h-5 w-5 animate-spin" /> AI Analyzing Data...</>
+                <><Loader2 className="h-5 w-5 animate-spin" /> AI Processing & De-duplicating...</>
               ) : (
-                <><Wand2 className="h-5 w-5" /> Analyze & AI Correct Data</>
+                <><Wand2 className="h-5 w-5" /> Analyze Data</>
               )}
             </Button>
           </CardContent>
         </Card>
 
+        {duplicatesCount > 0 && (
+          <Alert variant="destructive" className="bg-red-50 border-red-200">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Duplicate Detection</AlertTitle>
+            <AlertDescription>
+              We found <strong>{duplicatesCount}</strong> records that already exist in your system. These have been automatically excluded from the import list to keep your data clean.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {preview.length > 0 && (
           <Card className="border-green-200 shadow-lg animate-in fade-in slide-in-from-bottom-4">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
-                <CardTitle className="text-lg">Preview & Verification</CardTitle>
-                <CardDescription>Found {preview.length} valid entries. Check AI corrections below.</CardDescription>
+                <CardTitle className="text-lg">Clean Data Preview</CardTitle>
+                <CardDescription>Ready to import {preview.length} unique records.</CardDescription>
               </div>
               <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">
-                Ready to Import
+                Verified Data
               </Badge>
             </CardHeader>
             <CardContent>
@@ -179,31 +258,34 @@ export default function BulkDonorsPage() {
                       <th className="px-4 py-2 text-left">Name</th>
                       <th className="px-4 py-2 text-left">Phone</th>
                       <th className="px-4 py-2 text-left">Blood</th>
-                      <th className="px-4 py-2 text-left">District (AI Standardized)</th>
+                      <th className="px-4 py-2 text-left">Location (District & Area)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {preview.slice(0, 15).map((d, i) => (
+                    {preview.slice(0, 20).map((d, i) => (
                       <tr key={i} className={d.wasCorrected ? "bg-amber-50/30" : ""}>
                         <td className="px-4 py-2 font-medium">{d.fullName}</td>
                         <td className="px-4 py-2 font-mono text-xs">{d.phone}</td>
                         <td className="px-4 py-2 font-bold text-primary">{d.bloodType}</td>
                         <td className="px-4 py-2">
-                          <div className="flex items-center gap-2">
-                            {d.district}
-                            {d.wasCorrected && (
-                              <Badge variant="outline" className="h-5 text-[10px] bg-amber-50 text-amber-700 border-amber-200 py-0 px-1">
-                                <Sparkles className="h-2 w-2 mr-1" /> Corrected
-                              </Badge>
-                            )}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              {d.district}
+                              {d.wasCorrected && (
+                                <Badge variant="outline" className="h-4 text-[9px] bg-amber-50 text-amber-700 border-amber-200 py-0 px-1">
+                                  <Sparkles className="h-2 w-2 mr-1" /> AI Corrected
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">{d.area || 'N/A'}</span>
                           </div>
                         </td>
                       </tr>
                     ))}
-                    {preview.length > 15 && (
+                    {preview.length > 20 && (
                       <tr className="bg-muted/30">
                         <td colSpan={4} className="px-4 py-2 text-center italic text-muted-foreground">
-                          ... and {preview.length - 15} more rows.
+                          ... and {preview.length - 20} more records.
                         </td>
                       </tr>
                     )}
@@ -216,10 +298,10 @@ export default function BulkDonorsPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                    Saving to Google Sheets...
+                    Updating Google Sheets...
                   </>
                 ) : (
-                  <>Start Bulk Import <CheckCircle2 className="ml-2 h-6 w-6" /></>
+                  <>Complete Import <CheckCircle2 className="ml-2 h-6 w-6" /></>
                 )}
               </Button>
             </CardFooter>
