@@ -147,6 +147,11 @@ export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
   );
 }
 
+export async function createBloodDrive(data: Omit<BloodDrive, 'id'>) {
+  const id = Math.random().toString(36).substring(7);
+  return postToSheets({ action: 'createDrive', id, ...data }); // Note: Ensure Apps Script handle 'createDrive'
+}
+
 export async function getDonors(filters?: { bloodType?: string; district?: string; area?: string; union?: string }): Promise<Donor[]> {
   const data = await fetchFromSheets('getDonors');
   if (!Array.isArray(data)) return [];
