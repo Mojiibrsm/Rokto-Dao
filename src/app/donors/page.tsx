@@ -7,7 +7,7 @@ import { getDonors, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
@@ -86,9 +86,25 @@ function DonorsContent() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <div className="text-center mb-12 space-y-4">
-        <h1 className="text-4xl font-bold font-headline text-primary">রক্তদাতা অনুসন্ধান করুন</h1>
-        <p className="text-muted-foreground text-lg">আপনার এলাকায় জরুরি প্রয়োজনে রক্তদাতা খুঁজে নিন।</p>
+      {/* New Hero Section */}
+      <div className="text-center mb-16 space-y-6">
+        <div className="flex justify-center mb-4">
+          <Badge className="bg-primary/10 text-primary border-primary/20 px-6 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold">
+            <Heart className="h-4 w-4 fill-primary" /> মানবতার সেবায় নিয়োজিত
+          </Badge>
+        </div>
+        <h1 className="text-4xl md:text-6xl font-black font-headline tracking-tight text-foreground">
+          আমাদের <span className="text-primary">রক্তযোদ্ধারা</span>
+        </h1>
+        <div className="space-y-2">
+          <p className="text-xl md:text-2xl text-muted-foreground font-medium italic">
+            "Our active and available donors"
+          </p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            আপনার এলাকায় জরুরি প্রয়োজনে রক্তদাতা খুঁজে নিন। আমরা গর্বিত আমাদের এই নিঃস্বার্থ স্বেচ্ছাসেবকদের জন্য।
+          </p>
+        </div>
+        <div className="h-1.5 w-24 bg-primary mx-auto rounded-full mt-6"></div>
       </div>
 
       <Card className="mb-12 shadow-xl border-t-4 border-t-primary rounded-[2.5rem] p-8 bg-white/80 backdrop-blur">
