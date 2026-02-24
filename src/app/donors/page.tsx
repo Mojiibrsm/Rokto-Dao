@@ -12,7 +12,6 @@ import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
 function DonorsContent() {
   const [donors, setDonors] = useState<Donor[]>([]);
-  const [organizations, setOrganizations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [upazilas, setUpazilas] = useState<string[]>([]);
   const [unions, setUnions] = useState<string[]>([]);
@@ -22,32 +21,19 @@ function DonorsContent() {
     bloodType: 'যেকোনো গ্রুপ',
     district: 'যেকোনো জেলা',
     area: 'যেকোনো উপজেলা',
-    union: 'যেকোনো ইউনিয়ন',
-    organization: 'যেকোনো সংগঠন'
+    union: 'যেকোনো ইউনিয়ন'
   });
-
-  // Load initial data and extract unique organizations
-  useEffect(() => {
-    async function loadInitial() {
-      const allDonors = await getDonors();
-      const uniqueOrgs = Array.from(new Set(allDonors.map(d => d.organization).filter(Boolean))) as string[];
-      setOrganizations(uniqueOrgs.sort((a, b) => a.localeCompare(b, 'bn')));
-    }
-    loadInitial();
-  }, []);
 
   // Initialize filters from search parameters
   useEffect(() => {
     const bloodType = searchParams.get('bloodType');
     const district = searchParams.get('district');
-    const organization = searchParams.get('organization');
     
-    if (bloodType || district || organization) {
+    if (bloodType || district) {
       setFilters(prev => ({
         ...prev,
         bloodType: bloodType || 'যেকোনো গ্রুপ',
-        district: district || 'যেকোনো জেলা',
-        organization: organization || 'যেকোনো সংগঠন'
+        district: district || 'যেকোনো জেলা'
       }));
     }
   }, [searchParams]);
@@ -77,8 +63,7 @@ function DonorsContent() {
         bloodType: filters.bloodType === 'যেকোনো গ্রুপ' ? undefined : filters.bloodType,
         district: filters.district === 'যেকোনো জেলা' ? undefined : filters.district,
         area: filters.area === 'যেকোনো উপজেলা' ? undefined : filters.area,
-        union: filters.union === 'যেকোনো ইউনিয়ন' ? undefined : filters.union,
-        organization: filters.organization === 'যেকোনো সংগঠন' ? undefined : filters.organization
+        union: filters.union === 'যেকোনো ইউনিয়ন' ? undefined : filters.union
       } as any);
       setDonors(data);
     } catch (error) {
@@ -90,7 +75,7 @@ function DonorsContent() {
 
   useEffect(() => {
     loadDonorsData();
-  }, [filters.bloodType, filters.district, filters.organization]);
+  }, [filters.bloodType, filters.district]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,23 +135,6 @@ function DonorsContent() {
                 <SelectItem value="যেকোনো জেলা">যেকোনো জেলা</SelectItem>
                 {DISTRICTS.map(d => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
-              <Users className="h-3 w-3 text-primary" /> সংগঠন বা টিম
-            </label>
-            <Select value={filters.organization} onValueChange={(val) => setFilters(f => ({ ...f, organization: val }))}>
-              <SelectTrigger className="h-12 border-2">
-                <SelectValue placeholder="যেকোনো সংগঠন" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="যেকোনো সংগঠন">যেকোনো সংগঠন</SelectItem>
-                {organizations.map(org => (
-                  <SelectItem key={org} value={org}>{org}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

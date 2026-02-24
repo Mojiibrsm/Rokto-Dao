@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { useToast } from '@/hooks/use-toast';
+import { normalizePhone } from '@/lib/utils';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -55,16 +56,14 @@ export default function DashboardPage() {
 
         const allDonors = await getDonors();
         
-        // Robust matching logic for Dashboard load
+        // Robust matching logic for Dashboard load with numeral support
+        const userNormalizedPhone = normalizePhone(user.phone);
+        
         const currentDonor = allDonors.find(d => {
-          if (user.email && d.email === user.email) return true;
+          if (user.email && d.email?.toLowerCase() === user.email.toLowerCase()) return true;
           
-          const userPhoneClean = String(user.phone || '').replace(/\D/g, '');
-          const dbPhoneClean = String(d.phone || '').replace(/\D/g, '');
-          
-          if (userPhoneClean === dbPhoneClean) return true;
-          if (userPhoneClean.startsWith('0') && userPhoneClean.substring(1) === dbPhoneClean) return true;
-          if (dbPhoneClean.startsWith('0') && dbPhoneClean.substring(1) === userPhoneClean) return true;
+          const dbNormalizedPhone = normalizePhone(d.phone);
+          if (userNormalizedPhone && dbNormalizedPhone && userNormalizedPhone === dbNormalizedPhone) return true;
           
           return false;
         });

@@ -10,6 +10,7 @@ import { Droplet, Loader2, ArrowRight, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { getDonors } from '@/lib/sheets';
+import { normalizePhone } from '@/lib/utils';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState(''); // Can be email or phone
@@ -22,25 +23,16 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const donors = await getDonors();
+      const inputIdentifier = identifier.trim().toLowerCase();
+      const inputNormalizedPhone = normalizePhone(identifier);
       
       const user = donors.find((d: any) => {
         // Normalize email check
-        if (d.email?.toLowerCase() === identifier.toLowerCase()) return true;
+        if (d.email?.toLowerCase() === inputIdentifier) return true;
         
-        // Robust phone number check (handling missing leading zero in DB)
-        const inputPhone = identifier.replace(/\D/g, ''); // Remove non-digits
-        const dbPhone = String(d.phone || '').replace(/\D/g, '');
-        
-        if (!inputPhone || !dbPhone) return false;
-
-        // Case 1: Exact match
-        if (inputPhone === dbPhone) return true;
-        
-        // Case 2: Input has leading zero, DB doesn't (e.g. 018... vs 18...)
-        if (inputPhone.startsWith('0') && inputPhone.substring(1) === dbPhone) return true;
-        
-        // Case 3: DB has leading zero, Input doesn't (e.g. 18... vs 018...)
-        if (dbPhone.startsWith('0') && dbPhone.substring(1) === inputPhone) return true;
+        // Robust phone matching with support for Bengali numerals and missing zeros
+        const dbNormalizedPhone = normalizePhone(d.phone);
+        if (inputNormalizedPhone && dbNormalizedPhone && inputNormalizedPhone === dbNormalizedPhone) return true;
 
         return false;
       });
@@ -95,7 +87,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Input 
                   id="identifier" 
-                  placeholder="01XXXXXXXXX / example@mail.com" 
+                  placeholder="01XXXXXXXXX / ০১৭XXXXXXXX" 
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="pl-10"
