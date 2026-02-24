@@ -7,8 +7,9 @@ import { parseDonorData } from '@/ai/flows/donor-data-parser-flow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database, MapPin } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database, MapPin, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default function BulkDonorsPage() {
   const [inputText, setInputText] = useState('');
+  const [globalOrg, setGlobalOrg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
@@ -67,7 +69,11 @@ export default function BulkDonorsPage() {
         if (isDuplicate) {
           dupes++;
         } else {
-          uniqueNewData.push(newDonor);
+          // Apply global organization if provided, otherwise keep parsed one
+          uniqueNewData.push({
+            ...newDonor,
+            organization: globalOrg.trim() || newDonor.organization || ''
+          });
         }
       });
 
@@ -130,20 +136,38 @@ export default function BulkDonorsPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-8 px-10 space-y-6">
+          <CardContent className="pt-8 px-10 space-y-8">
             <Alert className="bg-blue-50 border-blue-200 rounded-2xl">
               <Info className="h-5 w-5 text-blue-600" />
               <AlertTitle className="text-blue-800 font-bold mb-1">স্মার্ট ইনপুট সাপোর্ট!</AlertTitle>
               <AlertDescription className="text-blue-700">
-                AI স্বয়ংক্রিয়ভাবে সংগঠন বা টিমের নাম (যেমন: Sandhani, Red Crescent) এবং উপজেলা খুঁজে নেবে এবং বাংলায় রূপান্তর করবে।
+                AI স্বয়ংক্রিয়ভাবে সংগঠন বা টিমের নাম এবং উপজেলা খুঁজে নেবে এবং বাংলায় রূপান্তর করবে।
               </AlertDescription>
             </Alert>
 
+            {/* Global Organization Field */}
+            <div className="space-y-3 p-6 bg-primary/5 rounded-3xl border border-primary/10">
+              <div className="flex items-center gap-2 mb-1">
+                <Building2 className="h-5 w-5 text-primary" />
+                <Label htmlFor="globalOrg" className="text-lg font-bold">সংগঠন বা টিমের নাম (ঐচ্ছিক)</Label>
+              </div>
+              <Input 
+                id="globalOrg"
+                placeholder="যেমন: Sandhani / Red Crescent (সবাই এই টিমে যুক্ত হবে)" 
+                className="h-14 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg"
+                value={globalOrg}
+                onChange={e => setGlobalOrg(e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground italic">
+                * যদি সবার জন্য একই সংগঠনের নাম দিতে চান তবে এখানে লিখুন। এটি টেক্সটে থাকা নামকে ওভাররাইড করবে।
+              </p>
+            </div>
+
             <div className="space-y-3">
-              <Label htmlFor="bulkData" className="text-lg font-bold">ইনপুট এরিয়া</Label>
+              <Label htmlFor="bulkData" className="text-lg font-bold">রক্তদাতার ডাটা ইনপুট দিন</Label>
               <Textarea 
                 id="bulkData" 
-                placeholder="যেমন: Faisal, B+, 01815... Coxbazar PS Maheshkhali, Org: Sandhani" 
+                placeholder="যেমন: Faisal, B+, 01815... Coxbazar PS Maheshkhali" 
                 className="min-h-[350px] font-mono text-base rounded-3xl bg-muted/20 focus:bg-white transition-all p-6 border-2 focus:border-primary"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
