@@ -72,6 +72,24 @@
       "description": "RoktoDao Mobile App coming soon",
       "imageUrl": "https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png",
       "imageHint": "mobile app"
+    },
+    {
+      "id": "blog-thumb-1",
+      "description": "Blood donation awareness article",
+      "imageUrl": "https://picsum.photos/seed/blog1/800/500",
+      "imageHint": "blood health"
+    },
+    {
+      "id": "blog-thumb-2",
+      "description": "How to prepare for donation",
+      "imageUrl": "https://picsum.photos/seed/blog2/800/500",
+      "imageHint": "medical preparation"
+    },
+    {
+      "id": "team-member-placeholder",
+      "description": "Team member placeholder",
+      "imageUrl": "https://picsum.photos/seed/team/400/400",
+      "imageHint": "professional person"
     }
   ]
 }

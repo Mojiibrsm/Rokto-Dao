@@ -26,7 +26,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased min-h-screen bg-background flex flex-col">
+      <body className="font-body antialiased min-h-screen bg-background flex flex-col" suppressHydrationWarning>
         <Navigation />
         
         <main className="flex-grow">{children}</main>
@@ -67,6 +67,7 @@ export default function RootLayout({
               <h3 className="text-xl font-bold border-b border-slate-700 pb-3">সম্পর্কে</h3>
               <ul className="space-y-3 text-slate-400">
                 <li><Link href="/about" className="hover:text-primary transition-colors">আমাদের সম্পর্কে</Link></li>
+                <li><Link href="/team" className="hover:text-primary transition-colors">আমাদের টিম</Link></li>
                 <li><Link href="/contact" className="hover:text-primary transition-colors">যোগাযোগ</Link></li>
                 <li><Link href="/faq" className="hover:text-primary transition-colors">সাধারণ জিজ্ঞাসা</Link></li>
               </ul>
