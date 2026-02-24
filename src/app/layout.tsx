@@ -1,23 +1,63 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/toaster';
 import { Droplet } from 'lucide-react';
 import Link from 'next/link';
+import { FooterYear } from '@/components/footer-year';
+
+export const viewport: Viewport = {
+  themeColor: '#d31d2a',
+  width: 'device-width',
+  initialScale: 1,
+};
+
+export const metadata: Metadata = {
+  title: {
+    default: 'রক্তদাও - RoktoDao | বাংলাদেশে রক্তদাতা খুঁজুন ও জীবন বাঁচান',
+    template: '%s | RoktoDao'
+  },
+  description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন এবং নিজে রক্তদাতার তালিকায় নাম নিবন্ধন করে জীবন বাঁচাতে পারেন।',
+  keywords: ['রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান', 'Blood Donation Bangladesh', 'Find Blood Donor', 'Emergency Blood', 'রক্তদান অ্যাপ', 'জীবন বাঁচান', 'ব্লাড ডোনার'],
+  authors: [{ name: 'RoktoDao Team' }],
+  creator: 'RoktoDao',
+  publisher: 'RoktoDao',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: 'রক্তদাও - RoktoDao | মানবতার সেবায় নিয়োজিত',
+    description: 'জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে এবং স্বেচ্ছায় রক্তদানে উৎসাহিত করতে আমাদের সাথে যুক্ত হোন।',
+    url: 'https://roktodao.com',
+    siteName: 'RoktoDao',
+    locale: 'bn_BD',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'রক্তদাও - RoktoDao',
+    description: 'বাংলাদেশে জরুরি রক্তদাতা খোঁজার সহজ মাধ্যম।',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [currentYear, setCurrentYear] = useState<number | null>(null);
-
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
-  }, []);
-
   return (
     <html lang="bn" suppressHydrationWarning>
       <head>
@@ -38,7 +78,7 @@ export default function RootLayout({
            </Link>
         </div>
 
-        {/* 12. Footer */}
+        {/* Footer */}
         <footer className="bg-slate-900 text-white pt-12 pb-8">
           <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="space-y-4">
@@ -47,7 +87,7 @@ export default function RootLayout({
                 <span className="tracking-tight font-headline">RoktoDao</span>
               </Link>
               <p className="text-slate-400 text-base">
-                A mission to connect blood donors with recipients.
+                Connecting blood donors with recipients across Bangladesh.
               </p>
               <div className="text-xl font-bold text-primary">+880 123 456 7890</div>
             </div>
@@ -81,7 +121,7 @@ export default function RootLayout({
             </div>
           </div>
           <div className="container mx-auto px-4 mt-10 pt-6 border-t border-slate-800 text-center text-slate-500 text-xs">
-            <p>© {currentYear ?? ''} RoktoDao. সর্বস্বত্ব সংরক্ষিত।</p>
+            <FooterYear />
           </div>
         </footer>
 

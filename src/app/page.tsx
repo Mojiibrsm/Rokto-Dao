@@ -69,16 +69,22 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
+      {/* SEO Headline Section */}
+      <section className="sr-only">
+        <h1>রক্তদাও - বাংলাদেশের অনলাইন রক্তদাতা খুঁজে পাওয়ার সহজ প্ল্যাটফর্ম</h1>
+        <p>জরুরি মুহূর্তে রক্তদাতা খুঁজুন অথবা নিজে একজন দাতা হিসেবে নিবন্ধন করে মানবতার সেবা করুন। RoktoDao বাংলাদেশে বিনামূল্যে রক্তদাতা এবং গ্রহীতাদের মধ্যে সংযোগ স্থাপন করে।</p>
+      </section>
+
       {/* 1. হিরো সেকশন */}
-      <section className="relative w-full py-12 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden">
+      <section className="relative w-full py-10 md:py-16 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-50"></div>
         
         <div className="container mx-auto relative z-10 max-w-5xl space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-1000">
           <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
             <Droplet className="h-10 w-10 md:h-14 md:w-14 text-primary fill-primary drop-shadow-xl" />
-            <h1 className="text-3xl md:text-[56px] font-black tracking-tight text-primary font-headline leading-tight">
+            <h2 className="text-3xl md:text-[56px] font-black tracking-tight text-primary font-headline leading-tight">
               “আপনার রক্তে বাঁচবে অন্যের স্বপ্ন!”
-            </h1>
+            </h2>
           </div>
           
           <p className="text-lg md:text-[20px] text-muted-foreground/80 max-w-4xl mx-auto leading-relaxed font-medium">
@@ -108,7 +114,7 @@ export default function Home() {
           </div>
 
           {/* ছোট্ট সার্চ বার */}
-          <div className="max-w-2xl mx-auto pt-6 animate-in fade-in slide-in-from-bottom-5 delay-500 duration-1000">
+          <div className="max-w-2xl mx-auto pt-4 animate-in fade-in slide-in-from-bottom-5 delay-500 duration-1000">
             <div className="bg-white/80 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-primary/5 flex flex-col md:flex-row gap-2">
               <div className="flex-1">
                 <Select value={selectedBloodType} onValueChange={setSelectedBloodType}>
@@ -156,7 +162,7 @@ export default function Home() {
       </section>
 
       {/* 2. পরিসংখ্যান সেকশন */}
-      <section className="bg-white py-8 border-b">
+      <section className="bg-white py-6 border-b">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
@@ -165,7 +171,7 @@ export default function Home() {
               { val: "১২,৫০০+", label: "সফল রক্তদান", icon: Heart, color: "text-red-500" },
               { val: "৬৪", label: "জেলায় কার্যক্রম", icon: Globe, color: "text-green-600" }
             ].map((stat, i) => (
-              <div key={i} className="flex flex-col items-center text-center p-3 rounded-2xl hover:bg-muted/30 transition-colors">
+              <div key={i} className="flex flex-col items-center text-center p-2 rounded-2xl hover:bg-muted/30 transition-colors">
                 <div className={`h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-2 ${stat.color}`}>
                   <stat.icon className="h-5 w-5" />
                 </div>
@@ -178,9 +184,9 @@ export default function Home() {
       </section>
 
       {/* 4. আমাদের রক্তযোদ্ধারা */}
-      <section className="py-12 bg-white">
+      <section className="py-10 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8 space-y-1">
+          <div className="text-center mb-6 space-y-1">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
             <p className="text-lg text-muted-foreground font-medium italic">"Our active and available donors"</p>
             <div className="h-1 w-16 bg-primary mx-auto rounded-full mt-3"></div>
@@ -189,7 +195,7 @@ export default function Home() {
           {loadingDonors ? (
             <div className="flex justify-center py-8"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
               {donors.map((donor, idx) => (
                 <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-[2rem] group border-t-4 border-t-primary/20 bg-muted/5">
                   <CardHeader className="bg-primary/5 pb-4">
@@ -251,9 +257,9 @@ export default function Home() {
       </section>
 
       {/* 5. কাজের প্রক্রিয়া */}
-      <section className="bg-muted/10 py-12 border-y">
+      <section className="bg-muted/10 py-10 border-y">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10 space-y-1">
+          <div className="text-center mb-8 space-y-1">
             <Badge variant="outline" className="text-primary border-primary">প্রক্রিয়া</Badge>
             <h2 className="text-3xl md:text-4xl font-bold font-headline">রক্তদান প্রক্রিয়া মাত্র ৩ ধাপে</h2>
             <div className="h-1 w-16 bg-primary mx-auto rounded-full mt-3"></div>
@@ -280,9 +286,9 @@ export default function Home() {
       </section>
 
       {/* 6. সরাসরি অনুরোধসমূহ */}
-      <section className="bg-white py-12">
+      <section className="bg-white py-10">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div className="text-center md:text-left">
               <h2 className="text-3xl font-bold font-headline flex items-center gap-3 justify-center md:justify-start">
                 <span className="relative flex h-3 w-3">
@@ -352,14 +358,14 @@ export default function Home() {
       </section>
 
       {/* 7. কেন রক্ত দেবেন? */}
-      <section className="py-12 bg-primary/5 overflow-hidden">
+      <section className="py-10 bg-primary/5 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative h-[350px] lg:h-[500px] rounded-[3rem] overflow-hidden shadow-2xl">
               <Image 
                 src={PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || 'https://picsum.photos/seed/benefits/800/800'} 
                 fill 
-                alt="Blood donation benefits" 
+                alt="রক্তদানের স্বাস্থ্য উপকারিতা - RoktoDao" 
                 className="object-cover"
                 data-ai-hint="blood donation benefits"
               />
@@ -402,7 +408,7 @@ export default function Home() {
       </section>
 
       {/* 8. AI Eligibility CTA */}
-      <section className="py-12 bg-white">
+      <section className="py-10 bg-white">
         <div className="container mx-auto px-4">
           <div className="bg-slate-900 rounded-[3rem] p-8 md:p-16 relative overflow-hidden text-center md:text-left">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
@@ -420,7 +426,7 @@ export default function Home() {
                 <Image 
                   src={PlaceHolderImages.find(img => img.id === 'can-you-donate')?.imageUrl || 'https://picsum.photos/seed/doctor/600/400'} 
                   fill 
-                  alt="Can you donate" 
+                  alt="রক্তদানের যোগ্যতা যাচাই - RoktoDao AI" 
                   className="object-contain"
                   data-ai-hint="blood donor"
                 />
@@ -431,9 +437,9 @@ export default function Home() {
       </section>
 
       {/* 9. রক্তের গ্রুপের সামঞ্জস্যতা */}
-      <section className="py-12 bg-muted/5">
+      <section className="py-10 bg-muted/5">
         <div className="container mx-auto px-4 max-w-4xl">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <h2 className="text-3xl font-bold font-headline mb-3">রক্তের গ্রুপের সামঞ্জস্যতা</h2>
             <p className="text-muted-foreground">জেনে নিন আপনি কাকে রক্ত দিতে পারবেন এবং কার থেকে নিতে পারবেন।</p>
           </div>
@@ -463,14 +469,14 @@ export default function Home() {
       </section>
 
       {/* 10. পরিচালকের বার্তা */}
-      <section className="py-12 bg-white border-y">
+      <section className="py-10 bg-white border-y">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <div className="relative h-[400px] rounded-[3rem] overflow-hidden shadow-2xl">
               <Image 
                 src="https://rokto-dao.vercel.app/files/Mojib_Rsm.jpg" 
                 fill 
-                alt="Mujibur Rahman" 
+                alt="Mujibur Rahman - Founder of RoktoDao" 
                 className="object-cover"
               />
             </div>
@@ -492,9 +498,9 @@ export default function Home() {
       </section>
 
       {/* 11. রক্তদাতাদের কথা */}
-      <section className="py-12 bg-muted/10">
+      <section className="py-10 bg-muted/10">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <Badge variant="outline" className="text-primary border-primary">প্রেরণা</Badge>
             <h2 className="text-3xl font-bold font-headline mt-2">রক্তদাতাদের কথা</h2>
           </div>
@@ -525,9 +531,9 @@ export default function Home() {
       </section>
 
       {/* 12. গ্যালারি */}
-      <section className="py-12 bg-white">
+      <section className="py-10 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <h2 className="text-3xl font-bold font-headline">আমাদের গ্যালারি</h2>
             <p className="text-muted-foreground mt-2">আমাদের সাম্প্রতিক ব্লাড ড্রাইভ ও ক্যাম্পেইনের কিছু মুহূর্ত।</p>
           </div>
@@ -537,7 +543,7 @@ export default function Home() {
                 <Image 
                   src={`https://picsum.photos/seed/rokto_gallery${i}/600/600`} 
                   fill 
-                  alt={`Camp ${i}`} 
+                  alt={`Blood Donation Camp - ${i}`} 
                   className="object-cover group-hover:scale-110 transition-transform duration-500"
                   data-ai-hint="blood donation"
                 />
@@ -549,7 +555,7 @@ export default function Home() {
       </section>
 
       {/* 13. মোবাইল অ্যাপ ও ভলান্টিয়ার */}
-      <section className="py-12 bg-slate-900 text-white overflow-hidden relative">
+      <section className="py-10 bg-slate-900 text-white overflow-hidden relative">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 text-center lg:text-left">
@@ -593,7 +599,7 @@ export default function Home() {
               <Image 
                 src={PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || 'https://picsum.photos/seed/app/800/1200'} 
                 fill 
-                alt="RoktoDao Mobile App Promo" 
+                alt="RoktoDao App - Blood Donor Search Bangladesh" 
                 className="object-contain"
                 data-ai-hint="mobile app"
               />
@@ -603,7 +609,7 @@ export default function Home() {
       </section>
 
       {/* 14. সহযোগী প্রতিষ্ঠান */}
-      <section className="py-12 bg-white">
+      <section className="py-10 bg-white">
         <div className="container mx-auto px-4">
           <p className="text-center text-muted-foreground font-bold uppercase tracking-widest text-xs mb-8">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:opacity-100 transition-all duration-500">
@@ -617,7 +623,7 @@ export default function Home() {
       </section>
 
       {/* 15. কেন বেছে নিবেন? */}
-      <section className="py-12 bg-muted/5 border-y">
+      <section className="py-10 bg-muted/5 border-y">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold font-headline mb-10">কেন RoktoDao বেছে নিবেন?</h2>
           <div className="grid md:grid-cols-4 gap-8">
@@ -640,7 +646,7 @@ export default function Home() {
       </section>
 
       {/* 16. সাধারণ জিজ্ঞাসা ও নিউজলেটার */}
-      <section className="py-12 bg-white">
+      <section className="py-10 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16">
             <div className="space-y-8">
