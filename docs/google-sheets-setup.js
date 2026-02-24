@@ -38,6 +38,7 @@ function doGet(e) {
   if (action === 'getRequests') return getBloodRequests();
   if (action === 'getStats') return getGlobalStats();
   if (action === 'getAdminPass') return getAdminPassword();
+  if (action === 'getAppointments') return getAppointments(e.parameter.email);
   
   return jsonResponse({ error: 'Invalid action' });
 }
@@ -62,6 +63,7 @@ function doPost(e) {
   else if (action === 'deleteEntry') result = deleteEntry(data);
   else if (action === 'seedLocations') result = seedLocations(data.rows);
   else if (action === 'createDrive') result = createDrive(data);
+  else if (action === 'scheduleAppointment') result = scheduleAppointment(data);
   else return jsonResponse({ error: 'Invalid action' });
 
   PropertiesService.getScriptProperties().setProperty('LAST_UPDATE', new Date().getTime().toString());
@@ -151,6 +153,28 @@ function deleteEntry(data) {
 function getDonors() { return jsonResponse(getSheetData(SS.getSheetByName('Donors'))); }
 function getBloodRequests() { return jsonResponse(getSheetData(SS.getSheetByName('Requests'))); }
 function getBloodDrives() { return jsonResponse(getSheetData(SS.getSheetByName('BloodDrives'))); }
+
+function getAppointments(email) {
+  const sheet = SS.getSheetByName('Appointments');
+  const data = getSheetData(sheet);
+  if (!email) return jsonResponse(data);
+  const filtered = data.filter(row => row.useremail.toString().toLowerCase() === email.toLowerCase());
+  return jsonResponse(filtered);
+}
+
+function scheduleAppointment(data) {
+  const sheet = SS.getSheetByName('Appointments');
+  const id = Math.random().toString(36).substring(7);
+  sheet.appendRow([id, data.driveId, data.driveName, data.userEmail, data.userName, data.date, data.time, 'Scheduled']);
+  return jsonResponse({ success: true, id: id });
+}
+
+function createDrive(data) {
+  const sheet = SS.getSheetByName('BloodDrives');
+  const id = Math.random().toString(36).substring(7);
+  sheet.appendRow([id, data.name, data.location, data.date, data.time, data.distance || '0 km']);
+  return jsonResponse({ success: true, id: id });
+}
 
 function jsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
