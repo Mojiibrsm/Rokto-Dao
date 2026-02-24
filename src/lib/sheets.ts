@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Service layer for interacting with Google Sheets.
- * Optimized with better mapping for Organization/Team features.
+ * Optimized with better mapping for Organization/Team features and robust phone handling.
  */
 
 export type BloodDrive = {
@@ -160,7 +160,7 @@ export async function getDonors(filters?: { bloodType?: string; district?: strin
   const normalized: Donor[] = data.map((d: any) => ({
     email: d.email || '',
     fullName: d.fullname || d.fullName || 'নামহীন',
-    phone: d.phone || '',
+    phone: String(d.phone || ''), // Ensure phone is a string
     bloodType: d.bloodtype || d.bloodType || 'Unknown',
     registrationDate: d.registrationdate || d.registrationDate || '',
     district: d.district || '',
@@ -215,7 +215,7 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
     district: d.district || '',
     area: d.area || '',
     union: d.union || '',
-    phone: d.phone || '',
+    phone: String(d.phone || ''),
     neededWhen: d.neededwhen || d.neededWhen || 'Urgent',
     bagsNeeded: d.bagsneeded || d.bagsNeeded || '1',
     isUrgent: d.isurgent === 'Yes' || d.isUrgent === true,

@@ -22,10 +22,28 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const donors = await getDonors();
-      const user = donors.find((d: any) => 
-        d.email?.toLowerCase() === identifier.toLowerCase() || 
-        d.phone?.toString() === identifier.toString()
-      );
+      
+      const user = donors.find((d: any) => {
+        // Normalize email check
+        if (d.email?.toLowerCase() === identifier.toLowerCase()) return true;
+        
+        // Robust phone number check (handling missing leading zero in DB)
+        const inputPhone = identifier.replace(/\D/g, ''); // Remove non-digits
+        const dbPhone = String(d.phone || '').replace(/\D/g, '');
+        
+        if (!inputPhone || !dbPhone) return false;
+
+        // Case 1: Exact match
+        if (inputPhone === dbPhone) return true;
+        
+        // Case 2: Input has leading zero, DB doesn't (e.g. 018... vs 18...)
+        if (inputPhone.startsWith('0') && inputPhone.substring(1) === dbPhone) return true;
+        
+        // Case 3: DB has leading zero, Input doesn't (e.g. 18... vs 018...)
+        if (dbPhone.startsWith('0') && dbPhone.substring(1) === inputPhone) return true;
+
+        return false;
+      });
 
       if (user) {
         localStorage.setItem('roktodao_user', JSON.stringify({

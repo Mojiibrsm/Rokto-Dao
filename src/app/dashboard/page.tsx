@@ -54,7 +54,21 @@ export default function DashboardPage() {
         setHistory(appData);
 
         const allDonors = await getDonors();
-        const currentDonor = allDonors.find(d => d.email === user.email || d.phone === user.phone);
+        
+        // Robust matching logic for Dashboard load
+        const currentDonor = allDonors.find(d => {
+          if (user.email && d.email === user.email) return true;
+          
+          const userPhoneClean = String(user.phone || '').replace(/\D/g, '');
+          const dbPhoneClean = String(d.phone || '').replace(/\D/g, '');
+          
+          if (userPhoneClean === dbPhoneClean) return true;
+          if (userPhoneClean.startsWith('0') && userPhoneClean.substring(1) === dbPhoneClean) return true;
+          if (dbPhoneClean.startsWith('0') && dbPhoneClean.substring(1) === userPhoneClean) return true;
+          
+          return false;
+        });
+
         if (currentDonor) {
           setDonorDetails(currentDonor);
           setFormData({
