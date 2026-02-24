@@ -36,6 +36,12 @@
       "description": "Why donate blood infographic",
       "imageUrl": "https://image.mojib.me/uploads/General/1771907154_%E0%A6%95%E0%A7%87%E0%A6%A8%20%E0%A6%B0%E0%A6%95%E0%A7%8D%E0%A6%A4%20%E0%A6%A6%E0%A7%87%E0%A6%AC%E0%A7%87%E0%A6%A8.png",
       "imageHint": "blood donation benefits"
+    },
+    {
+      "id": "can-you-donate",
+      "description": "Can you donate blood today poster",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771907823_Can%20You%20Donate%20Blood%20Today.png",
+      "imageHint": "blood donor"
     }
   ]
 }

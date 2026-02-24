@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -51,6 +52,7 @@ export default function Home() {
   };
 
   const whyDonateImage = PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || 'https://picsum.photos/seed/why-donate/800/600';
+  const canYouDonateImage = PlaceHolderImages.find(img => img.id === 'can-you-donate')?.imageUrl || '';
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
@@ -315,9 +317,21 @@ export default function Home() {
                 <NextLink href="/eligibility">আমার যোগ্যতা যাচাই করুন</NextLink>
               </Button>
             </div>
-            <div className="h-48 w-48 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20">
-              <ShieldCheck className="h-24 w-24 text-white" />
-            </div>
+            {canYouDonateImage ? (
+              <div className="shrink-0 relative h-64 w-64 md:h-80 md:w-80 rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-2xl">
+                <Image 
+                  src={canYouDonateImage} 
+                  fill 
+                  alt="Can you donate" 
+                  className="object-cover"
+                  data-ai-hint="blood donor"
+                />
+              </div>
+            ) : (
+              <div className="h-48 w-48 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20">
+                <ShieldCheck className="h-24 w-24 text-white" />
+              </div>
+            )}
           </div>
         </div>
       </section>
