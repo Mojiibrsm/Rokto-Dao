@@ -13,11 +13,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getBloodRequests, getDonors, type BloodRequest, type Donor } from '@/lib/sheets';
 import { DISTRICTS } from '@/lib/bangladesh-data';
-import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
@@ -57,14 +55,10 @@ export default function Home() {
     router.push(`/donors?${params.toString()}`);
   };
 
-  const whyDonateImage = PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || 'https://picsum.photos/seed/why-donate/800/600';
-  const canYouDonateImage = PlaceHolderImages.find(img => img.id === 'can-you-donate')?.imageUrl || '';
-  const mobileAppImage = PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || 'https://picsum.photos/seed/mobile/800/1000';
-
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
-      {/* 1. হিরো সেকশন */}
-      <section className="relative w-full py-12 md:py-20 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden">
+      {/* 1. হিরো সেকশন - Reduced spacing py-12 instead of py-20 */}
+      <section className="relative w-full py-12 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-50"></div>
         
@@ -103,8 +97,8 @@ export default function Home() {
           </div>
 
           {/* ছোট্ট সার্চ বার */}
-          <div className="max-w-2xl mx-auto pt-8 animate-in fade-in slide-in-from-bottom-5 delay-500 duration-1000">
-            <div className="bg-white/80 backdrop-blur-md p-2.5 rounded-2xl shadow-lg border border-primary/5 flex flex-col md:flex-row gap-2">
+          <div className="max-w-2xl mx-auto pt-6 animate-in fade-in slide-in-from-bottom-5 delay-500 duration-1000">
+            <div className="bg-white/80 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-primary/5 flex flex-col md:flex-row gap-2">
               <div className="flex-1">
                 <Select value={selectedBloodType} onValueChange={setSelectedBloodType}>
                   <SelectTrigger className="h-11 border-none bg-transparent focus:ring-0 text-base font-bold text-muted-foreground">
@@ -150,43 +144,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. পরিসংখ্যান সেকশন */}
-      <section className="bg-white py-10 border-b">
+      {/* 2. পরিসংখ্যান সেকশন - Compact py-8 */}
+      <section className="bg-white py-8 border-b">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { val: "২৫,০০০+", label: "নিবন্ধিত দাতা", icon: Users, color: "text-blue-600" },
               { val: "১৫,০০০+", label: "রক্তের অনুরোধ", icon: Droplet, color: "text-primary" },
               { val: "১২,৫০০+", label: "সফল রক্তদান", icon: Heart, color: "text-red-500" },
               { val: "৬৪", label: "জেলায় কার্যক্রম", icon: Globe, color: "text-green-600" }
             ].map((stat, i) => (
-              <div key={i} className="flex flex-col items-center text-center p-4 rounded-2xl hover:bg-muted/30 transition-colors">
-                <div className={`h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-3 ${stat.color}`}>
+              <div key={i} className="flex flex-col items-center text-center p-3 rounded-2xl hover:bg-muted/30 transition-colors">
+                <div className={`h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-2 ${stat.color}`}>
                   <stat.icon className="h-5 w-5" />
                 </div>
-                <div className="text-2xl md:text-3xl font-black font-headline mb-1">{stat.val}</div>
-                <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+                <div className="text-2xl md:text-3xl font-black font-headline mb-0.5">{stat.val}</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 4. আমাদের রক্তযোদ্ধারা */}
+      {/* 3. আমাদের রক্তযোদ্ধারা - Reduced py-12 */}
       <section className="py-12 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10 space-y-2">
+          <div className="text-center mb-8 space-y-1">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
             <p className="text-lg text-muted-foreground font-medium italic">"Our active and available donors"</p>
-            <div className="h-1 w-16 bg-primary mx-auto rounded-full mt-4"></div>
+            <div className="h-1 w-16 bg-primary mx-auto rounded-full mt-3"></div>
           </div>
 
           {loadingDonors ? (
-            <div className="flex justify-center py-12"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
               {donors.map((donor, idx) => (
-                <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-[2.5rem] group border-t-4 border-t-primary/20 bg-muted/5">
+                <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-[2rem] group border-t-4 border-t-primary/20 bg-muted/5">
                   <CardHeader className="bg-primary/5 pb-4">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
@@ -245,13 +239,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. কিভাবে কাজ করে */}
-      <section className="bg-muted/10 py-16 border-y">
+      {/* 4. কিভাবে কাজ করে - Compact py-12 */}
+      <section className="bg-muted/10 py-12 border-y">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 space-y-2">
+          <div className="text-center mb-10 space-y-1">
             <Badge variant="outline" className="text-primary border-primary">প্রক্রিয়া</Badge>
             <h2 className="text-3xl md:text-4xl font-bold font-headline">রক্তদান প্রক্রিয়া মাত্র ৩ ধাপে</h2>
-            <div className="h-1 w-16 bg-primary mx-auto rounded-full mt-4"></div>
+            <div className="h-1 w-16 bg-primary mx-auto rounded-full mt-3"></div>
           </div>
           <div className="grid gap-8 md:grid-cols-3">
             {[
@@ -274,10 +268,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. জরুরি রক্তের রিকোয়েস্ট */}
-      <section className="bg-white py-16">
+      {/* 5. জরুরি রক্তের রিকোয়েস্ট - Reduced py-12 */}
+      <section className="bg-white py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div className="text-center md:text-left">
               <h2 className="text-3xl font-bold font-headline flex items-center gap-3 justify-center md:justify-start">
                 <span className="relative flex h-3 w-3">
@@ -294,7 +288,7 @@ export default function Home() {
           </div>
 
           {loadingRequests ? (
-            <div className="flex justify-center py-12"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
+            <div className="flex justify-center py-8"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
               {requests.map((req) => (
@@ -346,8 +340,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 19. ইমার্জেন্সি সাপোর্ট বার */}
-      <section className="bg-red-50 py-8 border-t">
+      {/* 6. ইমার্জেন্সি সাপোর্ট বার - Reduced py-6 */}
+      <section className="bg-red-50 py-6 border-t">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-center md:text-left">
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
