@@ -83,35 +83,35 @@ function DonorsContent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="text-center mb-16 space-y-6">
-        <div className="flex justify-center mb-4">
-          <Badge className="bg-primary/10 text-primary border-primary/20 px-6 py-1.5 rounded-full flex items-center gap-2 text-sm font-bold">
-            <Heart className="h-4 w-4 fill-primary" /> মানবতার সেবায় নিয়োজিত
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-8 space-y-4">
+        <div className="flex justify-center mb-2">
+          <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1 rounded-full flex items-center gap-2 text-xs font-bold">
+            <Heart className="h-3.5 w-3.5 fill-primary" /> মানবতার সেবায় নিয়োজিত
           </Badge>
         </div>
-        <h1 className="text-4xl md:text-6xl font-black font-headline tracking-tight text-foreground">
+        <h1 className="text-3xl md:text-5xl font-black font-headline tracking-tight text-foreground">
           আমাদের <span className="text-primary">রক্তযোদ্ধারা</span>
         </h1>
-        <div className="space-y-2">
-          <p className="text-xl md:text-2xl text-muted-foreground font-medium italic">
+        <div className="space-y-1">
+          <p className="text-lg md:text-xl text-muted-foreground font-medium italic">
             "Our active and available donors"
           </p>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             আপনার এলাকায় জরুরি প্রয়োজনে রক্তদাতা খুঁজে নিন। আমরা গর্বিত আমাদের এই নিঃস্বার্থ স্বেচ্ছাসেবকদের জন্য।
           </p>
         </div>
-        <div className="h-1.5 w-24 bg-primary mx-auto rounded-full mt-6"></div>
+        <div className="h-1 w-16 bg-primary mx-auto rounded-full mt-4"></div>
       </div>
 
-      <Card className="mb-12 shadow-xl border-t-4 border-t-primary rounded-[2.5rem] p-8 bg-white/80 backdrop-blur">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
+      <Card className="mb-8 shadow-xl border-t-4 border-t-primary rounded-[2rem] p-6 bg-white/80 backdrop-blur">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-2">
               <Droplet className="h-3 w-3 text-primary" /> রক্তের গ্রুপ
             </label>
             <Select value={filters.bloodType} onValueChange={(val) => setFilters(f => ({ ...f, bloodType: val }))}>
-              <SelectTrigger className="h-12 border-2">
+              <SelectTrigger className="h-11 border-2">
                 <SelectValue placeholder="যেকোনো গ্রুপ" />
               </SelectTrigger>
               <SelectContent>
@@ -123,12 +123,12 @@ function DonorsContent() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-2">
               <MapPin className="h-3 w-3 text-primary" /> জেলা
             </label>
             <Select value={filters.district} onValueChange={(val) => setFilters(f => ({ ...f, district: val, area: 'যেকোনো উপজেলা', union: 'যেকোনো ইউনিয়ন' }))}>
-              <SelectTrigger className="h-12 border-2">
+              <SelectTrigger className="h-11 border-2">
                 <SelectValue placeholder="যেকোনো জেলা" />
               </SelectTrigger>
               <SelectContent>
@@ -140,12 +140,12 @@ function DonorsContent() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-2">
                উপজেলা
             </label>
             <Select value={filters.area} onValueChange={(val) => setFilters(f => ({ ...f, area: val, union: 'যেকোনো ইউনিয়ন' }))} disabled={filters.district === 'যেকোনো জেলা'}>
-              <SelectTrigger className="h-12 border-2">
+              <SelectTrigger className="h-11 border-2">
                 <SelectValue placeholder="উপজেলা" />
               </SelectTrigger>
               <SelectContent>
@@ -157,12 +157,12 @@ function DonorsContent() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-2">
                ইউনিয়ন
             </label>
             <Select value={filters.union} onValueChange={(val) => setFilters(f => ({ ...f, union: val }))} disabled={filters.area === 'যেকোনো উপজেলা'}>
-              <SelectTrigger className="h-12 border-2">
+              <SelectTrigger className="h-11 border-2">
                 <SelectValue placeholder="ইউনিয়ন" />
               </SelectTrigger>
               <SelectContent>
@@ -174,68 +174,68 @@ function DonorsContent() {
             </Select>
           </div>
 
-          <Button type="submit" className="h-12 bg-primary hover:bg-primary/90 text-lg font-bold gap-2 rounded-xl w-full">
-            <Search className="h-5 w-5" /> অনুসন্ধান
+          <Button type="submit" className="h-11 bg-primary hover:bg-primary/90 text-lg font-bold gap-2 rounded-xl w-full">
+            <Search className="h-4 w-4" /> অনুসন্ধান
           </Button>
         </form>
       </Card>
 
       {loading ? (
-        <div className="flex justify-center py-24">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <div className="flex justify-center py-16">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
       ) : donors.length === 0 ? (
-        <div className="text-center py-24 space-y-4 bg-muted/20 rounded-[3rem] border-2 border-dashed">
-          <User className="h-16 w-16 mx-auto text-muted-foreground opacity-20" />
-          <p className="text-2xl font-bold text-muted-foreground">কোনো রক্তদাতা পাওয়া যায়নি।</p>
-          <p className="text-muted-foreground">ভিন্ন কোনো গ্রুপ, সংগঠন বা এলাকা দিয়ে চেষ্টা করুন।</p>
+        <div className="text-center py-16 space-y-4 bg-muted/20 rounded-[2rem] border-2 border-dashed">
+          <User className="h-12 w-12 mx-auto text-muted-foreground opacity-20" />
+          <p className="text-xl font-bold text-muted-foreground">কোনো রক্তদাতা পাওয়া যায়নি।</p>
+          <p className="text-muted-foreground text-sm">ভিন্ন কোনো গ্রুপ, সংগঠন বা এলাকা দিয়ে চেষ্টা করুন।</p>
         </div>
       ) : (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {donors.map((donor, idx) => (
-            <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-[2.5rem] group border-t-4 border-t-primary/20">
-              <CardHeader className="bg-primary/5 pb-4">
+            <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all rounded-[2rem] group border-t-4 border-t-primary/20">
+              <CardHeader className="bg-primary/5 pb-3">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-primary/20">
+                    <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-primary/20">
                       {(donor.fullName || 'D').substring(0, 1)}
                     </div>
                     <div className="space-y-1">
-                      <CardTitle className="text-xl">{donor.fullName}</CardTitle>
-                      <CardDescription className="flex items-center gap-1 text-xs">
+                      <CardTitle className="text-lg">{donor.fullName}</CardTitle>
+                      <CardDescription className="flex items-center gap-1 text-[10px]">
                         <MapPin className="h-3 w-3 text-primary" /> {donor.union && donor.union !== 'N/A' ? donor.union + ', ' : ''} {donor.area && donor.area !== 'N/A' ? donor.area + ', ' : ''} {donor.district}
                       </CardDescription>
                       {donor.organization && (
-                        <div className="flex items-center gap-1.5 text-secondary font-bold text-[11px] bg-secondary/5 px-2 py-0.5 rounded-md border border-secondary/10 w-fit">
+                        <div className="flex items-center gap-1.5 text-secondary font-bold text-[10px] bg-secondary/5 px-2 py-0.5 rounded-md border border-secondary/10 w-fit">
                           <Users className="h-3 w-3" /> {donor.organization}
                         </div>
                       )}
                     </div>
                   </div>
-                  <Badge className="bg-primary text-white text-xl font-black h-12 w-12 flex items-center justify-center p-0 rounded-xl shadow-md">
+                  <Badge className="bg-primary text-white text-lg font-black h-10 w-10 flex items-center justify-center p-0 rounded-xl shadow-md">
                     {donor.bloodType}
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pt-8 space-y-6">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="p-4 bg-muted/30 rounded-2xl border">
-                    <p className="text-muted-foreground uppercase text-[10px] font-black mb-1">শেষ রক্তদান</p>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-muted/30 rounded-2xl border">
+                    <p className="text-muted-foreground uppercase text-[8px] font-black mb-1">শেষ রক্তদান</p>
                     <p className="font-bold text-foreground">{donor.lastDonationDate || 'N/A'}</p>
                   </div>
-                  <div className="p-4 bg-muted/30 rounded-2xl border">
-                    <p className="text-muted-foreground uppercase text-[10px] font-black mb-1">মোট রক্তদান</p>
+                  <div className="p-3 bg-muted/30 rounded-2xl border">
+                    <p className="text-muted-foreground uppercase text-[8px] font-black mb-1">মোট রক্তদান</p>
                     <p className="font-bold text-foreground">{donor.totalDonations || 0} বার</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-green-600 font-bold text-sm bg-green-50 p-2 rounded-lg border border-green-100">
-                  <ShieldCheck className="h-4 w-4" /> ভেরিফাইড রক্তদাতা
+                <div className="flex items-center gap-2 text-green-600 font-bold text-xs bg-green-50 p-2 rounded-lg border border-green-100">
+                  <ShieldCheck className="h-3.5 w-3.5" /> ভেরিফাইড রক্তদাতা
                 </div>
               </CardContent>
               <CardFooter className="p-0 border-t">
-                <Button className="w-full h-16 rounded-none bg-primary hover:bg-primary/90 text-xl font-bold gap-3" asChild>
+                <Button className="w-full h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
                   <a href={`tel:${donor.phone}`}>
-                    <Phone className="h-6 w-6" /> যোগাযোগ করুন
+                    <Phone className="h-5 w-5" /> যোগাযোগ করুন
                   </a>
                 </Button>
               </CardFooter>
@@ -249,7 +249,7 @@ function DonorsContent() {
 
 export default function DonorsPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>}>
+    <Suspense fallback={<div className="flex justify-center py-16"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>}>
       <DonorsContent />
     </Suspense>
   );
