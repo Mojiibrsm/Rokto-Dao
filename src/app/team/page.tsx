@@ -6,6 +6,7 @@ import { Linkedin, Twitter, Mail, Award, Heart, ShieldCheck, Users } from 'lucid
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const TEAM = [
   {
@@ -39,16 +40,32 @@ const TEAM = [
 ];
 
 export default function TeamPage() {
+  const teamHeroImg = PlaceHolderImages.find(img => img.id === 'team-hero')?.imageUrl || 'https://picsum.photos/seed/team/1200/800';
+
   return (
     <div className="flex flex-col gap-0 pb-20">
       {/* 1. Hero Section */}
-      <section className="bg-slate-50 py-24 border-b">
-        <div className="container mx-auto px-4 text-center space-y-6">
-          <Badge className="bg-primary/10 text-primary border-none px-4 py-1">আমাদের কারিগর</Badge>
-          <h1 className="text-4xl md:text-6xl font-black font-headline">আমাদের <span className="text-primary">টিম</span></h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            RoktoDao এর পেছনে কাজ করছে একঝাঁক নিবেদিত প্রাণ মানুষ, যারা নিঃস্বার্থভাবে জীবন বাঁচানোর এই মিশনে কাজ করে চলেছেন।
-          </p>
+      <section className="bg-slate-50 py-16 md:py-24 border-b">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div className="space-y-6">
+              <Badge className="bg-primary/10 text-primary border-none px-4 py-1">আমাদের কারিগর</Badge>
+              <h1 className="text-4xl md:text-6xl font-black font-headline tracking-tight">আমাদের <span className="text-primary">টিম</span></h1>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                RoktoDao এর পেছনে কাজ করছে একঝাঁক নিবেদিত প্রাণ মানুষ, যারা নিঃস্বার্থভাবে জীবন বাঁচানোর এই মিশনে কাজ করে চলেছেন।
+              </p>
+            </div>
+            <div className="relative h-[300px] md:h-[400px] rounded-[3rem] overflow-hidden shadow-2xl">
+              <Image 
+                src={teamHeroImg} 
+                fill 
+                alt="Our Team Hero" 
+                className="object-cover"
+                priority
+                data-ai-hint="medical team"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

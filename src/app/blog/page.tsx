@@ -3,8 +3,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, User, ArrowRight, BookOpen, Clock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Calendar, User, ArrowRight, BookOpen } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -17,7 +17,7 @@ const BLOG_POSTS = [
     date: "মে ১০, ২০২৪",
     author: "ডা. শফিকুল ইসলাম",
     category: "স্বাস্থ্য টিপস",
-    image: PlaceHolderImages.find(img => img.id === 'blog-thumb-1')?.imageUrl || 'https://picsum.photos/seed/health1/800/500'
+    image: PlaceHolderImages.find(img => img.id === 'blog-thumb-1')?.imageUrl || 'https://picsum.photos/seed/blog1/800/500'
   },
   {
     id: 2,
@@ -26,7 +26,7 @@ const BLOG_POSTS = [
     date: "মে ১৫, ২০২৪",
     author: "মুজিবুর রহমান",
     category: "সচেতনতা",
-    image: PlaceHolderImages.find(img => img.id === 'blog-thumb-2')?.imageUrl || 'https://picsum.photos/seed/awareness1/800/500'
+    image: PlaceHolderImages.find(img => img.id === 'blog-thumb-2')?.imageUrl || 'https://picsum.photos/seed/blog2/800/500'
   },
   {
     id: 3,
@@ -49,16 +49,32 @@ const BLOG_POSTS = [
 ];
 
 export default function BlogPage() {
+  const blogHeroImg = PlaceHolderImages.find(img => img.id === 'blog-hero')?.imageUrl || 'https://picsum.photos/seed/blog/1200/800';
+
   return (
     <div className="flex flex-col gap-0 pb-20">
       {/* Hero Section */}
-      <section className="bg-primary/5 py-20 border-b">
-        <div className="container mx-auto px-4 text-center space-y-6">
-          <Badge className="bg-primary text-white border-none px-4 py-1">ব্লগ ও সচেতনতা</Badge>
-          <h1 className="text-4xl md:text-6xl font-black font-headline">মানবতার জন্য <span className="text-primary">কিছু কথা</span></h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            রক্তদান সম্পর্কে জানুন, অন্যকে উদ্বুদ্ধ করুন এবং জীবন বাঁচাতে আপনার জ্ঞান বাড়ান।
-          </p>
+      <section className="relative bg-primary/5 py-16 md:py-24 border-b">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div className="space-y-6">
+              <Badge className="bg-primary text-white border-none px-4 py-1">ব্লগ ও সচেতনতা</Badge>
+              <h1 className="text-4xl md:text-6xl font-black font-headline tracking-tight">মানবতার জন্য <br /><span className="text-primary">কিছু কথা</span></h1>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                রক্তদান সম্পর্কে জানুন, অন্যকে উদ্বুদ্ধ করুন এবং জীবন বাঁচাতে আপনার জ্ঞান বাড়ান।
+              </p>
+            </div>
+            <div className="relative h-[300px] md:h-[400px] rounded-[3rem] overflow-hidden shadow-2xl">
+              <Image 
+                src={blogHeroImg} 
+                fill 
+                alt="Blog Hero" 
+                className="object-cover"
+                priority
+                data-ai-hint="medical blog"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

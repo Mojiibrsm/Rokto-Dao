@@ -74,6 +74,18 @@
       "imageHint": "mobile app"
     },
     {
+      "id": "blog-hero",
+      "description": "Blog and Awareness Hero",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771911212_Blog%20Roktodao.png",
+      "imageHint": "medical blog"
+    },
+    {
+      "id": "team-hero",
+      "description": "Our Team Hero",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771911335_Our%20Team%20Roktodao.png",
+      "imageHint": "medical team"
+    },
+    {
       "id": "blog-thumb-1",
       "description": "Blood donation awareness article",
       "imageUrl": "https://picsum.photos/seed/blog1/800/500",
