@@ -4,29 +4,36 @@
 
 @layer base {
   :root {
-    /* Background: Very light pink/flesh as seen in image */
-    --background: 340 82% 98%; 
+    /* More vibrant Blood Red Theme */
+    --background: 0 0% 100%; 
     --foreground: 0 0% 10%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-    /* Primary: Deep red as seen in image */
-    --primary: 354 85% 44%;
+    
+    /* Primary: Strong Blood Red */
+    --primary: 0 84% 45%;
     --primary-foreground: 0 0% 100%;
-    /* Secondary: Slightly lighter red */
-    --secondary: 354 85% 50%;
+    
+    /* Secondary: Slightly Darker Crimson */
+    --secondary: 0 72% 35%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 340 20% 94%;
+    
+    --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
-    --accent: 340 82% 92%;
-    --accent-foreground: 0 74% 20%;
-    --destructive: 0 84.2% 60.2%;
+    
+    /* Accent: Very light red for backgrounds */
+    --accent: 0 100% 97%;
+    --accent-foreground: 0 84% 45%;
+    
+    --destructive: 0 84% 45%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 10% 90%;
-    --input: 0 10% 90%;
-    --ring: 354 85% 44%;
-    --radius: 0.75rem;
+    
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 84% 45%;
+    --radius: 1rem;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -35,9 +42,9 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 354 85% 44%;
+    --primary: 0 84% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 354 85% 50%;
+    --secondary: 0 72% 45%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
@@ -47,7 +54,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 354 85% 44%;
+    --ring: 0 84% 55%;
   }
 }
 
