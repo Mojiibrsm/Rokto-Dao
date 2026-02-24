@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -25,7 +25,7 @@ export default function BulkDonorsPage() {
 
   const handleAnalyze = async () => {
     if (inputText.trim() === '') {
-      toast({ variant: "destructive", title: "No data found", description: "Please enter donor information." });
+      toast({ variant: "destructive", title: "তথ্য পাওয়া যায়নি", description: "অনুগ্রহ করে রক্তদাতার তথ্য ইনপুট দিন।" });
       return;
     }
 
@@ -38,7 +38,7 @@ export default function BulkDonorsPage() {
       const { donors: parsedDonors } = await parseDonorData({ rawText: inputText });
 
       if (!parsedDonors || parsedDonors.length === 0) {
-        toast({ variant: "destructive", title: "Parsing failed", description: "AI could not find any donor records." });
+        toast({ variant: "destructive", title: "পার্সিং ব্যর্থ", description: "AI কোনো দাতার তথ্য খুঁজে পায়নি।" });
         return;
       }
 
@@ -49,13 +49,17 @@ export default function BulkDonorsPage() {
       let dupes = 0;
 
       parsedDonors.forEach(newDonor => {
-        // Clean mobile numbers for better matching
-        const cleanNewPhone = newDonor.phone.replace(/\D/g, '');
+        // Safe conversion to string and cleanup
+        const cleanNewPhone = String(newDonor.phone || '').replace(/\D/g, '');
+        const newNameLower = String(newDonor.fullName || '').toLowerCase().trim();
         
         const isDuplicate = existingDonors.some(ext => {
-          const cleanExtPhone = ext.phone.replace(/\D/g, '');
+          if (!ext) return false;
+          const cleanExtPhone = String(ext.phone || '').replace(/\D/g, '');
+          const extNameLower = String(ext.fullName || '').toLowerCase().trim();
+          
           return (
-            ext.fullName.toLowerCase() === newDonor.fullName.toLowerCase() && 
+            extNameLower === newNameLower && 
             cleanExtPhone === cleanNewPhone
           );
         });
@@ -71,12 +75,12 @@ export default function BulkDonorsPage() {
       setPreview(uniqueNewData);
 
       toast({
-        title: "Analysis Complete",
-        description: `Found ${parsedDonors.length} records. ${dupes} duplicates removed.`,
+        title: "বিশ্লেষণ সম্পন্ন",
+        description: `মোট ${parsedDonors.length} জন পাওয়া গেছে। ${dupes} টি ডুপ্লিকেট বাদ দেওয়া হয়েছে।`,
       });
     } catch (e) {
       console.error(e);
-      toast({ variant: "destructive", title: "Analysis error", description: "Could not process data with AI." });
+      toast({ variant: "destructive", title: "বিশ্লেষণে ত্রুটি", description: "AI এর মাধ্যমে ডাটা প্রসেস করা যায়নি।" });
     } finally {
       setIsAnalyzing(false);
     }
@@ -90,13 +94,13 @@ export default function BulkDonorsPage() {
       const result = await bulkRegisterDonors(preview);
       if (result.success) {
         toast({
-          title: "Import Successful!",
-          description: `${result.count} new donors added to Google Sheets.`,
+          title: "ইম্পোর্ট সফল!",
+          description: `সফলভাবে ${result.count} জন নতুন দাতা যোগ করা হয়েছে।`,
         });
         router.push('/admin');
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "Import Failed", description: "An error occurred while updating the sheet." });
+      toast({ variant: "destructive", title: "ইম্পোর্ট ব্যর্থ", description: "গুগল শিট আপডেট করার সময় সমস্যা হয়েছে।" });
     } finally {
       setIsSubmitting(false);
     }
@@ -121,7 +125,7 @@ export default function BulkDonorsPage() {
               <div>
                 <CardTitle className="text-3xl">AI Data Parser</CardTitle>
                 <CardDescription className="text-lg">
-                  Paste any messy donor data. AI will extract and clean it for you.
+                  যেকোনো অগোছালো ডাটা পেস্ট করুন। AI নিজ থেকেই সব ঠিক করে নেবে।
                 </CardDescription>
               </div>
             </div>
@@ -129,17 +133,17 @@ export default function BulkDonorsPage() {
           <CardContent className="pt-8 px-10 space-y-6">
             <Alert className="bg-blue-50 border-blue-200 rounded-2xl">
               <Info className="h-5 w-5 text-blue-600" />
-              <AlertTitle className="text-blue-800 font-bold mb-1">যেকোনো ফরম্যাট সাপোর্ট করে!</AlertTitle>
+              <AlertTitle className="text-blue-800 font-bold mb-1">স্মার্ট ইনপুট সাপোর্ট!</AlertTitle>
               <AlertDescription className="text-blue-700">
-                আপনি হোয়াটসঅ্যাপ মেসেজ, এক্সেল কপি, বা অগোছালো নোট এখানে পেস্ট করতে পারেন। AI নিজ থেকেই নাম, গ্রুপ, মোবাইল এবং জেলা খুঁজে নেবে।
+                আপনি নাম, রক্তের গ্রুপ এবং মোবাইল নম্বর সম্বলিত যেকোনো টেক্সট এখানে দিতে পারেন। AI স্বয়ংক্রিয়ভাবে ইংরেজি জেলাকে বাংলায় রূপান্তর করবে এবং উপজেলা খুঁজে নেবে।
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3">
-              <Label htmlFor="bulkData" className="text-lg font-bold">Input Data Area</Label>
+              <Label htmlFor="bulkData" className="text-lg font-bold">ইনপুট এরিয়া</Label>
               <Textarea 
                 id="bulkData" 
-                placeholder="Paste here... e.g. Faisal, B+, 01815... Coxbazar Maheshkhali" 
+                placeholder="যেমন: Faisal, B+, 01815... Coxbazar PS Maheshkhali" 
                 className="min-h-[350px] font-mono text-base rounded-3xl bg-muted/20 focus:bg-white transition-all p-6 border-2 focus:border-primary"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
@@ -152,7 +156,7 @@ export default function BulkDonorsPage() {
               className="w-full h-16 bg-primary hover:bg-primary/90 rounded-2xl font-bold text-xl gap-3 shadow-xl shadow-primary/10 transition-all active:scale-95"
             >
               {isAnalyzing ? (
-                <><Loader2 className="h-6 w-6 animate-spin" /> AI Analyzing & Cleaning...</>
+                <><Loader2 className="h-6 w-6 animate-spin" /> AI বিশ্লেষণ করছে...</>
               ) : (
                 <><Wand2 className="h-6 w-6" /> Extract Data with AI</>
               )}
@@ -175,7 +179,7 @@ export default function BulkDonorsPage() {
             <CardHeader className="flex flex-row items-center justify-between pb-6 px-10 pt-10 bg-green-50/50">
               <div>
                 <CardTitle className="text-2xl text-green-800">Verified AI Output</CardTitle>
-                <CardDescription className="text-green-600">Ready to import {preview.length} unique records.</CardDescription>
+                <CardDescription className="text-green-600">ইম্পোর্ট করার জন্য {preview.length} টি নতুন ডাটা প্রস্তুত।</CardDescription>
               </div>
               <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 px-4 py-1 text-sm font-bold rounded-full">
                 <CheckCircle2 className="h-4 w-4 mr-2" /> Verified
@@ -186,10 +190,10 @@ export default function BulkDonorsPage() {
                 <table className="w-full text-base">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="px-6 py-4 text-left font-bold">Name</th>
-                      <th className="px-6 py-4 text-left font-bold">Phone</th>
-                      <th className="px-6 py-4 text-left font-bold">Blood</th>
-                      <th className="px-6 py-4 text-left font-bold">Location</th>
+                      <th className="px-6 py-4 text-left font-bold">নাম</th>
+                      <th className="px-6 py-4 text-left font-bold">ফোন</th>
+                      <th className="px-6 py-4 text-left font-bold">রক্তের গ্রুপ</th>
+                      <th className="px-6 py-4 text-left font-bold">অবস্থান</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y bg-white">
@@ -221,7 +225,7 @@ export default function BulkDonorsPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-8 w-8 animate-spin" />
-                    Updating Database...
+                    ডাটাবেজ আপডেট হচ্ছে...
                   </>
                 ) : (
                   <>
