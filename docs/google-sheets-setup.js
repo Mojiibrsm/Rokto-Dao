@@ -55,6 +55,7 @@ function doPost(e) {
 
   const action = data.action;
   if (action === 'register') return registerDonor(data);
+  if (action === 'bulkRegister') return bulkRegisterDonors(data);
   if (action === 'book') return scheduleAppointment(data);
   if (action === 'createRequest') return createBloodRequest(data);
   if (action === 'updateStatus') return updateEntryStatus(data);
@@ -92,8 +93,34 @@ function getSheetData(sheet) {
 
 function registerDonor(data) {
   const sheet = SS.getSheetByName('Donors');
-  sheet.appendRow([data.email, data.fullName, data.phone, data.bloodType, new Date().toISOString(), data.district || '', data.area || '', data.union || '', 'N/A', 0]);
+  sheet.appendRow([data.email || '', data.fullName || '', data.phone || '', data.bloodType || '', new Date().toISOString(), data.district || '', data.area || '', data.union || '', 'N/A', 0]);
   return jsonResponse({ success: true });
+}
+
+function bulkRegisterDonors(data) {
+  const sheet = SS.getSheetByName('Donors');
+  if (!data.donors || !Array.isArray(data.donors)) return jsonResponse({ error: 'No data provided' });
+  
+  const now = new Date().toISOString();
+  const rows = data.donors.map(d => [
+    d.email || '', 
+    d.fullName || '', 
+    d.phone || '', 
+    d.bloodType || '', 
+    now, 
+    d.district || '', 
+    d.area || '', 
+    d.union || '', 
+    'N/A', 
+    0
+  ]);
+  
+  if (rows.length > 0) {
+    const startRow = sheet.getLastRow() + 1;
+    sheet.getRange(startRow, 1, rows.length, 10).setValues(rows);
+  }
+  
+  return jsonResponse({ success: true, count: rows.length });
 }
 
 function createBloodRequest(data) {

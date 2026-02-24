@@ -149,7 +149,7 @@ export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
 
 export async function createBloodDrive(data: Omit<BloodDrive, 'id'>) {
   const id = Math.random().toString(36).substring(7);
-  return postToSheets({ action: 'createDrive', id, ...data }); // Note: Ensure Apps Script handle 'createDrive'
+  return postToSheets({ action: 'createDrive', id, ...data });
 }
 
 export async function getDonors(filters?: { bloodType?: string; district?: string; area?: string; union?: string }): Promise<Donor[]> {
@@ -188,6 +188,10 @@ export async function getDonors(filters?: { bloodType?: string; district?: strin
 
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   return postToSheets({ action: 'register', ...data });
+}
+
+export async function bulkRegisterDonors(donors: any[]) {
+  return postToSheets({ action: 'bulkRegister', donors });
 }
 
 export async function getBloodRequests(): Promise<BloodRequest[]> {

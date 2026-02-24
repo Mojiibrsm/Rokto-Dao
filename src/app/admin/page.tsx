@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { 
   ShieldAlert, BellRing, Settings, Users, BarChart3, ArrowRight, 
   Loader2, Droplet, CalendarCheck, Database, RefreshCw, 
-  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus
+  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus, FileUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -99,6 +99,14 @@ export default function AdminDashboard() {
       href: "/admin/add-donor",
       color: "text-blue-600",
       bgColor: "bg-blue-100"
+    },
+    {
+      title: "Bulk Donor Import",
+      description: "Paste multiple donor records to add them all at once.",
+      icon: FileUp,
+      href: "/admin/bulk-donors",
+      color: "text-purple-600",
+      bgColor: "bg-purple-100"
     },
     {
       title: "Fake Profile Detector",
