@@ -17,8 +17,26 @@ export const metadata: Metadata = {
     default: 'রক্তদাও - RoktoDao | বাংলাদেশে রক্তদাতা খুঁজুন ও জীবন বাঁচান',
     template: '%s | RoktoDao'
   },
-  description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন এবং নিজে রক্তদাতার তালিকায় নাম নিবন্ধন করে জীবন বাঁচাতে পারেন।',
-  keywords: ['রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান', 'Blood Donation Bangladesh', 'Find Blood Donor', 'Emergency Blood', 'রক্তদান অ্যাপ', 'জীবন বাঁচান', 'ব্লাড ডোনার'],
+  description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন এবং নিজে রক্তদাতার তালিকায় নাম নিবন্ধন করে জীবন বাঁচাতে পারেন। বিশেষ করে কক্সবাজার ও রামু এলাকায় জরুরি রক্ত সেবা পেতে আমাদের সাথে যুক্ত হোন।',
+  keywords: [
+    'রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান', 'Blood Donation Bangladesh', 
+    'Find Blood Donor', 'Emergency Blood', 'রক্তদান অ্যাপ', 'জীবন বাঁচান', 'ব্লাড ডোনার',
+    'Cox’s Bazar blood donor', 'রামু রক্তদাতা', 'Cox’s Bazar রক্তদান', 'রামু ব্লাড ডোনার', 
+    'urgent blood Cox’s Bazar', 'রক্ত প্রয়োজন Cox’s Bazar', 'Ramu blood donation', 
+    'রামু রক্ত সাহায্য', 'Cox’s Bazar O+ donor', 'রামু O+ রক্তদাতা', 
+    'blood donor near me Cox’s Bazar', 'রামু ব্লাড নেটওয়ার্ক', 'Cox’s Bazar A+ donor', 
+    'রামু A+ রক্ত', 'emergency blood Ramu', 'রক্ত দান Cox’s Bazar', 'Cox’s Bazar blood app', 
+    'রামু ব্লাড সেন্টার', 'volunteer blood Cox’s Bazar', 'রামু রক্তপ্রদাতা', 
+    'blood request Cox’s Bazar', 'রামু ব্লাড ডোনেশন', 'Cox’s Bazar rare blood', 
+    'রামু অরজেন্ট রক্ত', 'donate blood Cox’s Bazar', 'রক্তদাতা খুঁজুন রামু', 
+    'Cox’s Bazar plasma donor', 'রামু রক্তদান সাহায্য', 'Cox’s Bazar B+ donor', 
+    'রামু B+ রক্ত', 'Cox’s Bazar AB+ donor', 'রামু AB+ রক্ত', 
+    'blood donation camp Cox’s Bazar', 'রামু ব্লাড ক্যাম্প', 'find blood donor Ramu', 
+    'রামু রক্ত খুঁজুন', 'Cox’s Bazar emergency donor', 'রামু জরুরি রক্ত', 
+    'blood network Cox’s Bazar', 'রামু রক্ত নেটওয়ার্ক', 'Cox’s Bazar A- donor', 
+    'রামু A- রক্ত', 'urgent blood help Cox’s Bazar', 'রামু অরজেন্ট ব্লাড', 
+    'Cox’s Bazar B- donor', 'রামু B- রক্ত'
+  ],
   authors: [{ name: 'RoktoDao Team' }],
   creator: 'RoktoDao',
   publisher: 'RoktoDao',
@@ -29,7 +47,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'রক্তদাও - RoktoDao | মানবতার সেবায় নিয়োজিত',
-    description: 'জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে এবং স্বেচ্ছায় রক্তদানে উৎসাহিত করতে আমাদের সাথে যুক্ত হোন।',
+    description: 'কক্সবাজার ও রামু সহ সারাদেশে জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে এবং স্বেচ্ছায় রক্তদানে উৎসাহিত করতে আমাদের সাথে যুক্ত হোন।',
     url: 'https://roktodao.com',
     siteName: 'RoktoDao',
     locale: 'bn_BD',
@@ -38,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'রক্তদাও - RoktoDao',
-    description: 'বাংলাদেশে জরুরি রক্তদাতা খোঁজার সহজ মাধ্যম।',
+    description: 'বাংলাদেশে জরুরি রক্তদাতা খোঁজার সহজ মাধ্যম। বিশেষ করে রামু ও কক্সবাজার এলাকায় দ্রুত রক্ত পেতে সাহায্য করে।',
   },
   robots: {
     index: true,
@@ -82,12 +100,14 @@ export default function RootLayout({
         <footer className="bg-slate-900 text-white pt-12 pb-8">
           <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <Link href="/" className="flex items-center gap-2 font-bold text-primary text-2xl">
-                <Droplet className="h-8 w-8 fill-primary" />
+              <Link href="/" className="flex items-center gap-1 font-bold text-primary text-2xl">
+                <div className="relative flex items-center justify-center">
+                  <Droplet className="h-8 w-8 text-primary fill-primary" />
+                </div>
                 <span className="tracking-tight font-headline">RoktoDao</span>
               </Link>
               <p className="text-slate-400 text-base">
-                Connecting blood donors with recipients across Bangladesh.
+                Connecting blood donors with recipients across Bangladesh, focusing on Ramu and Cox's Bazar.
               </p>
               <div className="text-xl font-bold text-primary">+880 123 456 7890</div>
             </div>
