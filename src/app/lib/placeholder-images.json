@@ -48,6 +48,12 @@
       "description": "RoktoDao team and mission illustration",
       "imageUrl": "https://image.mojib.me/uploads/General/1771909111_about%20us%20Roktodao.png",
       "imageHint": "humanity service"
+    },
+    {
+      "id": "contact-us-hero",
+      "description": "Contact Us hero image with founder",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771909565_contact%20us%20roktodao.png",
+      "imageHint": "contact person"
     }
   ]
 }
