@@ -9,6 +9,7 @@ import {
   TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { getGlobalStats, seedLocationData } from '@/lib/sheets';
 import { BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { useToast } from '@/hooks/use-toast';
