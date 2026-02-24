@@ -1,16 +1,14 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/image';
 import NextLink from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
   Droplet, Heart, ShieldCheck, MapPin, ArrowRight, Search, Users, 
-  CheckCircle, Phone, Share2, Clock, MessageSquare, Loader2, 
-  Info, Star, Image as ImageIcon, Smartphone, HandHeart, 
-  HelpCircle, Mail, Globe, Zap, Gift, Shield, Quote
+  CheckCircle, Phone, Share2, Clock, Loader2, 
+  ImageIcon, Smartphone, HandHeart, 
+  HelpCircle, Mail, Globe, Zap, Star, Quote, MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -598,7 +596,7 @@ export default function Home() {
             <h2 className="text-4xl font-black font-headline">আপডেট থাকতে চান?</h2>
             <p className="text-xl opacity-90">আমাদের আগামী রক্তদান ক্যাম্পেইন ও গুরুত্বপূর্ণ খবরাখবর ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
             <form className="flex flex-col sm:flex-row gap-4">
-              <Input placeholder="আপনার ইমেইল ঠিকানা" className="h-14 rounded-full bg-white text-slate-900 px-8 text-lg" type="email" />
+              <Input suppressHydrationWarning placeholder="আপনার ইমেইল ঠিকানা" className="h-14 rounded-full bg-white text-slate-900 px-8 text-lg" type="email" />
               <Button className="h-14 px-10 rounded-full bg-slate-900 hover:bg-slate-800 text-lg font-bold">সাবস্ক্রাইব</Button>
             </form>
           </div>

@@ -1,21 +1,23 @@
-import type {Metadata} from 'next';
+
+'use client';
+
+import { useState, useEffect } from 'react';
 import './globals.css';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/toaster';
 import { Droplet } from 'lucide-react';
 import Link from 'next/link';
 
-export const metadata: Metadata = {
-  title: 'RoktoDao - রক্তদান ও জীবন বাঁচান',
-  description: 'রক্তদাতা খুঁজুন, রক্তের অনুরোধ করুন এবং রক্তদানের মাধ্যমে জীবন বাঁচান।',
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   return (
     <html lang="bn">
@@ -79,7 +81,7 @@ export default function RootLayout({
             </div>
           </div>
           <div className="container mx-auto px-4 mt-20 pt-8 border-t border-slate-800 text-center text-slate-500">
-            <p>© {currentYear} RoktoDao. সর্বস্বত্ব সংরক্ষিত।</p>
+            <p>© {currentYear ?? ''} RoktoDao. সর্বস্বত্ব সংরক্ষিত।</p>
           </div>
         </footer>
 
