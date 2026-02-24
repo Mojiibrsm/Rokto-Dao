@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link from 'next/image';
+import NextLink from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
@@ -18,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getBloodRequests, type BloodRequest } from '@/lib/sheets';
 import { DISTRICTS } from '@/lib/bangladesh-data';
 import { Input } from '@/components/ui/input';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
@@ -47,6 +49,8 @@ export default function Home() {
     if (selectedDistrict !== 'যেকোনো জেলা' && selectedDistrict !== 'all') params.set('district', selectedDistrict);
     router.push(`/donors?${params.toString()}`);
   };
+
+  const whyDonateImage = PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || 'https://picsum.photos/seed/why-donate/800/600';
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
@@ -195,7 +199,7 @@ export default function Home() {
               <p className="text-muted-foreground mt-2 text-lg">জরুরি ভিত্তিতে যাদের রক্তের প্রয়োজন।</p>
             </div>
             <Button variant="outline" className="rounded-full px-8" asChild>
-              <Link href="/requests">সব অনুরোধ দেখুন <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <NextLink href="/requests">সব অনুরোধ দেখুন <ArrowRight className="ml-2 h-4 w-4" /></NextLink>
             </Button>
           </div>
 
@@ -259,12 +263,12 @@ export default function Home() {
             <div className="relative">
               <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
               <Image 
-                src="https://rokto-dao.vercel.app/files/Why_Donate_Blood.jpg" 
+                src={whyDonateImage} 
                 width={800} 
                 height={600} 
                 alt="Blood donation benefits" 
                 className="rounded-[3rem] shadow-2xl"
-                data-ai-hint="blood donation benefits"
+                data-ai-hint="blood donation"
               />
               <div className="absolute -bottom-8 -right-8 bg-white p-8 rounded-3xl shadow-xl border max-w-[250px] hidden md:block">
                 <p className="text-primary font-black text-4xl mb-1">১টি</p>
@@ -293,7 +297,7 @@ export default function Home() {
                 ))}
               </div>
               <Button size="lg" className="rounded-full px-10 h-14 text-lg" asChild>
-                <Link href="/register">রক্তদাতা হতে চাই</Link>
+                <NextLink href="/register">রক্তদাতা হতে চাই</NextLink>
               </Button>
             </div>
           </div>
@@ -308,7 +312,7 @@ export default function Home() {
               <h2 className="text-3xl md:text-5xl font-black font-headline leading-tight">আপনি কি আজ রক্তদান করতে পারবেন?</h2>
               <p className="text-xl opacity-90">আমাদের AI ভিত্তিক কুইজের মাধ্যমে মাত্র ১ মিনিটে আপনার শারীরিক যোগ্যতা যাচাই করুন।</p>
               <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 rounded-full px-10 h-14 text-lg font-bold" asChild>
-                <Link href="/eligibility">আমার যোগ্যতা যাচাই করুন</Link>
+                <NextLink href="/eligibility">আমার যোগ্যতা যাচাই করুন</NextLink>
               </Button>
             </div>
             <div className="h-48 w-48 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20">
@@ -443,7 +447,7 @@ export default function Home() {
                   fill 
                   alt="Gallery image" 
                   className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  data-ai-hint="blood donation camp"
+                  data-ai-hint="blood donation"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Badge variant="secondary" className="bg-white/20 backdrop-blur text-white border-none">Camp {i}</Badge>
@@ -502,7 +506,7 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-bold font-headline">স্বেচ্ছাসেবক হিসেবে যোগ দিন</h2>
             <p className="text-xl text-muted-foreground">রক্তদান ছাড়াও আমাদের এই মহৎ কাজে আপনি স্বেচ্ছাসেবক হিসেবে অবদান রাখতে পারেন। আমরা আপনার অপেক্ষায় আছি।</p>
             <Button size="lg" className="rounded-full px-12 h-14 text-lg font-bold bg-secondary hover:bg-secondary/90 shadow-xl" asChild>
-              <Link href="/contact">আবেদন করুন</Link>
+              <NextLink href="/contact">আবেদন করুন</NextLink>
             </Button>
           </div>
         </div>

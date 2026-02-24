@@ -1,4 +1,3 @@
-
 {
   "placeholderImages": [
     {
@@ -30,6 +29,12 @@
       "description": "Donor being treated",
       "imageUrl": "https://picsum.photos/seed/rokto_gallery2/600/600",
       "imageHint": "medical donor"
+    },
+    {
+      "id": "why-donate",
+      "description": "Why donate blood infographic",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771907154_কেন রক্ত দেবেন.png",
+      "imageHint": "blood donation benefits"
     }
   ]
 }
