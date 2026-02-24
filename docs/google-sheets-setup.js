@@ -19,6 +19,10 @@ const SCHEMA = {
   'Locations': ['District', 'Upazila', 'Union']
 };
 
+function updateTimestamp() {
+  PropertiesService.getScriptProperties().setProperty('LAST_UPDATE', new Date().getTime().toString());
+}
+
 function initSheets() {
   Object.keys(SCHEMA).forEach(name => {
     let sheet = SS.getSheetByName(name);
@@ -54,27 +58,34 @@ function doPost(e) {
   }
 
   const action = data.action;
-  if (action === 'register') return registerDonor(data);
-  if (action === 'updateProfile') return updateDonorProfile(data);
-  if (action === 'bulkRegister') return bulkRegisterDonors(data);
-  if (action === 'book') return scheduleAppointment(data);
-  if (action === 'createRequest') return createBloodRequest(data);
-  if (action === 'updateStatus') return updateEntryStatus(data);
-  if (action === 'deleteEntry') return deleteEntry(data);
-  if (action === 'seedLocations') return seedLocations(data.rows);
-  if (action === 'createDrive') return createDrive(data);
-  
-  return jsonResponse({ error: 'Invalid action' });
+  let result;
+
+  if (action === 'register') result = registerDonor(data);
+  else if (action === 'updateProfile') result = updateDonorProfile(data);
+  else if (action === 'bulkRegister') result = bulkRegisterDonors(data);
+  else if (action === 'book') result = scheduleAppointment(data);
+  else if (action === 'createRequest') result = createBloodRequest(data);
+  else if (action === 'updateStatus') result = updateEntryStatus(data);
+  else if (action === 'deleteEntry') result = deleteEntry(data);
+  else if (action === 'seedLocations') result = seedLocations(data.rows);
+  else if (action === 'createDrive') result = createDrive(data);
+  else return jsonResponse({ error: 'Invalid action' });
+
+  updateTimestamp();
+  return result;
 }
 
 function getGlobalStats() {
   const donors = SS.getSheetByName('Donors').getLastRow() - 1;
   const requests = SS.getSheetByName('Requests').getLastRow() - 1;
   const appointments = SS.getSheetByName('Appointments').getLastRow() - 1;
+  const lastUpdate = PropertiesService.getScriptProperties().getProperty('LAST_UPDATE') || '0';
+  
   return jsonResponse({
     totalDonors: Math.max(0, donors),
     totalRequests: Math.max(0, requests),
-    totalAppointments: Math.max(0, appointments)
+    totalAppointments: Math.max(0, appointments),
+    lastUpdate: lastUpdate
   });
 }
 
@@ -118,7 +129,7 @@ function updateDonorProfile(data) {
   const emailCol = headers.indexOf('Email');
   const phoneCol = headers.indexOf('Phone');
   
-  const searchKey = data.originalKey; // Can be email or phone
+  const searchKey = data.originalKey; 
   
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][emailCol].toString().toLowerCase() === searchKey.toLowerCase() || 

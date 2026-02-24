@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Service layer for interacting with Google Sheets.
- * Optimized with better mapping for Organization/Team features and robust phone handling.
+ * Updated with a smart caching mechanism to reduce redundant network calls.
  */
 
 export type BloodDrive = {
@@ -58,6 +58,7 @@ export type BloodRequest = {
 
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 
+// Helper to handle browser-side caching (Used by client-side logic via this server service)
 async function postToSheets(payload: any) {
   if (!SHEETS_URL) {
     console.error("Backend URL not configured in .env file.");
@@ -123,9 +124,12 @@ async function fetchFromSheets(action: string, params: string = "") {
   }
 }
 
+/**
+ * Get stats from backend. Always fresh as it's small and contains the 'lastUpdate' marker.
+ */
 export async function getGlobalStats() {
   const data = await fetchFromSheets('getStats');
-  return data || { totalDonors: 0, totalRequests: 0, totalAppointments: 0 };
+  return data || { totalDonors: 0, totalRequests: 0, totalAppointments: 0, lastUpdate: '0' };
 }
 
 export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
@@ -153,6 +157,9 @@ export async function createBloodDrive(data: Omit<BloodDrive, 'id'>) {
   return postToSheets({ action: 'createDrive', id, ...data });
 }
 
+/**
+ * Fetch donors with a full raw list. Filtering is done here or on the client.
+ */
 export async function getDonors(filters?: { bloodType?: string; district?: string; area?: string; union?: string; organization?: string }): Promise<Donor[]> {
   const data = await fetchFromSheets('getDonors');
   if (!Array.isArray(data)) return [];
@@ -160,7 +167,7 @@ export async function getDonors(filters?: { bloodType?: string; district?: strin
   const normalized: Donor[] = data.map((d: any) => ({
     email: d.email || '',
     fullName: d.fullname || d.fullName || 'নামহীন',
-    phone: String(d.phone || ''), // Ensure phone is a string
+    phone: String(d.phone || ''), 
     bloodType: d.bloodtype || d.bloodType || 'Unknown',
     registrationDate: d.registrationdate || d.registrationDate || '',
     district: d.district || '',

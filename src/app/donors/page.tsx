@@ -2,16 +2,20 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getDonors, type Donor } from '@/lib/sheets';
+import { getDonors, getGlobalStats, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users, Building2 } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
+const CACHE_KEY = 'roktodao_donors_cache';
+const CACHE_TIME_KEY = 'roktodao_donors_last_sync';
+
 function DonorsContent() {
   const [donors, setDonors] = useState<Donor[]>([]);
+  const [allDonors, setAllDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
   const [upazilas, setUpazilas] = useState<string[]>([]);
   const [unions, setUnions] = useState<string[]>([]);
@@ -56,16 +60,36 @@ function DonorsContent() {
     }
   }, [filters.area, filters.district]);
 
+  const fetchAndCacheDonors = async () => {
+    const freshData = await getDonors();
+    setAllDonors(freshData);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(freshData));
+    const stats = await getGlobalStats();
+    localStorage.setItem(CACHE_TIME_KEY, stats.lastUpdate || '0');
+    return freshData;
+  };
+
   const loadDonorsData = async () => {
     setLoading(true);
     try {
-      const data = await getDonors({
-        bloodType: filters.bloodType === 'যেকোনো গ্রুপ' ? undefined : filters.bloodType,
-        district: filters.district === 'যেকোনো জেলা' ? undefined : filters.district,
-        area: filters.area === 'যেকোনো উপজেলা' ? undefined : filters.area,
-        union: filters.union === 'যেকোনো ইউনিয়ন' ? undefined : filters.union
-      } as any);
-      setDonors(data);
+      // 1. Check current sync timestamp from server (small request)
+      const stats = await getGlobalStats();
+      const serverLastUpdate = stats.lastUpdate || '0';
+      const localLastUpdate = localStorage.getItem(CACHE_TIME_KEY);
+      const cachedDonors = localStorage.getItem(CACHE_KEY);
+
+      let dataToUse: Donor[] = [];
+
+      if (cachedDonors && localLastUpdate === serverLastUpdate) {
+        // Cache is valid, use it
+        dataToUse = JSON.parse(cachedDonors);
+        setAllDonors(dataToUse);
+      } else {
+        // Cache missing or outdated, fetch fresh
+        dataToUse = await fetchAndCacheDonors();
+      }
+
+      applyFilters(dataToUse);
     } catch (error) {
       console.error(error);
     } finally {
@@ -73,18 +97,42 @@ function DonorsContent() {
     }
   };
 
+  const applyFilters = (data: Donor[]) => {
+    let filtered = data;
+    if (filters.bloodType !== 'যেকোনো গ্রুপ') {
+      filtered = filtered.filter(d => d.bloodType === filters.bloodType);
+    }
+    if (filters.district !== 'যেকোনো জেলা') {
+      filtered = filtered.filter(d => d.district?.toLowerCase() === filters.district?.toLowerCase());
+    }
+    if (filters.area !== 'যেকোনো উপজেলা') {
+      filtered = filtered.filter(d => d.area?.toLowerCase() === filters.area?.toLowerCase());
+    }
+    if (filters.union !== 'যেকোনো ইউনিয়ন') {
+      filtered = filtered.filter(d => d.union?.toLowerCase() === filters.union?.toLowerCase());
+    }
+    setDonors(filtered);
+  };
+
   useEffect(() => {
     loadDonorsData();
-  }, [filters.bloodType, filters.district]);
+  }, []);
+
+  // Re-apply filters locally whenever filter state changes
+  useEffect(() => {
+    if (allDonors.length > 0) {
+      applyFilters(allDonors);
+    }
+  }, [filters, allDonors]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    loadDonorsData();
+    applyFilters(allDonors);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="text-center mb-8 space-y-4">
+      <div className="text-center mb-8 space-y-2">
         <div className="flex justify-center mb-2">
           <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-1 rounded-full flex items-center gap-2 text-xs font-bold">
             <Heart className="h-3.5 w-3.5 fill-primary" /> মানবতার সেবায় নিয়োজিত
