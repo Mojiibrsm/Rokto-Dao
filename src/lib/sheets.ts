@@ -17,6 +17,7 @@ export type Donor = {
   status?: string;
   totalDonations?: number;
   lastDonationDate?: string;
+  password?: string;
 };
 
 export type BloodRequest = {
@@ -35,26 +36,15 @@ export type BloodRequest = {
   createdAt: string;
   disease?: string;
   diseaseInfo?: string;
+  createdBy?: string;
 };
 
-export type Appointment = {
-  id: string;
-  driveId: string;
-  driveName: string;
-  userEmail: string;
-  userName: string;
-  date: string;
-  time: string;
-  status: string;
-};
-
-export type BloodDrive = {
-  id: string;
-  name: string;
-  location: string;
-  date: string;
-  time: string;
-  distance: string;
+export type ActivityLog = {
+  timestamp: string;
+  username: string;
+  phone: string;
+  action: string;
+  details: string;
 };
 
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
@@ -116,7 +106,8 @@ export async function getDonors(): Promise<Donor[]> {
     organization: d.organization || '',
     status: d.status || 'Available',
     totalDonations: isNaN(parseInt(d.totaldonations)) ? 0 : parseInt(d.totaldonations),
-    lastDonationDate: d.lastdonationdate || 'N/A'
+    lastDonationDate: d.lastdonationdate || 'N/A',
+    password: d.password || ''
   }));
 }
 
@@ -128,8 +119,17 @@ export async function updateDonorProfile(originalKey: string, data: Partial<Dono
   return postToSheets({ action: 'updateProfile', originalKey, ...data });
 }
 
-export async function bulkRegisterDonors(donors: any[]) {
-  return postToSheets({ action: 'bulkRegister', donors });
+export async function setDonorPassword(email: string, phone: string, password: string) {
+  return postToSheets({ action: 'setPassword', email, phone, password });
+}
+
+export async function logActivity(userName: string, phone: string, logAction: string, details: string) {
+  return postToSheets({ action: 'logActivity', userName, phone, logAction, details });
+}
+
+export async function getLogs(): Promise<ActivityLog[]> {
+  const data = await fetchFromSheets('getLogs');
+  return Array.isArray(data) ? data : [];
 }
 
 export async function getBloodRequests(): Promise<BloodRequest[]> {
@@ -151,55 +151,11 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
     status: d.status || 'Pending',
     createdAt: d.createdat || '',
     disease: d.disease || '',
-    diseaseInfo: d.diseaseinfo || ''
+    diseaseInfo: d.diseaseinfo || '',
+    createdBy: d.createdby || 'Public'
   }));
 }
 
 export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
   return postToSheets({ action: 'createRequest', ...data });
-}
-
-export async function deleteEntry(sheetName: string, id: string) {
-  return postToSheets({ action: 'deleteEntry', sheetName, id });
-}
-
-export async function seedLocationData(rows: string[][]) {
-  return postToSheets({ action: 'seedLocations', rows });
-}
-
-export async function getDonationHistory(email: string): Promise<Appointment[]> {
-  const data = await fetchFromSheets('getAppointments', `&email=${email}`);
-  if (!Array.isArray(data)) return [];
-  return data.map((d: any) => ({
-    id: d.id || '',
-    driveId: d.driveid || '',
-    driveName: d.drivename || '',
-    userEmail: d.useremail || '',
-    userName: d.username || '',
-    date: d.date || '',
-    time: d.time || '',
-    status: d.status || 'Scheduled'
-  }));
-}
-
-export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
-  const params = query ? `&query=${encodeURIComponent(query)}` : '';
-  const data = await fetchFromSheets('getDrives', params);
-  if (!Array.isArray(data)) return [];
-  return data.map((d: any) => ({
-    id: d.id || '',
-    name: d.name || '',
-    location: d.location || '',
-    date: d.date || '',
-    time: d.time || '',
-    distance: d.distance || '0 km'
-  }));
-}
-
-export async function scheduleAppointment(data: any) {
-  return postToSheets({ action: 'scheduleAppointment', ...data });
-}
-
-export async function createBloodDrive(data: any) {
-  return postToSheets({ action: 'createDrive', ...data });
 }
