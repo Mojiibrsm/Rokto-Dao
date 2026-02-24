@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -10,8 +11,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function AboutPage() {
+  const aboutHeroImage = PlaceHolderImages.find(img => img.id === 'about-us-hero')?.imageUrl || 'https://picsum.photos/seed/lifeline4/800/800';
+
   return (
     <div className="flex flex-col gap-0 pb-20">
       {/* 1. Hero Section */}
@@ -94,12 +98,12 @@ export default function AboutPage() {
             <div className="relative order-1 lg:order-2 flex justify-center">
               <div className="absolute inset-0 bg-primary/5 rounded-full blur-3xl scale-90"></div>
               <Image 
-                src="https://picsum.photos/seed/lifeline4/800/800" 
+                src={aboutHeroImage} 
                 width={600} 
-                height={600} 
-                alt="Community work" 
-                className="rounded-[4rem] shadow-2xl relative z-10"
-                data-ai-hint="community people"
+                height={800} 
+                alt="Serving Humanity" 
+                className="rounded-[4rem] shadow-2xl relative z-10 object-cover"
+                data-ai-hint="humanity service"
               />
             </div>
           </div>

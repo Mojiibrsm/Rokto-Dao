@@ -42,6 +42,12 @@
       "description": "Can you donate blood today poster",
       "imageUrl": "https://image.mojib.me/uploads/General/1771907823_Can%20You%20Donate%20Blood%20Today.png",
       "imageHint": "blood donor"
+    },
+    {
+      "id": "about-us-hero",
+      "description": "RoktoDao team and mission illustration",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771909111_about%20us%20Roktodao.png",
+      "imageHint": "humanity service"
     }
   ]
 }
