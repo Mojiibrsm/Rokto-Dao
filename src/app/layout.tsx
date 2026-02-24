@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: 'রক্তদাও - RoktoDao | বাংলাদেশে রক্তদাতা খুঁজুন ও জীবন বাঁচান',
     template: '%s | RoktoDao'
   },
-  description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন এবং নিজে রক্তদাতার তালিকায় নাম নিবন্ধন করে জীবন বাঁচাতে পারেন। বিশেষ করে কক্সবাজার ও রামু এলাকায় জরুরি রক্ত সেবা পেতে আমাদের সাথে যুক্ত হোন।',
+  description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি সারা বাংলাদেশের যেকোনো প্রান্ত থেকে জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন এবং নিজে রক্তদাতার তালিকায় নাম নিবন্ধন করে জীবন বাঁচাতে পারেন।',
   keywords: [
     'রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান', 'Blood Donation Bangladesh', 
     'Find Blood Donor', 'Emergency Blood', 'রক্তদান অ্যাপ', 'জীবন বাঁচান', 'ব্লাড ডোনার',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'রক্তদাও - RoktoDao | মানবতার সেবায় নিয়োজিত',
-    description: 'কক্সবাজার ও রামু সহ সারাদেশে জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে এবং স্বেচ্ছায় রক্তদানে উৎসাহিত করতে আমাদের সাথে যুক্ত হোন।',
+    description: 'সারাদেশে জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে এবং স্বেচ্ছায় রক্তদানে উৎসাহিত করতে আমাদের সাথে যুক্ত হোন।',
     url: 'https://roktodao.com',
     siteName: 'RoktoDao',
     locale: 'bn_BD',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'রক্তদাও - RoktoDao',
-    description: 'বাংলাদেশে জরুরি রক্তদাতা খোঁজার সহজ মাধ্যম। বিশেষ করে রামু ও কক্সবাজার এলাকায় দ্রুত রক্ত পেতে সাহায্য করে।',
+    description: 'বাংলাদেশে জরুরি রক্তদাতা খোঁজার সহজ মাধ্যম। দ্রুত রক্ত পেতে সাহায্য করে আমাদের দেশব্যাপী নেটওয়ার্ক।',
   },
   robots: {
     index: true,
@@ -107,7 +107,7 @@ export default function RootLayout({
                 <span className="tracking-tight font-headline">RoktoDao</span>
               </Link>
               <p className="text-slate-400 text-base">
-                Connecting blood donors with recipients across Bangladesh, focusing on Ramu and Cox's Bazar.
+                Connecting blood donors with recipients across Bangladesh. Saving lives together through technology and humanity.
               </p>
               <div className="flex flex-col gap-2">
                 <div className="text-xl font-bold text-primary">+8801600151907</div>
