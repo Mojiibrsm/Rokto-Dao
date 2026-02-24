@@ -148,22 +148,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. সাম্প্রতিক কার্যক্রম (Marquee) */}
-      <div className="bg-primary text-white py-3 overflow-hidden whitespace-nowrap border-y">
-        <div className="inline-block animate-marquee-slow hover-pause px-4 font-bold">
-          {[
-            "ঢাকা মেডিকেল কলেজে আজ সকালে ৩ ব্যাগ O+ রক্ত দেওয়া হয়েছে।",
-            "চট্টগ্রামের পটিয়াতে একজন থ্যালাসেমিয়া রোগীর জন্য B- রক্ত প্রয়োজন।",
-            "সিলেটে ৫ জন নতুন রক্তদাতা আজ নিবন্ধন করেছেন।",
-            "রংপুরে আগামী শুক্রবার রক্তদান ক্যাম্প অনুষ্ঠিত হবে।"
-          ].map((text, i) => (
-            <span key={i} className="mx-12 flex items-center gap-2">
-              <Zap className="h-4 w-4 fill-white" /> {text}
-            </span>
-          ))}
-        </div>
-      </div>
-
       {/* 4. আমাদের রক্তযোদ্ধারা */}
       <section className="py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
