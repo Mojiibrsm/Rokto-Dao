@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/toaster';
-import { Droplet } from 'lucide-react';
+import { Droplet, Facebook } from 'lucide-react';
 import Link from 'next/link';
 import { FooterYear } from '@/components/footer-year';
 
@@ -109,7 +109,14 @@ export default function RootLayout({
               <p className="text-slate-400 text-base">
                 Connecting blood donors with recipients across Bangladesh, focusing on Ramu and Cox's Bazar.
               </p>
-              <div className="text-xl font-bold text-primary">+880 123 456 7890</div>
+              <div className="flex flex-col gap-2">
+                <div className="text-xl font-bold text-primary">+8801600151907</div>
+                <div className="flex gap-3 pt-2">
+                  <a href="https://www.facebook.com/Roktooo" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">

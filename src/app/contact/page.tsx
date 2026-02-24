@@ -38,11 +38,11 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="flex flex-col gap-0 pb-20">
+    <div className="flex flex-col gap-0 pb-16">
       {/* 1. Hero Section */}
-      <section className="relative bg-white pt-12">
+      <section className="relative bg-white pt-8">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl relative min-h-[400px] md:min-h-[550px]">
+          <div className="max-w-6xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl relative min-h-[350px] md:min-h-[450px]">
             <Image 
               src={contactHeroImage} 
               fill 
@@ -63,43 +63,49 @@ export default function ContactPage() {
       </section>
 
       {/* 2. Contact Info & Form */}
-      <section className="py-24 container mx-auto px-4">
-        <div className="grid lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
+      <section className="py-16 container mx-auto px-4">
+        <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           
           {/* Info Side */}
-          <div className="space-y-8">
-            <div className="space-y-4">
+          <div className="space-y-6">
+            <div className="space-y-2">
               <h2 className="text-3xl font-bold font-headline">যোগাযোগের তথ্য</h2>
               <p className="text-muted-foreground">জরুরি প্রয়োজনে সরাসরি আমাদের হেল্পলাইনে কল করতে পারেন।</p>
             </div>
 
-            <div className="grid gap-6">
+            <div className="grid gap-4">
               {[
-                { icon: Phone, title: "ফোন করুন", val: "+৮৮০ ১২৩৪ ৫৬৭ ৮৯০", desc: "সকাল ৯টা - রাত ৮টা", color: "text-primary bg-primary/10" },
-                { icon: Mail, title: "ইমেইল করুন", val: "support@roktodao.com", desc: "যেকোনো অফিসিয়াল কাজে", color: "text-blue-600 bg-blue-50" },
-                { icon: MapPin, title: "অফিসের ঠিকানা", val: "শাহবাগ, ঢাকা-১০০০", desc: "বাংলাদেশ", color: "text-green-600 bg-green-50" }
+                { icon: Phone, title: "ফোন করুন", val: "+8801600151907", desc: "সকাল ৯টা - রাত ৮টা", color: "text-primary bg-primary/10" },
+                { icon: Mail, title: "ইমেইল করুন", val: "mojibrsm@gmail.com", desc: "যেকোনো অফিসিয়াল কাজে", color: "text-blue-600 bg-blue-50" },
+                { icon: MapPin, title: "অফিসের ঠিকানা", val: "House: 25, Road: 10, Sector: 11, Uttara, Dhaka-1230", desc: "বাংলাদেশ", color: "text-green-600 bg-green-50" }
               ].map((info, i) => (
-                <div key={i} className="flex gap-5 p-6 rounded-3xl bg-white border shadow-sm hover:shadow-md transition-all group">
-                  <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${info.color}`}>
-                    <info.icon className="h-7 w-7" />
+                <div key={i} className="flex gap-4 p-5 rounded-3xl bg-white border shadow-sm hover:shadow-md transition-all group">
+                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${info.color}`}>
+                    <info.icon className="h-6 w-6" />
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{info.title}</h4>
-                    <p className="text-xl font-bold">{info.val}</p>
+                  <div className="space-y-0.5 overflow-hidden">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{info.title}</h4>
+                    <p className="text-lg font-bold truncate">{info.val}</p>
                     <p className="text-xs text-muted-foreground">{info.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="p-8 rounded-3xl bg-slate-900 text-white space-y-6">
+            <div className="p-6 rounded-3xl bg-slate-900 text-white space-y-4">
               <h4 className="text-xl font-bold">সামাজিক যোগাযোগ</h4>
               <div className="flex gap-4">
-                {[Facebook, Twitter, Youtube].map((Icon, i) => (
-                  <Button key={i} variant="outline" size="icon" className="h-12 w-12 rounded-full border-white/20 bg-white/5 hover:bg-primary hover:border-primary text-white transition-all">
-                    <Icon className="h-5 w-5" />
-                  </Button>
-                ))}
+                <Button variant="outline" size="icon" className="h-12 w-12 rounded-full border-white/20 bg-white/5 hover:bg-primary hover:border-primary text-white transition-all" asChild>
+                  <a href="https://www.facebook.com/Roktooo" target="_blank" rel="noopener noreferrer">
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                </Button>
+                <Button variant="outline" size="icon" className="h-12 w-12 rounded-full border-white/20 bg-white/5 hover:bg-primary hover:border-primary text-white transition-all">
+                  <Twitter className="h-5 w-5" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-12 w-12 rounded-full border-white/20 bg-white/5 hover:bg-primary hover:border-primary text-white transition-all">
+                  <Youtube className="h-5 w-5" />
+                </Button>
               </div>
               <p className="text-sm text-slate-400">নতুন আপডেট পেতে আমাদের সোশ্যাল মিডিয়ায় ফলো করুন।</p>
             </div>
@@ -108,36 +114,36 @@ export default function ContactPage() {
           {/* Form Side */}
           <div className="lg:col-span-2">
             {!submitted ? (
-              <Card className="rounded-[2.5rem] p-8 md:p-12 shadow-xl border-none bg-white">
-                <CardHeader className="px-0 pt-0 space-y-4 mb-8">
-                  <div className="h-16 w-16 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
-                    <MessageSquare className="h-8 w-8" />
+              <Card className="rounded-[2.5rem] p-6 md:p-10 shadow-xl border-none bg-white">
+                <CardHeader className="px-0 pt-0 space-y-2 mb-6">
+                  <div className="h-14 w-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
+                    <MessageSquare className="h-7 w-7" />
                   </div>
                   <CardTitle className="text-3xl font-bold">আমাদের মেসেজ পাঠান</CardTitle>
                   <CardDescription className="text-lg">নিচের ফর্মটি পূরণ করুন, আমরা খুব দ্রুত আপনার সাথে যোগাযোগ করব।</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="name" className="text-base">আপনার নাম</Label>
-                        <Input id="name" placeholder="পুরো নাম লিখুন" className="h-12 rounded-xl bg-muted/30 border-none" required />
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="name" className="text-sm">আপনার নাম</Label>
+                        <Input id="name" placeholder="পুরো নাম লিখুন" className="h-11 rounded-xl bg-muted/30 border-none" required />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-base">ইমেইল ঠিকানা</Label>
-                        <Input id="email" type="email" placeholder="example@mail.com" className="h-12 rounded-xl bg-muted/30 border-none" required suppressHydrationWarning />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="email" className="text-sm">ইমেইল ঠিকানা</Label>
+                        <Input id="email" type="email" placeholder="example@mail.com" className="h-11 rounded-xl bg-muted/30 border-none" required suppressHydrationWarning />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="subject" className="text-base">বিষয়</Label>
-                      <Input id="subject" placeholder="কি বিষয়ে কথা বলতে চান?" className="h-12 rounded-xl bg-muted/30 border-none" required />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="subject" className="text-sm">বিষয়</Label>
+                      <Input id="subject" placeholder="কি বিষয়ে কথা বলতে চান?" className="h-11 rounded-xl bg-muted/30 border-none" required />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message" className="text-base">আপনার বার্তা</Label>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="message" className="text-sm">আপনার বার্তা</Label>
                       <Textarea 
                         id="message" 
                         placeholder="এখানে বিস্তারিত লিখুন..." 
-                        className="min-h-[150px] rounded-2xl bg-muted/30 border-none resize-none" 
+                        className="min-h-[120px] rounded-2xl bg-muted/30 border-none resize-none" 
                         required 
                       />
                     </div>
@@ -157,15 +163,15 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-white rounded-[2.5rem] shadow-xl border border-green-100">
-                <div className="h-24 w-24 rounded-full bg-green-100 flex items-center justify-center mb-8">
-                  <CheckCircle2 className="h-12 w-12 text-green-600" />
+              <div className="h-full flex flex-col items-center justify-center text-center p-10 bg-white rounded-[2.5rem] shadow-xl border border-green-100">
+                <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
+                  <CheckCircle2 className="h-10 w-10 text-green-600" />
                 </div>
-                <h2 className="text-4xl font-bold mb-4 font-headline">ধন্যবাদ!</h2>
-                <p className="text-xl text-muted-foreground max-w-md leading-relaxed mb-10">
+                <h2 className="text-3xl font-bold mb-3 font-headline">ধন্যবাদ!</h2>
+                <p className="text-lg text-muted-foreground max-w-md leading-relaxed mb-8">
                   আপনার বার্তাটি সফলভাবে আমাদের কাছে পৌঁছেছে। আমাদের টিম খুব শীঘ্রই আপনার সাথে যোগাযোগ করবে।
                 </p>
-                <Button variant="outline" className="h-12 px-8 rounded-full border-primary text-primary" onClick={() => setSubmitted(false)}>
+                <Button variant="outline" className="h-11 px-8 rounded-full border-primary text-primary" onClick={() => setSubmitted(false)}>
                   আরেকটি বার্তা পাঠান
                 </Button>
               </div>
@@ -175,14 +181,13 @@ export default function ContactPage() {
       </section>
 
       {/* 3. Map/Location Placeholder */}
-      <section className="container mx-auto px-4 pb-24">
-        <div className="w-full h-[400px] bg-muted rounded-[3rem] overflow-hidden relative border-4 border-white shadow-2xl">
+      <section className="container mx-auto px-4 pb-16">
+        <div className="w-full h-[350px] bg-muted rounded-[3rem] overflow-hidden relative border-4 border-white shadow-2xl">
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/5 backdrop-blur-[2px]">
-            <MapPin className="h-16 w-16 text-primary mb-4 opacity-50" />
+            <MapPin className="h-12 w-12 text-primary mb-3 opacity-50" />
             <p className="text-xl font-bold text-slate-600">আমাদের অফিসের অবস্থান</p>
-            <p className="text-muted-foreground">শাহবাগ, ঢাকা, বাংলাদেশ</p>
+            <p className="text-muted-foreground">House: 25, Road: 10, Sector: 11, Uttara, Dhaka-1230</p>
           </div>
-          {/* Interactive map integration would go here */}
         </div>
       </section>
     </div>
