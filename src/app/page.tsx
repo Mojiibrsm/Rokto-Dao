@@ -188,7 +188,7 @@ export default function Home() {
                         <div className="space-y-1">
                           <CardTitle className="text-xl">{donor.fullName}</CardTitle>
                           <CardDescription className="flex items-center gap-1 text-xs">
-                            <MapPin className="h-3 w-3 text-primary" /> {donor.area || 'N/A'}, {donor.district}
+                            <MapPin className="h-3 w-3 text-primary" /> {donor.area && donor.area !== 'N/A' ? donor.area + ', ' : ''} {donor.district}
                           </CardDescription>
                           {donor.organization && (
                             <div className="flex items-center gap-1.5 text-secondary font-bold text-[11px] bg-secondary/5 px-2 py-0.5 rounded-md border border-secondary/10 w-fit">

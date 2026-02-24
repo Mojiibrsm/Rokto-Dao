@@ -12,6 +12,7 @@ import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
 function DonorsContent() {
   const [donors, setDonors] = useState<Donor[]>([]);
+  const [organizations, setOrganizations] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [upazilas, setUpazilas] = useState<string[]>([]);
   const [unions, setUnions] = useState<string[]>([]);
@@ -21,19 +22,32 @@ function DonorsContent() {
     bloodType: 'যেকোনো গ্রুপ',
     district: 'যেকোনো জেলা',
     area: 'যেকোনো উপজেলা',
-    union: 'যেকোনো ইউনিয়ন'
+    union: 'যেকোনো ইউনিয়ন',
+    organization: 'যেকোনো সংগঠন'
   });
+
+  // Load initial data and extract unique organizations
+  useEffect(() => {
+    async function loadInitial() {
+      const allDonors = await getDonors();
+      const uniqueOrgs = Array.from(new Set(allDonors.map(d => d.organization).filter(Boolean))) as string[];
+      setOrganizations(uniqueOrgs.sort((a, b) => a.localeCompare(b, 'bn')));
+    }
+    loadInitial();
+  }, []);
 
   // Initialize filters from search parameters
   useEffect(() => {
     const bloodType = searchParams.get('bloodType');
     const district = searchParams.get('district');
+    const organization = searchParams.get('organization');
     
-    if (bloodType || district) {
+    if (bloodType || district || organization) {
       setFilters(prev => ({
         ...prev,
         bloodType: bloodType || 'যেকোনো গ্রুপ',
-        district: district || 'যেকোনো জেলা'
+        district: district || 'যেকোনো জেলা',
+        organization: organization || 'যেকোনো সংগঠন'
       }));
     }
   }, [searchParams]);
@@ -63,7 +77,8 @@ function DonorsContent() {
         bloodType: filters.bloodType === 'যেকোনো গ্রুপ' ? undefined : filters.bloodType,
         district: filters.district === 'যেকোনো জেলা' ? undefined : filters.district,
         area: filters.area === 'যেকোনো উপজেলা' ? undefined : filters.area,
-        union: filters.union === 'যেকোনো ইউনিয়ন' ? undefined : filters.union
+        union: filters.union === 'যেকোনো ইউনিয়ন' ? undefined : filters.union,
+        organization: filters.organization === 'যেকোনো সংগঠন' ? undefined : filters.organization
       } as any);
       setDonors(data);
     } catch (error) {
@@ -75,7 +90,7 @@ function DonorsContent() {
 
   useEffect(() => {
     loadDonorsData();
-  }, [filters.bloodType, filters.district]);
+  }, [filters.bloodType, filters.district, filters.organization]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +120,7 @@ function DonorsContent() {
       </div>
 
       <Card className="mb-12 shadow-xl border-t-4 border-t-primary rounded-[2.5rem] p-8 bg-white/80 backdrop-blur">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
           <div className="space-y-2">
             <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
               <Droplet className="h-3 w-3 text-primary" /> রক্তের গ্রুপ
@@ -135,6 +150,23 @@ function DonorsContent() {
                 <SelectItem value="যেকোনো জেলা">যেকোনো জেলা</SelectItem>
                 {DISTRICTS.map(d => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
+              <Users className="h-3 w-3 text-primary" /> সংগঠন বা টিম
+            </label>
+            <Select value={filters.organization} onValueChange={(val) => setFilters(f => ({ ...f, organization: val }))}>
+              <SelectTrigger className="h-12 border-2">
+                <SelectValue placeholder="যেকোনো সংগঠন" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="যেকোনো সংগঠন">যেকোনো সংগঠন</SelectItem>
+                {organizations.map(org => (
+                  <SelectItem key={org} value={org}>{org}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -188,7 +220,7 @@ function DonorsContent() {
         <div className="text-center py-24 space-y-4 bg-muted/20 rounded-[3rem] border-2 border-dashed">
           <User className="h-16 w-16 mx-auto text-muted-foreground opacity-20" />
           <p className="text-2xl font-bold text-muted-foreground">কোনো রক্তদাতা পাওয়া যায়নি।</p>
-          <p className="text-muted-foreground">ভিন্ন কোনো গ্রুপ বা এলাকা দিয়ে চেষ্টা করুন।</p>
+          <p className="text-muted-foreground">ভিন্ন কোনো গ্রুপ, সংগঠন বা এলাকা দিয়ে চেষ্টা করুন।</p>
         </div>
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -203,7 +235,7 @@ function DonorsContent() {
                     <div className="space-y-1">
                       <CardTitle className="text-xl">{donor.fullName}</CardTitle>
                       <CardDescription className="flex items-center gap-1 text-xs">
-                        <MapPin className="h-3 w-3 text-primary" /> {donor.union ? donor.union + ', ' : ''} {donor.area}, {donor.district}
+                        <MapPin className="h-3 w-3 text-primary" /> {donor.union && donor.union !== 'N/A' ? donor.union + ', ' : ''} {donor.area && donor.area !== 'N/A' ? donor.area + ', ' : ''} {donor.district}
                       </CardDescription>
                       {donor.organization && (
                         <div className="flex items-center gap-1.5 text-secondary font-bold text-[11px] bg-secondary/5 px-2 py-0.5 rounded-md border border-secondary/10 w-fit">

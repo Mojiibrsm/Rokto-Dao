@@ -153,7 +153,7 @@ export async function createBloodDrive(data: Omit<BloodDrive, 'id'>) {
   return postToSheets({ action: 'createDrive', id, ...data });
 }
 
-export async function getDonors(filters?: { bloodType?: string; district?: string; area?: string; union?: string }): Promise<Donor[]> {
+export async function getDonors(filters?: { bloodType?: string; district?: string; area?: string; union?: string; organization?: string }): Promise<Donor[]> {
   const data = await fetchFromSheets('getDonors');
   if (!Array.isArray(data)) return [];
   
@@ -184,6 +184,9 @@ export async function getDonors(filters?: { bloodType?: string; district?: strin
   }
   if (filters?.union && filters.union !== 'যেকোনো ইউনিয়ন') {
     filtered = filtered.filter(d => d.union?.toLowerCase() === filters.union?.toLowerCase());
+  }
+  if (filters?.organization && filters.organization !== 'যেকোনো সংগঠন') {
+    filtered = filtered.filter(d => d.organization?.toLowerCase() === filters.organization?.toLowerCase());
   }
   return filtered;
 }
