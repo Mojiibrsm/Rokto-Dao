@@ -6,7 +6,7 @@ import { getDonors, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
@@ -200,11 +200,16 @@ function DonorsContent() {
                     <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-primary/20">
                       {(donor.fullName || 'D').substring(0, 1)}
                     </div>
-                    <div>
+                    <div className="space-y-1">
                       <CardTitle className="text-xl">{donor.fullName}</CardTitle>
-                      <CardDescription className="flex items-center gap-1 mt-0.5 text-xs">
-                        <MapPin className="h-3 w-3" /> {donor.union ? donor.union + ', ' : ''} {donor.area}, {donor.district}
+                      <CardDescription className="flex items-center gap-1 text-xs">
+                        <MapPin className="h-3 w-3 text-primary" /> {donor.union ? donor.union + ', ' : ''} {donor.area}, {donor.district}
                       </CardDescription>
+                      {donor.organization && (
+                        <div className="flex items-center gap-1.5 text-secondary font-bold text-[11px] bg-secondary/5 px-2 py-0.5 rounded-md border border-secondary/10 w-fit">
+                          <Users className="h-3 w-3" /> {donor.organization}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Badge className="bg-primary text-white text-xl font-black h-12 w-12 flex items-center justify-center p-0 rounded-xl shadow-md">
@@ -213,12 +218,6 @@ function DonorsContent() {
                 </div>
               </CardHeader>
               <CardContent className="pt-8 space-y-6">
-                {donor.organization && (
-                  <Badge variant="secondary" className="bg-secondary/10 text-secondary border-none px-4 py-1.5 rounded-full flex items-center gap-2 w-fit font-bold">
-                    <Users className="h-4 w-4" /> {donor.organization}
-                  </Badge>
-                )}
-                
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="p-4 bg-muted/30 rounded-2xl border">
                     <p className="text-muted-foreground uppercase text-[10px] font-black mb-1">শেষ রক্তদান</p>

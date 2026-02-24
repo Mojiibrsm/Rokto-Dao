@@ -185,11 +185,16 @@ export default function Home() {
                         <div className="h-14 w-14 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-primary/20">
                           {(donor.fullName || 'D').substring(0, 1)}
                         </div>
-                        <div>
+                        <div className="space-y-1">
                           <CardTitle className="text-xl">{donor.fullName}</CardTitle>
-                          <CardDescription className="flex items-center gap-1 mt-0.5 text-xs">
-                            <MapPin className="h-3 w-3" /> {donor.district}
+                          <CardDescription className="flex items-center gap-1 text-xs">
+                            <MapPin className="h-3 w-3 text-primary" /> {donor.area || 'N/A'}, {donor.district}
                           </CardDescription>
+                          {donor.organization && (
+                            <div className="flex items-center gap-1.5 text-secondary font-bold text-[11px] bg-secondary/5 px-2 py-0.5 rounded-md border border-secondary/10 w-fit">
+                              <Users className="h-3 w-3" /> {donor.organization}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <Badge className="bg-primary text-white text-xl font-black h-12 w-12 flex items-center justify-center p-0 rounded-xl shadow-md">
@@ -198,16 +203,18 @@ export default function Home() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-4">
-                    {donor.organization && (
-                      <Badge variant="secondary" className="bg-secondary/10 text-secondary border-none flex items-center gap-1.5 w-fit font-bold">
-                        <Users className="h-3 w-3" /> {donor.organization}
-                      </Badge>
-                    )}
                     <div className="flex items-center gap-2 text-green-600 font-bold text-sm bg-green-50 p-2 rounded-lg border border-green-100 w-fit">
                       <ShieldCheck className="h-4 w-4" /> ভেরিফাইড রক্তদাতা
                     </div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" /> {donor.area || 'N/A'}, {donor.district}
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="p-3 bg-white/50 rounded-xl border">
+                        <p className="text-muted-foreground uppercase text-[9px] font-bold">শেষ রক্তদান</p>
+                        <p className="font-bold">{donor.lastDonationDate || 'N/A'}</p>
+                      </div>
+                      <div className="p-3 bg-white/50 rounded-xl border">
+                        <p className="text-muted-foreground uppercase text-[9px] font-bold">মোট রক্তদান</p>
+                        <p className="font-bold">{donor.totalDonations || 0} বার</p>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="p-0 border-t">
@@ -242,7 +249,7 @@ export default function Home() {
             {[
               { title: "নিবন্ধন", desc: "আপনার সঠিক তথ্য দিয়ে আমাদের জীবন রক্ষাকারী ডেটাবেজে যুক্ত হোন।", icon: Users },
               { title: "অনুরোধ বা অনুসন্ধান", desc: "জরুরি প্রয়োজনে পোস্ট দিন অথবা সরাসরি দাতার সাথে যোগাযোগ করুন।", icon: Search },
-              { title: "জীবন বাঁচান", desc: "হাসপাতালে গিয়ে নিরাপদ রক্তদানের মাধ্যমে একজন মুমূর্ষু রোগীর প্রাণ বাঁচান।", icon: Heart }
+              { title: "জীবন বাঁচান", desc: "হাসপাতালে গিয়ে নিরাপদ রক্তদানের মাধ্যমে একজন মুম্মুর্ষু রোগীর প্রাণ বাঁচান।", icon: Heart }
             ].map((item, idx) => (
               <div key={idx} className="relative p-8 rounded-[2.5rem] border-2 border-muted hover:border-primary/20 transition-all group bg-white shadow-sm hover:shadow-xl text-center">
                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl border-4 border-white shadow-lg">
