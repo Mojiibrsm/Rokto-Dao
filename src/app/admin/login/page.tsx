@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShieldCheck, Loader2, KeyRound, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Loader2, KeyRound } from 'lucide-react';
 import { getAdminPassword } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 
@@ -69,13 +69,6 @@ export default function AdminLoginPage() {
               {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "প্রবেশ করুন"}
             </Button>
           </form>
-          
-          <div className="mt-8 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 items-start">
-            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-800 leading-relaxed">
-              <strong>টিপস:</strong> আপনি আপনার গুগল শিটের <strong>'Config'</strong> ট্যাব থেকে যেকোনো সময় এই পাসওয়ার্ডটি পরিবর্তন করতে পারেন। ডিফল্ট পাসওয়ার্ড হলো: <code>admin123</code>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
