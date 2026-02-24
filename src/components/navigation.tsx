@@ -1,8 +1,7 @@
-
 'use client';
 
 import Link from 'next/link';
-import { Droplet, User, Bell, Menu, LayoutDashboard, LogOut, Users } from 'lucide-react';
+import { Droplet, User, Bell, Menu, LayoutDashboard, LogOut, Users, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
@@ -37,36 +36,33 @@ export function Navigation() {
   const navLinks = [
     { href: '/donors', label: 'রক্তদাতা খুঁজুন', icon: User },
     { href: '/requests', label: 'রক্তের অনুরোধ', icon: Droplet },
-    { href: '/eligibility', label: 'যোগ্যতা যাচাই', icon: User },
-    { href: '/team', label: 'আমাদের টিম', icon: Users },
+    { href: '/blog', label: 'গ্যালারি', icon: Bell },
     { href: '/about', label: 'আমাদের সম্পর্কে', icon: User },
+    { href: '/team', label: 'আমাদের টিম', icon: Users },
     { href: '/contact', label: 'যোগাযোগ', icon: Bell },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full flex flex-col">
-      <div className="bg-primary text-white py-2 overflow-hidden whitespace-nowrap">
-        <div className="inline-block animate-marquee hover-pause px-4">
-          <span className="mx-8">জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
-          <span className="mx-8">কক্সবাজার-এ AB+ রক্তের প্রয়োজন। <Link href="/requests" className="underline font-bold ml-2">যোগাযোগ করুন</Link></span>
-        </div>
-      </div>
-
-      <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-primary text-xl">
-            <Droplet className="h-8 w-8 fill-primary" />
-            <span className="tracking-tight font-headline text-2xl">RoktoDao</span>
+      <nav className="w-full border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
+        <div className="container mx-auto px-4 flex h-20 items-center justify-between">
+          <Link href="/" className="flex items-center gap-1 group">
+            <div className="relative flex items-center justify-center">
+              <Droplet className="h-8 w-8 text-primary fill-primary" />
+            </div>
+            <span className="tracking-tight font-headline text-2xl font-bold text-primary">RoktoDao</span>
+            <div className="ml-1 bg-primary rounded-full p-1 border-2 border-white shadow-sm group-hover:scale-110 transition-transform">
+              <Heart className="h-3 w-3 text-white fill-white" />
+            </div>
           </Link>
           
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href} 
-                className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1.5"
+                className="text-[15px] font-medium transition-colors hover:text-primary text-muted-foreground"
               >
-                <link.icon className="h-4 w-4" />
                 {link.label}
               </Link>
             ))}
@@ -85,8 +81,8 @@ export function Navigation() {
               </div>
             ) : (
               <>
-                <Link href="/login" className="text-sm font-medium hidden sm:block hover:text-primary">লগইন</Link>
-                <Button size="sm" asChild className="bg-primary hover:bg-primary/90 text-white rounded-full px-6">
+                <Link href="/login" className="text-[15px] font-medium hidden sm:block hover:text-primary bg-muted/50 px-4 py-2 rounded-lg transition-colors">লগইন</Link>
+                <Button size="default" asChild className="bg-primary hover:bg-primary/90 text-white rounded-lg px-6 font-bold">
                   <Link href="/register">রেজিস্ট্রেশন</Link>
                 </Button>
               </>
@@ -116,9 +112,8 @@ export function Navigation() {
                         key={link.href} 
                         href={link.href} 
                         onClick={() => setIsOpen(false)}
-                        className="text-lg font-medium flex items-center gap-3"
+                        className="text-lg font-medium"
                       >
-                        <link.icon className="h-5 w-5 text-primary" />
                         {link.label}
                       </Link>
                     ))}

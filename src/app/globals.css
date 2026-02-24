@@ -4,28 +4,28 @@
 
 @layer base {
   :root {
-    /* Background: Light pink #F8BBD0 -> HSL(340, 82%, 85%) */
+    /* Background: Very light pink/flesh as seen in image */
     --background: 340 82% 98%; 
     --foreground: 0 0% 10%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-    /* Primary: Deep red #B71C1C -> HSL(0, 74%, 41%) */
-    --primary: 0 74% 41%;
+    /* Primary: Deep red as seen in image */
+    --primary: 354 85% 44%;
     --primary-foreground: 0 0% 100%;
-    /* Secondary (Accent): Dark red #D32F2F -> HSL(0, 64%, 51%) */
-    --secondary: 0 64% 51%;
+    /* Secondary: Slightly lighter red */
+    --secondary: 354 85% 50%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 340 20% 90%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 340 20% 94%;
+    --muted-foreground: 0 0% 45%;
     --accent: 340 82% 92%;
     --accent-foreground: 0 74% 20%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 10% 85%;
-    --input: 0 10% 85%;
-    --ring: 0 74% 41%;
+    --border: 0 10% 90%;
+    --input: 0 10% 90%;
+    --ring: 354 85% 44%;
     --radius: 0.75rem;
   }
   .dark {
@@ -35,9 +35,9 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 74% 41%;
+    --primary: 354 85% 44%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 64% 51%;
+    --secondary: 354 85% 50%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
@@ -47,7 +47,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 0 74% 41%;
+    --ring: 354 85% 44%;
   }
 }
 
@@ -71,15 +71,6 @@
 .animate-marquee {
   display: inline-block;
   animation: marquee 30s linear infinite;
-}
-
-@keyframes marquee-slow {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.animate-marquee-slow {
-  animation: marquee-slow 40s linear infinite;
 }
 
 .hover-pause:hover {
