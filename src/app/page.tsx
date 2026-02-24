@@ -8,12 +8,13 @@ import {
   Droplet, Heart, ShieldCheck, MapPin, ArrowRight, Search, Users, 
   CheckCircle, Phone, Share2, Clock, Loader2, 
   ImageIcon, Smartphone, HandHeart, 
-  HelpCircle, Mail, Globe, Zap, Star, Quote, MessageSquare
+  HelpCircle, Mail, Globe, Zap, Star, Quote, MessageSquare, Plus, Hospital, Award, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { getBloodRequests, getDonors, type BloodRequest, type Donor } from '@/lib/sheets';
 import { DISTRICTS } from '@/lib/bangladesh-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -55,11 +56,21 @@ export default function Home() {
     router.push(`/donors?${params.toString()}`);
   };
 
+  const bloodTable = [
+    { type: 'A+', give: 'A+, AB+', take: 'A+, A-, O+, O-' },
+    { type: 'O+', give: 'O+, A+, B+, AB+', take: 'O+, O-' },
+    { type: 'B+', give: 'B+, AB+', take: 'B+, B-, O+, O-' },
+    { type: 'AB+', give: 'AB+ Only', take: 'সব গ্রুপ (Universal Receiver)' },
+    { type: 'A-', give: 'A+, A-, AB+, AB-', take: 'A-, O-' },
+    { type: 'O-', give: 'সব গ্রুপ (Universal Donor)', take: 'O- Only' },
+    { type: 'B-', give: 'B+, B-, AB+, AB-', take: 'B-, O-' },
+    { type: 'AB-', give: 'AB+, AB-', take: 'AB-, A-, B-, O-' },
+  ];
+
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
-      {/* 1. হিরো সেকশন - Reduced spacing py-12 instead of py-20 */}
+      {/* 1. হিরো সেকশন */}
       <section className="relative w-full py-12 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden">
-        {/* Decorative elements */}
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-50"></div>
         
         <div className="container mx-auto relative z-10 max-w-5xl space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -144,7 +155,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. পরিসংখ্যান সেকশন - Compact py-8 */}
+      {/* 2. পরিসংখ্যান সেকশন */}
       <section className="bg-white py-8 border-b">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -166,8 +177,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. আমাদের রক্তযোদ্ধারা - Reduced py-12 */}
-      <section className="py-12 bg-white overflow-hidden">
+      {/* 3. আপডেট টি্যাকার (Scrolling news) */}
+      <div className="bg-slate-900 py-3 overflow-hidden whitespace-nowrap border-y">
+        <div className="animate-marquee inline-block text-white font-medium text-sm md:text-base">
+          <span className="mx-8">📢 ঢাকা মেডিকেল কলেজে আজ সকালে ৩ ব্যাগ O+ রক্ত দেওয়া হয়েছে।</span>
+          <span className="mx-8">📢 চট্টগ্রামের পটিয়াতে একজন থ্যালাসেমিয়া রোগীর জন্য B- রক্ত প্রয়োজন।</span>
+          <span className="mx-8">📢 সিলেটে ৫ জন নতুন রক্তদাতা আজ নিবন্ধন করেছেন।</span>
+          <span className="mx-8">📢 রংপুরে আগামী শুক্রবার রক্তদান ক্যাম্প অনুষ্ঠিত হবে।</span>
+        </div>
+      </div>
+
+      {/* 4. আমাদের রক্তযোদ্ধারা */}
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 space-y-1">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
@@ -239,7 +260,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. কিভাবে কাজ করে - Compact py-12 */}
+      {/* 5. কাজের প্রক্রিয়া */}
       <section className="bg-muted/10 py-12 border-y">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10 space-y-1">
@@ -268,7 +289,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. জরুরি রক্তের রিকোয়েস্ট - Reduced py-12 */}
+      {/* 6. সরাসরি অনুরোধসমূহ */}
       <section className="bg-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -340,7 +361,340 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. ইমার্জেন্সি সাপোর্ট বার - Reduced py-6 */}
+      {/* 7. কেন রক্ত দেবেন? (Restored) */}
+      <section className="py-12 bg-primary/5 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="relative h-[350px] lg:h-[500px] rounded-[3rem] overflow-hidden shadow-2xl">
+              <Image 
+                src={PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || 'https://picsum.photos/seed/benefits/800/800'} 
+                fill 
+                alt="Blood donation benefits" 
+                className="object-cover"
+                data-ai-hint="blood donation benefits"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex items-end p-8">
+                <div className="bg-white/90 backdrop-blur p-6 rounded-2xl shadow-xl">
+                  <p className="text-primary font-black text-2xl">১টি</p>
+                  <p className="font-bold text-slate-800">রক্তদান ৩ জন মানুষের প্রাণ বাঁচাতে পারে!</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <Badge className="bg-primary text-white border-none">কেন রক্ত দেবেন?</Badge>
+                <h2 className="text-3xl md:text-4xl font-bold font-headline leading-tight">রক্তদানের কিছু বিস্ময়কর <span className="text-primary">স্বাস্থ্য উপকারিতা</span></h2>
+              </div>
+              <div className="grid gap-6">
+                {[
+                  { title: "হার্টের স্বাস্থ্য ভালো রাখে", desc: "রক্তদান করলে শরীরে আয়রনের ভারসাম্য বজায় থাকে, যা হৃদরোগের ঝুঁকি কমায়।", icon: Heart },
+                  { title: "নতুন রক্তকণিকা তৈরি", desc: "রক্ত দেওয়ার পর শরীর নতুন রক্তকণিকা তৈরি করে, যা আপনাকে আরও সতেজ রাখে।", icon: Zap },
+                  { title: "বিনামূল্যে স্বাস্থ্য পরীক্ষা", desc: "রক্তদানের সময় আপনার হিমোগ্লোবিন, রক্তচাপ ও অন্যান্য পরীক্ষা বিনামূল্যে করা হয়।", icon: ShieldCheck },
+                  { title: "মানসিক প্রশান্তি", desc: "কারো জীবন বাঁচানোর চেয়ে বড় মানসিক তৃপ্তি আর কিছু হতে পারে না।", icon: Star }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow">
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <item.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg">{item.title}</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button size="lg" className="bg-primary rounded-full px-10 h-14 text-xl font-bold" asChild>
+                <NextLink href="/register">রক্তদাতা হতে চাই</NextLink>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. AI Eligibility CTA (Restored) */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="bg-slate-900 rounded-[3rem] p-8 md:p-16 relative overflow-hidden text-center md:text-left">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+            <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
+              <div className="space-y-6">
+                <h2 className="text-3xl md:text-5xl font-black text-white font-headline leading-tight">আপনি কি আজ রক্তদান করতে পারবেন?</h2>
+                <p className="text-slate-400 text-lg md:text-xl leading-relaxed">
+                  আমাদের AI ভিত্তিক কুইজের মাধ্যমে মাত্র ১ মিনিটে আপনার শারীরিক যোগ্যতা যাচাই করুন।
+                </p>
+                <Button size="lg" className="bg-primary hover:bg-primary/90 h-14 px-10 rounded-full text-xl font-bold" asChild>
+                  <NextLink href="/eligibility">আমার যোগ্যতা যাচাই করুন <ArrowRight className="ml-2 h-5 w-5" /></NextLink>
+                </Button>
+              </div>
+              <div className="relative h-[250px] md:h-[350px]">
+                <Image 
+                  src={PlaceHolderImages.find(img => img.id === 'can-you-donate')?.imageUrl || 'https://picsum.photos/seed/doctor/600/400'} 
+                  fill 
+                  alt="Can you donate" 
+                  className="object-contain"
+                  data-ai-hint="blood donor"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. রক্তের গ্রুপের সামঞ্জস্যতা (Restored) */}
+      <section className="py-12 bg-muted/5">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold font-headline mb-3">রক্তের গ্রুপের সামঞ্জস্যতা</h2>
+            <p className="text-muted-foreground">জেনে নিন আপনি কাকে রক্ত দিতে পারবেন এবং কার থেকে নিতে পারবেন।</p>
+          </div>
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-primary text-white">
+                  <tr>
+                    <th className="px-6 py-4 font-bold">রক্তের গ্রুপ</th>
+                    <th className="px-6 py-4 font-bold">রক্ত দিতে পারবেন</th>
+                    <th className="px-6 py-4 font-bold">রক্ত নিতে পারবেন</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {bloodTable.map((row, i) => (
+                    <tr key={i} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 font-black text-primary text-lg">{row.type}</td>
+                      <td className="px-6 py-4 font-medium text-slate-700">{row.give}</td>
+                      <td className="px-6 py-4 font-medium text-slate-700">{row.take}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 10. পরিচালকের বার্তা (Restored) */}
+      <section className="py-16 bg-white border-y">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div className="relative h-[400px] rounded-[3rem] overflow-hidden shadow-2xl">
+              <Image 
+                src="https://rokto-dao.vercel.app/files/Mojib_Rsm.jpg" 
+                fill 
+                alt="Mujibur Rahman" 
+                className="object-cover"
+              />
+            </div>
+            <div className="space-y-6">
+              <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-4">
+                <Quote className="h-6 w-6 fill-primary" />
+              </div>
+              <h2 className="text-3xl font-bold font-headline">পরিচালকের বার্তা</h2>
+              <p className="text-xl text-muted-foreground leading-relaxed italic">
+                "RoktoDao একটি অলাভজনক উদ্যোগ যা রক্তদাতা এবং গ্রহীতাদের মধ্যে একটি সেতুবন্ধন তৈরির লক্ষ্যে কাজ করে। প্রযুক্তি ব্যবহার করে জীবন বাঁচানোর এই যাত্রায় আমাদের সঙ্গী হওয়ার জন্য আপনাকে ধন্যবাদ।"
+              </p>
+              <div>
+                <h4 className="text-2xl font-bold text-primary">মুজিবুর রহমান</h4>
+                <p className="text-slate-500 font-medium">প্রতিষ্ঠাতা, RoktoDao</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 11. রক্তদাতাদের কথা (Restored) */}
+      <section className="py-12 bg-muted/10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <Badge variant="outline" className="text-primary border-primary">প্রেরণা</Badge>
+            <h2 className="text-3xl font-bold font-headline mt-2">রক্তদাতাদের কথা</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { name: "রাসেল আহমেদ", role: "১০ বার রক্তদাতা", text: "রক্তদান করলে মনের মধ্যে যে অদ্ভুত এক প্রশান্তি আসে, তা আর কিছুতে পাই না। RoktoDao এর মাধ্যমে যোগাযোগ করা এখন অনেক সহজ।", initial: "র" },
+              { name: "সুমাইয়া জান্নাত", role: "শিক্ষার্থী", text: "প্রথমবার রক্ত দেওয়ার সময় ভয় লেগেছিল, কিন্তু একজনের প্রাণ বাঁচাতে পেরেছি জেনে এখন নিয়মিত রক্ত দেই।", initial: "স" },
+              { name: "ডা. আরিফ হাসান", role: "সহযোগী অধ্যাপক", text: "একজন চিকিৎসক হিসেবে আমি জানি রক্ত কতটা মূল্যবান। RoktoDao এর এই উদ্যোগ সত্যিই প্রশংসনীয়।", initial: "ড" }
+            ].map((item, i) => (
+              <Card key={i} className="rounded-3xl border-none shadow-lg bg-white p-6 relative">
+                <div className="absolute -top-4 -left-4 h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                  {item.initial}
+                </div>
+                <CardContent className="pt-6 px-0">
+                  <div className="flex text-amber-400 mb-4">
+                    {[...Array(5)].map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400" />)}
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed mb-6">"{item.text}"</p>
+                  <div>
+                    <h4 className="font-bold">{item.name}</h4>
+                    <p className="text-xs text-primary font-bold">{item.role}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 12. গ্যালারি (Restored) */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold font-headline">আমাদের গ্যালারি</h2>
+            <p className="text-muted-foreground mt-2">আমাদের সাম্প্রতিক ব্লাড ড্রাইভ ও ক্যাম্পেইনের কিছু মুহূর্ত।</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="relative h-64 rounded-2xl overflow-hidden group shadow-md">
+                <Image 
+                  src={`https://picsum.photos/seed/rokto_gallery${i}/600/600`} 
+                  fill 
+                  alt={`Camp ${i}`} 
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  data-ai-hint="blood donation"
+                />
+                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 13. মোবাইল অ্যাপ ও ভলান্টিয়ার (Restored) */}
+      <section className="py-12 bg-slate-900 text-white overflow-hidden relative">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8 text-center lg:text-left">
+              <div className="space-y-4">
+                <Badge className="bg-primary hover:bg-primary border-none text-white">শীঘ্রই আসছে</Badge>
+                <h2 className="text-4xl md:text-5xl font-black font-headline">RoktoDao মোবাইল অ্যাপ</h2>
+                <p className="text-slate-400 text-lg leading-relaxed">
+                  এখন পকেটেই থাকবে আপনার এলাকার সব রক্তদাতার তথ্য। জরুরি নোটিফিকেশন ও দ্রুত যোগাযোগের জন্য আমাদের অ্যাপটি হবে আপনার সেরা সঙ্গী।
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+                <div className="bg-white/10 backdrop-blur p-4 rounded-2xl flex items-center gap-3 border border-white/10 w-48">
+                  <Smartphone className="h-8 w-8 text-primary" />
+                  <div className="text-left">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Download on</p>
+                    <p className="font-bold">Google Play</p>
+                  </div>
+                </div>
+                <div className="bg-white/10 backdrop-blur p-4 rounded-2xl flex items-center gap-3 border border-white/10 w-48 opacity-50">
+                  <div className="h-8 w-8 bg-slate-700 rounded-full flex items-center justify-center font-bold italic">A</div>
+                  <div className="text-left">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Coming to</p>
+                    <p className="font-bold">App Store</p>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-8 border-t border-white/10">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <div className="h-16 w-16 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
+                    <HandHeart className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold">স্বেচ্ছাসেবক হিসেবে যোগ দিন</h4>
+                    <p className="text-slate-400 text-sm">রক্তদান ছাড়াও আমাদের এই মহৎ কাজে আপনি স্বেচ্ছাসেবক হিসেবে অবদান রাখতে পারেন।</p>
+                  </div>
+                  <Button className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-12 font-bold shrink-0">আবেদন করুন</Button>
+                </div>
+              </div>
+            </div>
+            <div className="relative h-[400px] md:h-[550px] hidden lg:block">
+              <Image 
+                src={PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || 'https://picsum.photos/seed/app/800/1200'} 
+                fill 
+                alt="RoktoDao Mobile App Promo" 
+                className="object-contain"
+                data-ai-hint="mobile app"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 14. সহযোগী প্রতিষ্ঠান (Restored) */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-muted-foreground font-bold uppercase tracking-widest text-xs mb-8">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:opacity-100 transition-all duration-500">
+            {["ঢাকা মেডিকেল", "রেড ক্রিসেন্ট", "বঙ্গবন্ধু মেডিকেল", "ব্লাড ফাউন্ডেশন", "বেসরকারি ক্লিনিক"].map((name, i) => (
+              <div key={i} className="flex items-center gap-2 font-black text-xl text-slate-800">
+                <div className="h-8 w-8 bg-slate-200 rounded-lg"></div> {name}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 15. কেন বেছে নিবেন? (Restored) */}
+      <section className="py-12 bg-muted/5 border-y">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold font-headline mb-10">কেন RoktoDao বেছে নিবেন?</h2>
+          <div className="grid md:grid-cols-4 gap-8">
+            {[
+              { title: "যাচাইকৃত রক্তদাতা", desc: "আমাদের সকল রক্তদাতা মোবাইল নম্বর ভেরিফাইড, তাই আপনি নির্ভয়ে যোগাযোগ করতে পারেন।", icon: ShieldCheck },
+              { title: "দ্রুত যোগাযোগ", desc: "সরাসরি ফোন কল বা মেসেজের মাধ্যমে দ্রুত রক্তদাতার সাথে যোগাযোগ স্থাপন করা যায়।", icon: Zap },
+              { title: "দেশব্যাপী নেটওয়ার্ক", desc: "সারাদেশে প্রতিটি জেলা ও উপজেলায় আমাদের রক্তদাতাদের নেটওয়ার্ক বিস্তৃত।", icon: Globe },
+              { title: "সম্পূর্ণ সুরক্ষিত", desc: "আপনার ব্যক্তিগত তথ্য আমাদের কাছে নিরাপদ। আমরা কোনো তথ্য তৃতীয় পক্ষের কাছে শেয়ার করি না।", icon: Lock }
+            ].map((item, i) => (
+              <div key={i} className="space-y-4">
+                <div className="h-16 w-16 bg-white shadow-md rounded-2xl flex items-center justify-center mx-auto">
+                  <item.icon className="h-8 w-8 text-primary" />
+                </div>
+                <h4 className="font-bold text-lg">{item.title}</h4>
+                <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 16. সাধারণ জিজ্ঞাসা ও নিউজলেটার (Restored) */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-16">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <HelpCircle className="h-8 w-8 text-primary" />
+                <h2 className="text-3xl font-bold font-headline">সাধারণ জিজ্ঞাসা</h2>
+              </div>
+              <Accordion type="single" collapsible className="w-full">
+                {[
+                  { q: "রক্তদানের জন্য সর্বনিম্ন বয়স ও ওজন কত?", a: "সাধারণত ১৮ থেকে ৬০ বছর বয়সের যেকোনো সুস্থ মানুষ রক্ত দিতে পারেন। তবে ওজন অবশ্যই ৫০ কেজির উপরে হতে হবে।" },
+                  { q: "কারা রক্তদান করতে পারবেন না?", a: "যাদের উচ্চ রক্তচাপ, ডায়াবেটিস (নিয়ন্ত্রিত না থাকলে), জন্ডিস বা অন্য কোনো রক্তবাহিত রোগ আছে তারা রক্ত দিতে পারবেন না।" },
+                  { q: "কতদিন পর পর রক্তদান করা যায়?", a: "একজন সুস্থ মানুষ প্রতি ৪ মাস (বা ১২০ দিন) অন্তর রক্তদান করতে পারেন।" },
+                  { q: "রক্ত দিতে কি কোনো টাকা লাগে?", a: "না, রক্তদান একটি সম্পূর্ণ মানবিক ও বিনামূল্যে করার কাজ। রক্ত কেনাবেচা করা একটি দণ্ডনীয় অপরাধ।" },
+                  { q: "রক্তদানের পর কি কোনো বিশ্রাম প্রয়োজন?", a: "রক্তদানের পর অন্তত ১৫-২০ মিনিট বিশ্রাম নেওয়া উচিত এবং প্রচুর পরিমাণে তরল খাবার পান করা ভালো।" }
+                ].map((faq, i) => (
+                  <AccordionItem key={i} value={`item-${i}`} className="border-b">
+                    <AccordionTrigger className="text-left font-bold py-4 hover:text-primary transition-colors">{faq.q}</AccordionTrigger>
+                    <AccordionContent className="text-slate-600 leading-relaxed pb-4">{faq.a}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+            <div className="bg-primary/5 rounded-[2.5rem] p-8 md:p-12 flex flex-col justify-center space-y-8">
+              <div className="h-16 w-16 bg-white shadow-sm rounded-2xl flex items-center justify-center">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-3xl font-bold font-headline">আপডেট থাকতে চান?</h3>
+                <p className="text-muted-foreground text-lg">আমাদের আগামী রক্তদান ক্যাম্পেইন ও গুরুত্বপূর্ণ খবরাখবর ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input 
+                  type="email" 
+                  placeholder="আপনার ইমেইল ঠিকানা" 
+                  className="flex-1 h-14 rounded-full px-6 border-2 border-primary/10 focus:border-primary outline-none transition-all"
+                />
+                <Button className="h-14 rounded-full px-10 bg-primary hover:bg-primary/90 text-lg font-bold">সাবস্ক্ৰাইব</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 17. ইমার্জেন্সি সাপোর্ট বার */}
       <section className="bg-red-50 py-6 border-t">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-center md:text-left">
@@ -358,5 +712,26 @@ export default function Home() {
         </div>
       </section>
     </div>
+  );
+}
+
+// Helper icon
+function Lock(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
   );
 }
