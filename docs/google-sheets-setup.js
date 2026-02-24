@@ -1,5 +1,5 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Secure Admin Version)
+ * RoktoDao - Google Sheets Backend Setup Script (Updated with Column Verification)
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -21,9 +21,17 @@ function initSheets() {
       sheet.appendRow(SCHEMA[name]);
       sheet.getRange(1, 1, 1, SCHEMA[name].length).setFontWeight('bold').setBackground('#fce4ec');
       
-      // Default Admin Password
       if (name === 'Config') {
         sheet.appendRow(['admin_password', 'admin123']);
+      }
+    } else {
+      // Ensure headers match schema order
+      const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      const targetHeaders = SCHEMA[name];
+      
+      // If headers are missing or in wrong order, we warn but for now we trust the SCHEMA for appending
+      if (existingHeaders.length < targetHeaders.length) {
+        sheet.getRange(1, 1, 1, targetHeaders.length).setValues([targetHeaders]);
       }
     }
   });
@@ -70,6 +78,28 @@ function doPost(e) {
   return result;
 }
 
+function createBloodRequest(data) {
+  const sheet = SS.getSheetByName('Requests');
+  const id = Math.random().toString(36).substring(7);
+  // Important: Matching the 'Requests' SCHEMA order exactly
+  sheet.appendRow([
+    id, 
+    data.patientName, 
+    data.bloodType, 
+    data.hospitalName, 
+    data.district, 
+    data.area || '', 
+    data.union || '', 
+    data.phone, 
+    data.neededWhen, 
+    data.bagsNeeded, 
+    data.isUrgent ? 'Yes' : 'No', 
+    'Pending', 
+    new Date().toISOString()
+  ]);
+  return jsonResponse({ success: true, id: id });
+}
+
 function getAdminPassword() {
   const sheet = SS.getSheetByName('Config');
   const data = sheet.getDataRange().getValues();
@@ -94,7 +124,7 @@ function getSheetData(sheet) {
   return data.map(row => {
     let obj = {};
     headers.forEach((header, i) => {
-      const key = header.toLowerCase().replace(/\s/g, '');
+      const key = header.toString().toLowerCase().replace(/\s/g, '');
       obj[key] = row[i];
     });
     return obj;
@@ -129,13 +159,6 @@ function updateDonorProfile(data) {
     }
   }
   return jsonResponse({ error: 'Donor not found' });
-}
-
-function createBloodRequest(data) {
-  const sheet = SS.getSheetByName('Requests');
-  const id = Math.random().toString(36).substring(7);
-  sheet.appendRow([id, data.patientName, data.bloodType, data.hospitalName, data.district, data.area, data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Pending', new Date().toISOString()]);
-  return jsonResponse({ success: true, id: id });
 }
 
 function deleteEntry(data) {

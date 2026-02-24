@@ -133,6 +133,8 @@ export async function bulkRegisterDonors(donors: any[]) {
 export async function getBloodRequests(): Promise<BloodRequest[]> {
   const data = await fetchFromSheets('getRequests');
   if (!Array.isArray(data)) return [];
+  
+  // Explicit mapping based on normalized headers from getSheetData
   return data.map((d: any) => ({
     id: d.id || '',
     patientName: d.patientname || '',
@@ -143,8 +145,8 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
     union: d.union || '',
     phone: String(d.phone || ''),
     neededWhen: d.neededwhen || '',
-    bagsNeeded: d.bagsneeded || '',
-    isUrgent: d.isurgent === 'Yes',
+    bagsNeeded: String(d.bagsneeded || '1'),
+    isUrgent: String(d.isurgent).toLowerCase() === 'yes',
     status: d.status || 'Pending',
     createdAt: d.createdat || ''
   }));

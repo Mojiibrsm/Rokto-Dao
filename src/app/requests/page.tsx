@@ -5,7 +5,7 @@ import { getBloodRequests, type BloodRequest } from '@/lib/sheets';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle } from 'lucide-react';
+import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,7 +24,7 @@ export default function RequestsPage() {
     loadRequests();
   }, []);
 
-  const handleShare = (req: BloodRequest) => {
+  const handleShare = async (req: BloodRequest) => {
     const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
 
 🩸 রক্তের গ্রুপ: *${req.bloodType}*
@@ -38,11 +38,30 @@ export default function RequestsPage() {
 🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।
 🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
 
-    navigator.clipboard.writeText(shareText);
-    toast({
-      title: "কপি হয়েছে!",
-      description: "রক্তের অনুরোধটি শেয়ার করার জন্য কপি করা হয়েছে।",
-    });
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareText);
+      } else {
+        // Fallback for older browsers or insecure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      
+      toast({
+        title: "কপি হয়েছে!",
+        description: "রক্তের অনুরোধটি শেয়ার করার জন্য ক্লিপবোর্ডে কপি করা হয়েছে।",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "ব্যর্থ হয়েছে",
+        description: "দুঃখিত, লেখাটি কপি করা সম্ভব হয়নি।",
+      });
+    }
   };
 
   return (
@@ -80,12 +99,12 @@ export default function RequestsPage() {
             <Card key={req.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all rounded-[1.5rem] group">
               <CardHeader className={`${req.isUrgent ? 'bg-primary' : 'bg-slate-800'} text-white p-6`}>
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-xl">{req.patientName}</CardTitle>
+                  <CardTitle className="text-xl font-bold">{req.patientName}</CardTitle>
                   <Badge className="bg-white text-primary border-none font-black px-3 py-0.5 text-[10px]">
                     {req.isUrgent ? 'জরুরি' : 'Approved'}
                   </Badge>
                 </div>
-                <CardDescription className="text-white/90 mt-2 flex items-center gap-2 text-base">
+                <CardDescription className="text-white/90 mt-2 flex items-center gap-2 text-base font-medium">
                   <MapPin className="h-4 w-4" /> {req.hospitalName}
                 </CardDescription>
               </CardHeader>
@@ -100,14 +119,24 @@ export default function RequestsPage() {
                     <p className="text-3xl font-black text-primary">{req.bagsNeeded}</p>
                   </div>
                 </div>
-                <div className="mt-6 space-y-2">
+                <div className="mt-6 space-y-3">
                    <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                      <Clock className="h-4 w-4 text-primary" />
-                      <span className="font-bold">কখন প্রয়োজন:</span> {req.neededWhen}
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Clock className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-foreground">কখন প্রয়োজন:</span> 
+                        <p className="text-foreground">{req.neededWhen}</p>
+                      </div>
                    </div>
                    <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="font-bold">স্থান:</span> {req.area}, {req.district}
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-foreground">স্থান:</span> 
+                        <p className="text-foreground">{req.area ? req.area + ', ' : ''}{req.district}</p>
+                      </div>
                    </div>
                 </div>
               </CardContent>
@@ -117,7 +146,7 @@ export default function RequestsPage() {
                     <Phone className="h-5 w-5" /> যোগাযোগ
                   </a>
                 </Button>
-                <Button onClick={() => handleShare(req)} variant="ghost" className="flex-1 h-14 rounded-none text-lg font-bold gap-3 hover:bg-primary/5">
+                <Button onClick={() => handleShare(req)} variant="ghost" className="flex-1 h-14 rounded-none text-lg font-bold gap-3 hover:bg-primary/5 transition-colors">
                   <Share2 className="h-5 w-5" /> শেয়ার
                 </Button>
               </CardFooter>

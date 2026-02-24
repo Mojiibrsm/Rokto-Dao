@@ -58,7 +58,7 @@ export default function Home() {
     router.push(`/donors?${params.toString()}`);
   };
 
-  const handleShare = (req: BloodRequest) => {
+  const handleShare = async (req: BloodRequest) => {
     const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
 
 🩸 রক্তের গ্রুপ: *${req.bloodType}*
@@ -72,11 +72,28 @@ export default function Home() {
 🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।
 🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
 
-    navigator.clipboard.writeText(shareText);
-    toast({
-      title: "কপি হয়েছে!",
-      description: "রক্তের অনুরোধটি শেয়ার করার জন্য কপি করা হয়েছে।",
-    });
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareText);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      toast({
+        title: "কপি হয়েছে!",
+        description: "রক্তের অনুরোধটি শেয়ার করার জন্য ক্লিপবোর্ডে কপি করা হয়েছে।",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "ব্যর্থ হয়েছে",
+        description: "লেখাটি কপি করা সম্ভব হয়নি।",
+      });
+    }
   };
 
   const bloodTable = [
@@ -92,25 +109,28 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="relative w-full py-12 md:py-20 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden border-b border-primary/5">
+      {/* 1. Breaking News / Marquee - Compact */}
+      <div className="bg-primary text-white py-2 overflow-hidden border-b border-white/10 whitespace-nowrap relative">
+        <div className="animate-marquee inline-block hover-pause px-4">
+          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন। যোগাযোগ করুন</span>
+          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> কক্সবাজার-এ AB+ রক্তের প্রয়োজন। যোগাযোগ করুন</span>
+          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> ঢাকা মেডিকেল কলেজে আজ সকালে ৩ ব্যাগ O+ রক্ত দেওয়া হয়েছে।</span>
+          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> চট্টগ্রামের পটিয়াতে একজন থ্যালাসেমিয়া রোগীর জন্য B- রক্ত প্রয়োজন।</span>
+        </div>
+      </div>
+
+      {/* 2. Hero Section - Compact */}
+      <section className="relative w-full py-10 md:py-16 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden border-b border-primary/5">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-50"></div>
         <div className="container mx-auto relative z-10 max-w-5xl space-y-6">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-2 mb-2">
-            <Droplet className="h-10 w-10 md:h-14 md:w-14 text-primary fill-primary drop-shadow-xl" />
-            <h1 className="text-4xl md:text-[56px] font-black tracking-tight text-primary font-headline leading-tight">“আপনার রক্তে বাঁচবে অন্যের স্বপ্ন!”</h1>
+          <Badge variant="outline" className="text-primary border-primary px-4 py-1 uppercase tracking-widest font-black text-[10px] bg-primary/5">স্বেচ্ছায় রক্তদান করুন, জীবন বাঁচান</Badge>
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tight text-primary font-headline leading-tight">আপনার নিকটবর্তী <br />রক্তদাতা খুঁজুন</h1>
+            <p className="text-lg md:text-xl text-muted-foreground/80 max-w-2xl mx-auto font-medium">জরুরী মুহূর্তে রক্ত খুঁজে পেতে বা রক্তদানের মাধ্যমে জীবন বাঁচাতে আমাদের প্ল্যাটফর্মে যোগ দিন।</p>
           </div>
-          <p className="text-xl md:text-[22px] text-muted-foreground/80 max-w-3xl mx-auto leading-relaxed font-medium">সারা বাংলাদেশে জরুরি মুহূর্তে রক্ত খুঁজে পেতে বা রক্তদানের মাধ্যমে জীবন বাঁচাতে আমাদের প্ল্যাটফর্মে যোগ দিন।</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 h-14 md:h-16 px-10 rounded-xl text-xl font-bold shadow-xl shadow-primary/20 gap-3 group transition-all hover:scale-[1.02]" asChild>
-              <NextLink href="/register"><Heart className="h-6 w-6 text-white group-hover:scale-110 transition-transform" /> রক্ত দিতে চাই</NextLink>
-            </Button>
-            <Button size="lg" variant="outline" className="bg-white hover:bg-muted/50 h-14 md:h-16 px-10 rounded-xl text-xl font-bold border-none shadow-md gap-3 group transition-all hover:scale-[1.02]" asChild>
-              <NextLink href="/donors"><Search className="h-6 w-6 text-muted-foreground group-hover:scale-110 transition-transform" /> রক্ত খুঁজছি</NextLink>
-            </Button>
-          </div>
-          <div className="max-w-2xl mx-auto pt-6">
-            <div className="bg-white/80 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-primary/5 flex flex-col md:flex-row gap-2">
+          
+          <div className="max-w-2xl mx-auto pt-4">
+            <div className="bg-white p-2 rounded-2xl shadow-xl border border-primary/10 flex flex-col md:flex-row gap-2">
               <div className="flex-1">
                 <Select value={selectedBloodType} onValueChange={setSelectedBloodType}>
                   <SelectTrigger className="h-12 border-none bg-transparent focus:ring-0 text-base font-bold text-muted-foreground"><div className="flex items-center gap-2"><Droplet className="h-5 w-5 text-primary" /><SelectValue placeholder="রক্তের গ্রুপ" /></div></SelectTrigger>
@@ -130,13 +150,13 @@ export default function Home() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleSearch} size="icon" className="h-12 w-12 md:w-14 bg-primary hover:bg-primary/90 rounded-xl shrink-0 shadow-lg shadow-primary/10 transition-all active:scale-95"><Search className="h-5 w-5" /></Button>
+              <Button onClick={handleSearch} className="h-12 px-8 bg-primary hover:bg-primary/90 rounded-xl shrink-0 shadow-lg shadow-primary/10 transition-all font-bold text-lg">অনুসন্ধান করুন</Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* 3. Stats Section */}
       <section className="bg-white py-8 border-b">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -156,12 +176,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Active Donors Section */}
+      {/* 4. Active Donors Section */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 space-y-1">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
-            <p className="text-base text-muted-foreground font-medium">দেশের প্রতিটি কোণায় নিবেদিত প্রাণ রক্তদাতাগণ</p>
+            <p className="text-base text-muted-foreground font-medium">"Our active and available donors"</p>
             <div className="h-1.5 w-16 bg-primary mx-auto rounded-full mt-3"></div>
           </div>
           {loadingDonors ? (
@@ -212,7 +232,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Process Section */}
+      {/* 5. Process Section */}
       <section className="bg-muted/10 py-12 border-y">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10 space-y-1">
@@ -237,7 +257,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Requests Section */}
+      {/* 6. Requests Section */}
       <section className="bg-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -249,7 +269,7 @@ export default function Home() {
                 </span>
                 সরাসরি অনুরোধসমূহ
               </h2>
-              <p className="text-muted-foreground text-base mt-1">সারা দেশে যাদের জরুরি ভিত্তিতে রক্তের প্রয়োজন।</p>
+              <p className="text-muted-foreground text-base mt-1">জরুরি ভিত্তিতে যাদের রক্তের প্রয়োজন।</p>
             </div>
             <Button variant="outline" className="rounded-full px-6 h-10 text-sm font-bold border-primary text-primary hover:bg-primary/5" asChild><NextLink href="/requests">সব অনুরোধ দেখুন <ArrowRight className="ml-2 h-4 w-4" /></NextLink></Button>
           </div>
@@ -288,7 +308,7 @@ export default function Home() {
                     </div>
                     <div className="flex gap-3">
                       <Button className="flex-1 bg-primary hover:bg-primary/90 rounded-xl h-11 gap-2 text-sm font-bold shadow-lg shadow-primary/10" asChild><a href={`tel:${req.phone}`}><Phone className="h-4 w-4" /> যোগাযোগ</a></Button>
-                      <Button onClick={() => handleShare(req)} variant="secondary" size="icon" className="h-11 w-11 rounded-xl"><Share2 className="h-4 w-4" /></Button>
+                      <Button onClick={() => handleShare(req)} variant="secondary" size="icon" className="h-11 w-11 rounded-xl transition-colors"><Share2 className="h-4 w-4" /></Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -298,7 +318,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Health Benefits Section */}
+      {/* 7. Why Donate / Health Benefits */}
       <section className="py-12 bg-primary/5">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -306,7 +326,7 @@ export default function Home() {
               <Image src={PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || "https://picsum.photos/seed/benefits/800/600"} fill alt="রক্তদানের স্বাস্থ্য উপকারিতা" className="object-cover" data-ai-hint="blood donation benefits" />
             </div>
             <div className="space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold font-headline leading-tight">রক্তদানের <span className="text-primary">স্বাস্থ্য উপকারিতা</span></h2>
+              <h2 className="text-3xl md:text-4xl font-bold font-headline leading-tight">কেন রক্ত দেবেন?</h2>
               <p className="text-muted-foreground text-lg italic">১টি রক্তদান ৩ জন মানুষের প্রাণ বাঁচাতে পারে!</p>
               <div className="grid gap-4">
                 {[
@@ -332,7 +352,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Eligibility Quiz Banner */}
+      {/* 8. Eligibility Quiz Banner */}
       <section className="container mx-auto px-4 py-8">
         <div className="bg-slate-950 rounded-[3rem] p-8 md:p-16 overflow-hidden relative group border border-white/5">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
@@ -370,7 +390,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Blood Compatibility Section */}
+      {/* 9. Blood Compatibility Section */}
       <section className="py-12 bg-muted/5">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-8">
@@ -402,7 +422,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Founder's Message */}
+      {/* 10. Founder's Message */}
       <section className="py-16 bg-white border-y">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
@@ -424,8 +444,63 @@ export default function Home() {
         </div>
       </section>
 
-      {/* App Promo Section */}
-      <section className="py-12 bg-slate-900 text-white overflow-hidden relative">
+      {/* 11. Testimonials */}
+      <section className="py-16 bg-muted/10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="text-primary border-primary mb-2">প্রেরণা</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold font-headline">রক্তদাতাদের কথা</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { name: "রাসেল আহমেদ", role: "১০ বার রক্তদাতা", text: "রক্তদান করলে মনের মধ্যে যে অদ্ভুত এক প্রশান্তি আসে, তা আর কিছুতে পাই না। RoktoDao এর মাধ্যমে যোগাযোগ করা এখন অনেক সহজ।" },
+              { name: "সুমাইয়া জান্নাত", role: "শিক্ষার্থী", text: "প্রথমবার রক্ত দেওয়ার সময় ভয় লেগেছিল, কিন্তু একজনের প্রাণ বাঁচাতে পেরেছি জেনে এখন নিয়মিত রক্ত দেই।" },
+              { name: "ডা. আরিফ হাসান", role: "সহযোগী অধ্যাপক", text: "একজন চিকিৎসক হিসেবে আমি জানি রক্ত কতটা মূল্যবান। RoktoDao এর এই উদ্যোগ সত্যিই প্রশংসনীয়।" }
+            ].map((t, i) => (
+              <Card key={i} className="rounded-3xl p-6 border-none shadow-lg bg-white relative">
+                <Quote className="absolute top-6 right-6 h-8 w-8 text-primary opacity-10" />
+                <CardContent className="p-0 space-y-4">
+                  <p className="text-muted-foreground italic leading-relaxed">"{t.text}"</p>
+                  <div className="flex items-center gap-3 border-t pt-4">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">{t.name[0]}</div>
+                    <div>
+                      <h4 className="font-bold text-sm">{t.name}</h4>
+                      <p className="text-xs text-muted-foreground">{t.role}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 12. Gallery - Compact */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold font-headline">আমাদের গ্যালারি</h2>
+            <p className="text-muted-foreground mt-2">আমাদের সাম্প্রতিক ব্লাড ড্রাইভ ও ক্যাম্পেইনের কিছু মুহূর্ত।</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="relative h-48 md:h-64 rounded-3xl overflow-hidden shadow-md group">
+                <Image 
+                  src={PlaceHolderImages.find(img => img.id === `gallery-${i % 2 === 0 ? 2 : 1}`)?.imageUrl || `https://picsum.photos/seed/camp${i}/600/600`} 
+                  fill 
+                  alt={`Camp ${i}`} 
+                  className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                  data-ai-hint="blood donation"
+                />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 13. App Promo Section */}
+      <section className="py-12 bg-slate-900 text-white overflow-hidden relative border-y border-white/5">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -453,17 +528,53 @@ export default function Home() {
               </div>
             </div>
             <div className="relative h-[400px] hidden lg:block drop-shadow-2xl">
-              <Image src={PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || "https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png"} fill alt="App Preview" className="object-contain" data-ai-hint="mobile app" />
+              <Image src={PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || "https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png"} fill alt="RoktoDao Mobile App Promo" className="object-contain" data-ai-hint="mobile app" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* 14. Partner Logos / Trust */}
+      <section className="py-12 bg-white grayscale opacity-50 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-xs font-bold uppercase tracking-widest text-muted-foreground mb-8">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+            {["ঢাকা মেডিকেল", "রেড ক্রিসেন্ট", "বঙ্গবন্ধু মেডিকেল", "ব্লাড ফাউন্ডেশন", "বেসরকারি ক্লিনিক"].map((p, i) => (
+              <span key={i} className="text-xl md:text-2xl font-black font-headline whitespace-nowrap">{p}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 15. Why Choose Us */}
+      <section className="py-16 bg-muted/10 border-y">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold font-headline">কেন RoktoDao বেছে নিবেন?</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { icon: ShieldCheck, title: "যাচাইকৃত রক্তদাতা", desc: "আমাদের সকল রক্তদাতা মোবাইল নম্বর ভেরিফাইড, তাই আপনি নির্ভয়ে যোগাযোগ করতে পারেন।" },
+              { icon: Zap, title: "দ্রুত যোগাযোগ", desc: "সরাসরি ফোন কল বা মেসেজের মাধ্যমে দ্রুত রক্তদাতার সাথে যোগাযোগ স্থাপন করা যায়।" },
+              { icon: Globe, title: "দেশব্যাপী নেটওয়ার্ক", desc: "সারাদেশে প্রতিটি জেলা ও উপজেলায় আমাদের রক্তদাতাদের নেটওয়ার্ক বিস্তৃত।" },
+              { icon: Lock, title: "সম্পূর্ণ সুরক্ষিত", desc: "আপনার ব্যক্তিগত তথ্য আমাদের কাছে নিরাপদ। আমরা কোনো তথ্য তৃতীয় পক্ষের কাছে শেয়ার করি না।" }
+            ].map((v, i) => (
+              <div key={i} className="text-center space-y-3">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mx-auto"><v.icon className="h-6 w-6" /></div>
+                <h4 className="font-bold text-lg">{v.title}</h4>
+                <p className="text-sm text-muted-foreground">{v.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 16. FAQ Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold font-headline mb-4">সাধারণ জিজ্ঞাসা (FAQ)</h2>
+            <Badge variant="outline" className="text-primary border-primary mb-2">সহযোগিতা</Badge>
+            <h2 className="text-3xl font-bold font-headline mb-4">সাধারণ জিজ্ঞাসা</h2>
             <div className="h-1.5 w-16 bg-primary mx-auto rounded-full"></div>
           </div>
           <Accordion type="single" collapsible className="w-full space-y-4">
@@ -471,7 +582,8 @@ export default function Home() {
               { q: "রক্তদানের জন্য সর্বনিম্ন বয়স ও ওজন কত?", a: "১৮ থেকে ৬৫ বছর বয়সী যেকোনো সুস্থ ব্যক্তি যার ওজন অন্তত ৫০ কেজি, তিনি রক্ত দিতে পারেন।" },
               { q: "কারা রক্তদান করতে পারবেন না?", a: "যাদের রক্তে কোনো রোগ আছে, যারা গত ৪৮ ঘণ্টায় অ্যান্টিবায়োটিক নিয়েছেন বা কোনো বড় সার্জারি করেছেন, তারা রক্ত দিতে পারবেন না।" },
               { q: "কতদিন পর পর রক্তদান করা যায়?", a: "পুরুষেরা প্রতি ৩ মাস এবং মহিলারা প্রতি ৪ মাস অন্তর নিরাপদভাবে রক্তদান করতে পারেন।" },
-              { q: "রক্ত দিতে কি কোনো টাকা লাগে?", a: "রক্তদান একটি সম্পূর্ণ মানবিক ও স্বেচ্ছাসেবী কাজ। RoktoDao কোনো আর্থিক লেনদেন সমর্থন করে না।" }
+              { q: "রক্ত দিতে কি কোনো টাকা লাগে?", a: "রক্তদান একটি সম্পূর্ণ মানবিক ও স্বেচ্ছাসেবী কাজ। RoktoDao কোনো আর্থিক লেনদেন সমর্থন করে না।" },
+              { q: "রক্তদানের পর কি কোনো বিশ্রাম প্রয়োজন?", a: "রক্তদানের পর ১০-১৫ মিনিট বিশ্রাম নেওয়া এবং প্রচুর পানি বা জুস খাওয়া জরুরি।" }
             ].map((faq, i) => (
               <AccordionItem key={i} value={`item-${i}`} className="border rounded-2xl px-6 bg-muted/5 border-primary/5">
                 <AccordionTrigger className="text-lg font-bold hover:no-underline text-left">{faq.q}</AccordionTrigger>
@@ -482,7 +594,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* 17. Newsletter - Compact */}
       <section className="py-12 bg-primary/5">
         <div className="container mx-auto px-4 max-w-4xl text-center space-y-8">
           <h2 className="text-3xl font-bold font-headline">আপডেট থাকতে চান?</h2>
@@ -499,14 +611,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final Emergency Contact */}
+      {/* 18. Final Emergency Contact - Compact */}
       <section className="bg-primary py-6 border-t border-white/10">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-white">
             <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center shrink-0"><Phone className="h-6 w-6" /></div>
             <div>
               <h4 className="font-bold text-lg">জরুরি কোনো সাহায্য প্রয়োজন?</h4>
-              <p className="text-white/80 text-sm">কল করুন সরাসরি সাহায্যের জন্য (২৪/৭ খোলা)</p>
+              <p className="text-white/80 text-sm">আমাদের হেল্পলাইন নম্বরে কল করুন সরাসরি সাহায্যের জন্য।</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -520,3 +632,5 @@ export default function Home() {
     </div>
   );
 }
+
+import { Lock } from 'lucide-react';
