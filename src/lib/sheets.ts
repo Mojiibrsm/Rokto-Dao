@@ -195,6 +195,10 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   return postToSheets({ action: 'register', ...data });
 }
 
+export async function updateDonorProfile(originalKey: string, data: Partial<Donor>) {
+  return postToSheets({ action: 'updateProfile', originalKey, ...data });
+}
+
 export async function bulkRegisterDonors(donors: any[]) {
   return postToSheets({ action: 'bulkRegister', donors });
 }

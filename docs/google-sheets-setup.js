@@ -26,13 +26,6 @@ function initSheets() {
       sheet = SS.insertSheet(name);
       sheet.appendRow(SCHEMA[name]);
       sheet.getRange(1, 1, 1, SCHEMA[name].length).setFontWeight('bold').setBackground('#fce4ec');
-    } else {
-      // Update headers if missing Organization
-      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-      if (!headers.includes('Organization')) {
-        sheet.insertColumnBefore(9);
-        sheet.getRange(1, 9).setValue('Organization').setFontWeight('bold').setBackground('#fce4ec');
-      }
     }
   });
 }
@@ -62,6 +55,7 @@ function doPost(e) {
 
   const action = data.action;
   if (action === 'register') return registerDonor(data);
+  if (action === 'updateProfile') return updateDonorProfile(data);
   if (action === 'bulkRegister') return bulkRegisterDonors(data);
   if (action === 'book') return scheduleAppointment(data);
   if (action === 'createRequest') return createBloodRequest(data);
@@ -115,6 +109,35 @@ function registerDonor(data) {
     0
   ]);
   return jsonResponse({ success: true });
+}
+
+function updateDonorProfile(data) {
+  const sheet = SS.getSheetByName('Donors');
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const emailCol = headers.indexOf('Email');
+  const phoneCol = headers.indexOf('Phone');
+  
+  const searchKey = data.originalKey; // Can be email or phone
+  
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][emailCol].toString().toLowerCase() === searchKey.toLowerCase() || 
+        rows[i][phoneCol].toString() === searchKey.toString()) {
+      
+      // Found the row, update fields
+      const rowNum = i + 1;
+      if (data.fullName) sheet.getRange(rowNum, headers.indexOf('Full Name') + 1).setValue(data.fullName);
+      if (data.phone) sheet.getRange(rowNum, headers.indexOf('Phone') + 1).setValue(data.phone);
+      if (data.email) sheet.getRange(rowNum, headers.indexOf('Email') + 1).setValue(data.email);
+      if (data.district) sheet.getRange(rowNum, headers.indexOf('District') + 1).setValue(data.district);
+      if (data.area) sheet.getRange(rowNum, headers.indexOf('Area') + 1).setValue(data.area);
+      if (data.union) sheet.getRange(rowNum, headers.indexOf('Union') + 1).setValue(data.union);
+      if (data.organization) sheet.getRange(rowNum, headers.indexOf('Organization') + 1).setValue(data.organization);
+      
+      return jsonResponse({ success: true });
+    }
+  }
+  return jsonResponse({ error: 'Donor not found' });
 }
 
 function bulkRegisterDonors(data) {

@@ -6,13 +6,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplet, Loader2, ArrowRight } from 'lucide-react';
+import { Droplet, Loader2, ArrowRight, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { getDonors } from '@/lib/sheets';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Can be email or phone
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -21,20 +21,23 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // In this MVP, we verify by checking if the email exists in our donor sheet
       const donors = await getDonors();
-      const user = donors.find((d: any) => d.email?.toLowerCase() === email.toLowerCase());
+      const user = donors.find((d: any) => 
+        d.email?.toLowerCase() === identifier.toLowerCase() || 
+        d.phone?.toString() === identifier.toString()
+      );
 
       if (user) {
         localStorage.setItem('roktodao_user', JSON.stringify({
           email: user.email,
-          fullName: user.fullname,
-          bloodType: user.bloodtype
+          phone: user.phone,
+          fullName: user.fullName,
+          bloodType: user.bloodType
         }));
         
         toast({
           title: "লগইন সফল!",
-          description: `স্বাগতম, ${user.fullname}`,
+          description: `স্বাগতম, ${user.fullName}`,
         });
         
         window.dispatchEvent(new Event('storage'));
@@ -43,7 +46,7 @@ export default function LoginPage() {
         toast({
           variant: "destructive",
           title: "লগইন ব্যর্থ",
-          description: "এই ইমেইলটি আমাদের সিস্টেমে পাওয়া যায়নি। অনুগ্রহ করে সঠিক ইমেইল দিন বা নতুন একাউন্ট তৈরি করুন।",
+          description: "এই ইমেইল বা ফোন নম্বরটি আমাদের সিস্টেমে পাওয়া যায়নি।",
         });
       }
     } catch (error) {
@@ -65,20 +68,27 @@ export default function LoginPage() {
             <Droplet className="h-8 w-8 text-primary fill-primary" />
           </div>
           <CardTitle className="text-3xl font-headline">লগইন করুন</CardTitle>
-          <CardDescription>আপনার নিবন্ধিত ইমেইল ঠিকানা দিয়ে প্রবেশ করুন।</CardDescription>
+          <CardDescription>আপনার নিবন্ধিত ফোন নম্বর অথবা ইমেইল দিয়ে প্রবেশ করুন।</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">ইমেইল ঠিকানা</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="example@mail.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
-              />
+              <Label htmlFor="identifier">ইমেইল বা ফোন নম্বর</Label>
+              <div className="relative">
+                <Input 
+                  id="identifier" 
+                  placeholder="01XXXXXXXXX / example@mail.com" 
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  className="pl-10"
+                  required 
+                />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex gap-1 opacity-40">
+                  <Phone className="h-4 w-4" />
+                  <span className="text-xs">/</span>
+                  <Mail className="h-4 w-4" />
+                </div>
+              </div>
             </div>
             <Button type="submit" className="w-full h-12 text-lg bg-primary" disabled={loading}>
               {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (
