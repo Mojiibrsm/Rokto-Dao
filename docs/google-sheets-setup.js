@@ -1,5 +1,5 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Updated with Column Verification)
+ * RoktoDao - Google Sheets Backend Setup Script (Updated with Disease Info)
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -8,7 +8,7 @@ const SCHEMA = {
   'Donors': ['Email', 'Full Name', 'Phone', 'Blood Type', 'Registration Date', 'District', 'Area', 'Union', 'Organization', 'Last Donation Date', 'Total Donations'],
   'Appointments': ['ID', 'Drive ID', 'Drive Name', 'User Email', 'User Name', 'Date', 'Time', 'Status'],
   'BloodDrives': ['ID', 'Name', 'Location', 'Date', 'Time', 'Distance'],
-  'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At'],
+  'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At', 'Disease', 'Disease Info'],
   'Locations': ['District', 'Upazila', 'Union'],
   'Config': ['Key', 'Value']
 };
@@ -25,11 +25,8 @@ function initSheets() {
         sheet.appendRow(['admin_password', 'admin123']);
       }
     } else {
-      // Ensure headers match schema order
       const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       const targetHeaders = SCHEMA[name];
-      
-      // If headers are missing or in wrong order, we warn but for now we trust the SCHEMA for appending
       if (existingHeaders.length < targetHeaders.length) {
         sheet.getRange(1, 1, 1, targetHeaders.length).setValues([targetHeaders]);
       }
@@ -81,7 +78,6 @@ function doPost(e) {
 function createBloodRequest(data) {
   const sheet = SS.getSheetByName('Requests');
   const id = Math.random().toString(36).substring(7);
-  // Important: Matching the 'Requests' SCHEMA order exactly
   sheet.appendRow([
     id, 
     data.patientName, 
@@ -95,7 +91,9 @@ function createBloodRequest(data) {
     data.bagsNeeded, 
     data.isUrgent ? 'Yes' : 'No', 
     'Pending', 
-    new Date().toISOString()
+    new Date().toISOString(),
+    data.disease || '',
+    data.diseaseInfo || ''
   ]);
   return jsonResponse({ success: true, id: id });
 }
@@ -183,20 +181,6 @@ function getAppointments(email) {
   if (!email) return jsonResponse(data);
   const filtered = data.filter(row => row.useremail.toString().toLowerCase() === email.toLowerCase());
   return jsonResponse(filtered);
-}
-
-function scheduleAppointment(data) {
-  const sheet = SS.getSheetByName('Appointments');
-  const id = Math.random().toString(36).substring(7);
-  sheet.appendRow([id, data.driveId, data.driveName, data.userEmail, data.userName, data.date, data.time, 'Scheduled']);
-  return jsonResponse({ success: true, id: id });
-}
-
-function createDrive(data) {
-  const sheet = SS.getSheetByName('BloodDrives');
-  const id = Math.random().toString(36).substring(7);
-  sheet.appendRow([id, data.name, data.location, data.date, data.time, data.distance || '0 km']);
-  return jsonResponse({ success: true, id: id });
 }
 
 function jsonResponse(data) {

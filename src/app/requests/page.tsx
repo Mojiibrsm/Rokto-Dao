@@ -5,7 +5,7 @@ import { getBloodRequests, type BloodRequest } from '@/lib/sheets';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, Check } from 'lucide-react';
+import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, Check, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,6 +29,7 @@ export default function RequestsPage() {
 
 🩸 রক্তের গ্রুপ: *${req.bloodType}*
 👤 রোগী: ${req.patientName}
+🩺 রোগ: ${req.disease || 'উল্লেখ নেই'}${req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}
 🏥 হাসপাতাল: ${req.hospitalName}
 📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}
 🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ
@@ -42,7 +43,6 @@ export default function RequestsPage() {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(shareText);
       } else {
-        // Fallback for older browsers or insecure contexts
         const textArea = document.createElement("textarea");
         textArea.value = shareText;
         document.body.appendChild(textArea);
@@ -120,6 +120,17 @@ export default function RequestsPage() {
                   </div>
                 </div>
                 <div className="mt-6 space-y-3">
+                   {req.disease && (
+                     <div className="flex items-center gap-3 text-muted-foreground text-sm">
+                        <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
+                          <Activity className="h-4 w-4 text-secondary" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-foreground">রোগ:</span> 
+                          <p className="text-foreground">{req.disease}{req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}</p>
+                        </div>
+                     </div>
+                   )}
                    <div className="flex items-center gap-3 text-muted-foreground text-sm">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <Clock className="h-4 w-4 text-primary" />

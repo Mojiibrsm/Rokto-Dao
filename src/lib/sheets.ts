@@ -33,6 +33,8 @@ export type BloodRequest = {
   isUrgent: boolean;
   status: 'Pending' | 'Approved' | 'Fullfilled';
   createdAt: string;
+  disease?: string;
+  diseaseInfo?: string;
 };
 
 export type Appointment = {
@@ -134,7 +136,6 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
   const data = await fetchFromSheets('getRequests');
   if (!Array.isArray(data)) return [];
   
-  // Explicit mapping based on normalized headers from getSheetData
   return data.map((d: any) => ({
     id: d.id || '',
     patientName: d.patientname || '',
@@ -148,7 +149,9 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
     bagsNeeded: String(d.bagsneeded || '1'),
     isUrgent: String(d.isurgent).toLowerCase() === 'yes',
     status: d.status || 'Pending',
-    createdAt: d.createdat || ''
+    createdAt: d.createdat || '',
+    disease: d.disease || '',
+    diseaseInfo: d.diseaseinfo || ''
   }));
 }
 
