@@ -1,12 +1,5 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Professional Admin Version)
- * 
- * INSTRUCTIONS:
- * 1. Go to your existing Apps Script editor.
- * 2. Replace the old code with THIS new version.
- * 3. Click 'Save' and 'Deploy' > 'Manage Deployments'.
- * 4. Edit the current deployment and select 'New Version'.
- * 5. Click 'Deploy'.
+ * RoktoDao - Google Sheets Backend Setup Script (Secure Admin Version)
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -16,12 +9,9 @@ const SCHEMA = {
   'Appointments': ['ID', 'Drive ID', 'Drive Name', 'User Email', 'User Name', 'Date', 'Time', 'Status'],
   'BloodDrives': ['ID', 'Name', 'Location', 'Date', 'Time', 'Distance'],
   'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At'],
-  'Locations': ['District', 'Upazila', 'Union']
+  'Locations': ['District', 'Upazila', 'Union'],
+  'Config': ['Key', 'Value']
 };
-
-function updateTimestamp() {
-  PropertiesService.getScriptProperties().setProperty('LAST_UPDATE', new Date().getTime().toString());
-}
 
 function initSheets() {
   Object.keys(SCHEMA).forEach(name => {
@@ -30,6 +20,11 @@ function initSheets() {
       sheet = SS.insertSheet(name);
       sheet.appendRow(SCHEMA[name]);
       sheet.getRange(1, 1, 1, SCHEMA[name].length).setFontWeight('bold').setBackground('#fce4ec');
+      
+      // Default Admin Password
+      if (name === 'Config') {
+        sheet.appendRow(['admin_password', 'admin123']);
+      }
     }
   });
 }
@@ -41,9 +36,8 @@ function doGet(e) {
   if (action === 'getDrives') return getBloodDrives();
   if (action === 'getDonors') return getDonors();
   if (action === 'getRequests') return getBloodRequests();
-  if (action === 'getHistory') return getDonationHistory(e.parameter.email);
   if (action === 'getStats') return getGlobalStats();
-  if (action === 'getLocations') return getLocations();
+  if (action === 'getAdminPass') return getAdminPassword();
   
   return jsonResponse({ error: 'Invalid action' });
 }
@@ -63,7 +57,6 @@ function doPost(e) {
   if (action === 'register') result = registerDonor(data);
   else if (action === 'updateProfile') result = updateDonorProfile(data);
   else if (action === 'bulkRegister') result = bulkRegisterDonors(data);
-  else if (action === 'book') result = scheduleAppointment(data);
   else if (action === 'createRequest') result = createBloodRequest(data);
   else if (action === 'updateStatus') result = updateEntryStatus(data);
   else if (action === 'deleteEntry') result = deleteEntry(data);
@@ -71,26 +64,28 @@ function doPost(e) {
   else if (action === 'createDrive') result = createDrive(data);
   else return jsonResponse({ error: 'Invalid action' });
 
-  updateTimestamp();
+  PropertiesService.getScriptProperties().setProperty('LAST_UPDATE', new Date().getTime().toString());
   return result;
+}
+
+function getAdminPassword() {
+  const sheet = SS.getSheetByName('Config');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === 'admin_password') return jsonResponse({ password: data[i][1] });
+  }
+  return jsonResponse({ password: 'admin123' });
 }
 
 function getGlobalStats() {
   const donors = SS.getSheetByName('Donors').getLastRow() - 1;
   const requests = SS.getSheetByName('Requests').getLastRow() - 1;
-  const appointments = SS.getSheetByName('Appointments').getLastRow() - 1;
   const lastUpdate = PropertiesService.getScriptProperties().getProperty('LAST_UPDATE') || '0';
-  
-  return jsonResponse({
-    totalDonors: Math.max(0, donors),
-    totalRequests: Math.max(0, requests),
-    totalAppointments: Math.max(0, appointments),
-    lastUpdate: lastUpdate
-  });
+  return jsonResponse({ totalDonors: Math.max(0, donors), totalRequests: Math.max(0, requests), lastUpdate: lastUpdate });
 }
 
 function getSheetData(sheet) {
-  if (!sheet) return { error: 'Sheet not found' };
+  if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
   if (data.length <= 1) return [];
   const headers = data.shift();
@@ -106,19 +101,7 @@ function getSheetData(sheet) {
 
 function registerDonor(data) {
   const sheet = SS.getSheetByName('Donors');
-  sheet.appendRow([
-    data.email || '', 
-    data.fullName || '', 
-    data.phone || '', 
-    data.bloodType || '', 
-    new Date().toISOString(), 
-    data.district || '', 
-    data.area || '', 
-    data.union || '', 
-    data.organization || '',
-    'N/A', 
-    data.totalDonations || 0
-  ]);
+  sheet.appendRow([data.email, data.fullName, data.phone, data.bloodType, new Date().toISOString(), data.district, data.area, data.union, data.organization, 'N/A', data.totalDonations || 0]);
   return jsonResponse({ success: true });
 }
 
@@ -128,54 +111,22 @@ function updateDonorProfile(data) {
   const headers = rows[0];
   const emailCol = headers.indexOf('Email');
   const phoneCol = headers.indexOf('Phone');
-  
   const searchKey = data.originalKey; 
-  
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i][emailCol].toString().toLowerCase() === searchKey.toLowerCase() || 
-        rows[i][phoneCol].toString() === searchKey.toString()) {
-      
+    if (rows[i][emailCol].toString().toLowerCase() === searchKey.toLowerCase() || rows[i][phoneCol].toString() === searchKey.toString()) {
       const rowNum = i + 1;
       if (data.fullName) sheet.getRange(rowNum, headers.indexOf('Full Name') + 1).setValue(data.fullName);
       if (data.phone) sheet.getRange(rowNum, headers.indexOf('Phone') + 1).setValue(data.phone);
       if (data.email) sheet.getRange(rowNum, headers.indexOf('Email') + 1).setValue(data.email);
       if (data.district) sheet.getRange(rowNum, headers.indexOf('District') + 1).setValue(data.district);
       if (data.area) sheet.getRange(rowNum, headers.indexOf('Area') + 1).setValue(data.area);
-      if (data.union) sheet.getRange(rowNum, headers.indexOf('Union') + 1).setValue(data.union);
       if (data.organization) sheet.getRange(rowNum, headers.indexOf('Organization') + 1).setValue(data.organization);
       if (data.totalDonations !== undefined) sheet.getRange(rowNum, headers.indexOf('Total Donations') + 1).setValue(data.totalDonations);
-      
+      if (data.lastDonationDate) sheet.getRange(rowNum, headers.indexOf('Last Donation Date') + 1).setValue(data.lastDonationDate);
       return jsonResponse({ success: true });
     }
   }
   return jsonResponse({ error: 'Donor not found' });
-}
-
-function bulkRegisterDonors(data) {
-  const sheet = SS.getSheetByName('Donors');
-  if (!data.donors || !Array.isArray(data.donors)) return jsonResponse({ error: 'No data provided' });
-  
-  const now = new Date().toISOString();
-  const rows = data.donors.map(d => [
-    d.email || '', 
-    d.fullName || '', 
-    d.phone || '', 
-    d.bloodType || '', 
-    now, 
-    d.district || '', 
-    d.area || '', 
-    d.union || '', 
-    d.organization || '',
-    'N/A', 
-    d.totalDonations || 0
-  ]);
-  
-  if (rows.length > 0) {
-    const startRow = sheet.getLastRow() + 1;
-    sheet.getRange(startRow, 1, rows.length, 11).setValues(rows);
-  }
-  
-  return jsonResponse({ success: true, count: rows.length });
 }
 
 function createBloodRequest(data) {
@@ -185,45 +136,11 @@ function createBloodRequest(data) {
   return jsonResponse({ success: true, id: id });
 }
 
-function createDrive(data) {
-  const sheet = SS.getSheetByName('BloodDrives');
-  sheet.appendRow([data.id, data.name, data.location, data.date, data.time, data.distance]);
-  return jsonResponse({ success: true });
-}
-
-function seedLocations(rows) {
-  const sheet = SS.getSheetByName('Locations');
-  if (sheet.getLastRow() > 1) {
-    sheet.getRange(2, 1, sheet.getLastRow() - 1, SCHEMA.Locations.length).clearContent();
-  }
-  if (rows && rows.length > 0) {
-    sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
-  }
-  return jsonResponse({ success: true, count: rows.length });
-}
-
-function getLocations() { return jsonResponse(getSheetData(SS.getSheetByName('Locations'))); }
-
-function updateEntryStatus(data) {
-  const sheet = SS.getSheetByName(data.sheetName);
-  const rows = sheet.getDataRange().getValues();
-  const idCol = 0;
-  for (let i = 1; i < rows.length; i++) {
-    if (rows[i][idCol].toString() === data.id.toString()) {
-      const statusCol = SCHEMA[data.sheetName].indexOf('Status') + 1;
-      sheet.getRange(i + 1, statusCol).setValue(data.newStatus);
-      return jsonResponse({ success: true });
-    }
-  }
-  return jsonResponse({ error: 'Entry not found' });
-}
-
 function deleteEntry(data) {
   const sheet = SS.getSheetByName(data.sheetName);
   const rows = sheet.getDataRange().getValues();
-  const idCol = 0;
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i][idCol].toString() === data.id.toString()) {
+    if (rows[i][0].toString() === data.id.toString()) {
       sheet.deleteRow(i + 1);
       return jsonResponse({ success: true });
     }
@@ -231,13 +148,9 @@ function deleteEntry(data) {
   return jsonResponse({ error: 'Entry not found' });
 }
 
-function getBloodDrives() { return jsonResponse(getSheetData(SS.getSheetByName('BloodDrives'))); }
 function getDonors() { return jsonResponse(getSheetData(SS.getSheetByName('Donors'))); }
 function getBloodRequests() { return jsonResponse(getSheetData(SS.getSheetByName('Requests'))); }
-function getDonationHistory(email) {
-  const data = getSheetData(SS.getSheetByName('Appointments'));
-  return jsonResponse(data.filter(item => item.useremail === email));
-}
+function getBloodDrives() { return jsonResponse(getSheetData(SS.getSheetByName('BloodDrives'))); }
 
 function jsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);

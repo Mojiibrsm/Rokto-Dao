@@ -6,23 +6,21 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { 
   ShieldAlert, BellRing, Settings, Users, BarChart3, ArrowRight, 
   Loader2, Droplet, CalendarCheck, Database, RefreshCw, 
-  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus, FileUp, UserCheck
+  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus, FileUp, UserCheck, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getGlobalStats, seedLocationData } from '@/lib/sheets';
 import { BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  Tooltip as ChartTooltip, ResponsiveContainer, Cell, PieChart, Pie 
-} from 'recharts';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSeeding, setIsSeeding] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadStats() {
@@ -37,6 +35,11 @@ export default function AdminDashboard() {
     }
     loadStats();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('roktodao_admin_auth');
+    router.push('/admin/login');
+  };
 
   const handleSeedData = async () => {
     setIsSeeding(true);
@@ -66,7 +69,7 @@ export default function AdminDashboard() {
     { title: "Add New Donor", description: "Directly add donors to the system.", icon: UserPlus, href: "/admin/add-donor", color: "text-blue-600", bgColor: "bg-blue-100" },
     { title: "Bulk Donor Import", description: "Smart AI import from raw text records.", icon: FileUp, href: "/admin/bulk-donors", color: "text-purple-600", bgColor: "bg-purple-100" },
     { title: "Urgent Notification", description: "Generate personalized Bengali SMS messages.", icon: BellRing, href: "/admin/send-notification", color: "text-primary", bgColor: "bg-primary/10" },
-    { title: "Blood Drive Manager", description: "Plan and manage upcoming campaigns.", icon: CalendarCheck, href: "/admin/manage-drives", color: "text-green-600", bgColor: "bg-green-100" }
+    { title: "Fake Detector", description: "Check if a profile looks suspicious using AI.", icon: ShieldAlert, href: "/admin/fake-profile-detector", color: "text-amber-600", bgColor: "bg-amber-50" }
   ];
 
   return (
@@ -76,13 +79,15 @@ export default function AdminDashboard() {
           <h1 className="text-4xl font-bold font-headline flex items-center gap-3"><Settings className="h-10 w-10 text-primary" /> অ্যাডমিন প্যানেল</h1>
           <p className="text-muted-foreground mt-2">RoktoDao প্ল্যাটফর্ম এবং AI টুলস পরিচালনা করুন।</p>
         </div>
+        <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={handleLogout}>
+          <LogOut className="h-4 w-4 mr-2" /> লগআউট করুন
+        </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-4 mb-10">
+      <div className="grid gap-6 md:grid-cols-3 mb-10">
         {[
           { label: "মোট দাতা", val: stats?.totalDonors, icon: Users, color: "text-primary", bg: "bg-primary/5" },
           { label: "রক্তের অনুরোধ", val: stats?.totalRequests, icon: Droplet, color: "text-secondary", bg: "bg-secondary/5" },
-          { label: "অ্যাপয়েন্টমেন্ট", val: stats?.totalAppointments, icon: CalendarCheck, color: "text-green-600", bg: "bg-green-50" },
           { label: "সফল দান", val: "৪৫০+", icon: HeartPulse, color: "text-blue-600", bg: "bg-blue-50" }
         ].map((s, i) => (
           <Card key={i} className={`${s.bg} border-none shadow-sm`}>
@@ -106,7 +111,7 @@ export default function AdminDashboard() {
               <div className={`${tool.bgColor} p-3 rounded-xl`}><tool.icon className={`h-6 w-6 ${tool.color}`} /></div>
               <div className="space-y-1">
                 <CardTitle className="text-xl">{tool.title}</CardTitle>
-                <CardDescription>{tool.description}</CardDescription>
+                <CardDescription className="text-sm">{tool.description}</CardDescription>
               </div>
             </CardHeader>
             <CardContent>
