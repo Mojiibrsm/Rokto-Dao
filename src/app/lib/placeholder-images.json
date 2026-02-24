@@ -66,6 +66,12 @@
       "description": "Terms and Conditions Illustration",
       "imageUrl": "https://image.mojib.me/uploads/General/1771910140_Terms%20RoktoDao.png",
       "imageHint": "terms agreement"
+    },
+    {
+      "id": "mobile-app-promo",
+      "description": "RoktoDao Mobile App coming soon",
+      "imageUrl": "https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png",
+      "imageHint": "mobile app"
     }
   ]
 }

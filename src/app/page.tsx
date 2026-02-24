@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -51,6 +52,7 @@ export default function Home() {
 
   const whyDonateImage = PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || 'https://picsum.photos/seed/why-donate/800/600';
   const canYouDonateImage = PlaceHolderImages.find(img => img.id === 'can-you-donate')?.imageUrl || '';
+  const mobileAppImage = PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || 'https://picsum.photos/seed/mobile/800/1000';
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
@@ -223,6 +225,9 @@ export default function Home() {
                       </Badge>
                     </div>
                   </CardHeader>
+                  <CardDescription className="px-8 flex items-center gap-2 font-medium">
+                    <MapPin className="h-4 w-4 text-primary" /> {req.hospitalName}
+                  </CardDescription>
                   <CardContent className="px-8 pb-8">
                     <div className="flex items-center gap-6 py-4 border-y border-dashed my-4">
                       <div className="text-center">
@@ -497,11 +502,11 @@ export default function Home() {
             </div>
             <div className="flex-1 relative h-[400px] lg:h-[600px] w-full">
               <Image 
-                src="https://picsum.photos/seed/mobile/800/1000" 
+                src={mobileAppImage} 
                 fill 
-                alt="App screenshot" 
-                className="object-cover opacity-60"
-                data-ai-hint="smartphone app"
+                alt="RoktoDao Mobile App Promo" 
+                className="object-contain lg:object-cover"
+                data-ai-hint="mobile app"
               />
             </div>
           </div>
