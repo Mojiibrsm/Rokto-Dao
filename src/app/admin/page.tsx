@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { 
   ShieldAlert, BellRing, Settings, Users, BarChart3, ArrowRight, 
   Loader2, Droplet, CalendarCheck, Database, RefreshCw, 
-  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse
+  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -93,6 +93,14 @@ export default function AdminDashboard() {
 
   const tools = [
     {
+      title: "Add New Donor",
+      description: "Directly add donors to the system. Email is optional.",
+      icon: UserPlus,
+      href: "/admin/add-donor",
+      color: "text-blue-600",
+      bgColor: "bg-blue-100"
+    },
+    {
       title: "Fake Profile Detector",
       description: "Analyze donor profiles to detect potential fakes using AI.",
       icon: ShieldAlert,
@@ -115,14 +123,6 @@ export default function AdminDashboard() {
       href: "/admin/manage-drives",
       color: "text-green-600",
       bgColor: "bg-green-100"
-    },
-    {
-      title: "Donor Management",
-      description: "View and manage all registered donors in the system.",
-      icon: Users,
-      href: "/donors",
-      color: "text-blue-600",
-      bgColor: "bg-blue-100"
     }
   ];
 
