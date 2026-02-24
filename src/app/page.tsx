@@ -177,16 +177,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. আপডেট টি্যাকার (Scrolling news) */}
-      <div className="bg-slate-900 py-3 overflow-hidden whitespace-nowrap border-y">
-        <div className="animate-marquee inline-block text-white font-medium text-sm md:text-base">
-          <span className="mx-8">📢 ঢাকা মেডিকেল কলেজে আজ সকালে ৩ ব্যাগ O+ রক্ত দেওয়া হয়েছে।</span>
-          <span className="mx-8">📢 চট্টগ্রামের পটিয়াতে একজন থ্যালাসেমিয়া রোগীর জন্য B- রক্ত প্রয়োজন।</span>
-          <span className="mx-8">📢 সিলেটে ৫ জন নতুন রক্তদাতা আজ নিবন্ধন করেছেন।</span>
-          <span className="mx-8">📢 রংপুরে আগামী শুক্রবার রক্তদান ক্যাম্প অনুষ্ঠিত হবে।</span>
-        </div>
-      </div>
-
       {/* 4. আমাদের রক্তযোদ্ধারা */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
@@ -361,7 +351,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. কেন রক্ত দেবেন? (Restored) */}
+      {/* 7. কেন রক্ত দেবেন? */}
       <section className="py-12 bg-primary/5 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -411,14 +401,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. AI Eligibility CTA (Restored) */}
+      {/* 8. AI Eligibility CTA */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="bg-slate-900 rounded-[3rem] p-8 md:p-16 relative overflow-hidden text-center md:text-left">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
             <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
               <div className="space-y-6">
-                <h2 className="text-3xl md:text-5xl font-black text-white font-headline leading-tight">আপনি কি আজ রক্তদান করতে পারবেন?</h2>
+                <h2 className="text-3xl md:text-[40px] font-black text-white font-headline leading-tight">আপনি কি আজ রক্তদান করতে পারবেন?</h2>
                 <p className="text-slate-400 text-lg md:text-xl leading-relaxed">
                   আমাদের AI ভিত্তিক কুইজের মাধ্যমে মাত্র ১ মিনিটে আপনার শারীরিক যোগ্যতা যাচাই করুন।
                 </p>
@@ -440,7 +430,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. রক্তের গ্রুপের সামঞ্জস্যতা (Restored) */}
+      {/* 9. রক্তের গ্রুপের সামঞ্জস্যতা */}
       <section className="py-12 bg-muted/5">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-10">
@@ -472,8 +462,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. পরিচালকের বার্তা (Restored) */}
-      <section className="py-16 bg-white border-y">
+      {/* 10. পরিচালকের বার্তা */}
+      <section className="py-12 bg-white border-y">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <div className="relative h-[400px] rounded-[3rem] overflow-hidden shadow-2xl">
@@ -501,7 +491,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 11. রক্তদাতাদের কথা (Restored) */}
+      {/* 11. রক্তদাতাদের কথা */}
       <section className="py-12 bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
@@ -534,7 +524,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 12. গ্যালারি (Restored) */}
+      {/* 12. গ্যালারি */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
@@ -558,7 +548,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 13. মোবাইল অ্যাপ ও ভলান্টিয়ার (Restored) */}
+      {/* 13. মোবাইল অ্যাপ ও ভলান্টিয়ার */}
       <section className="py-12 bg-slate-900 text-white overflow-hidden relative">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -593,7 +583,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="text-xl font-bold">স্বেচ্ছাসেবক হিসেবে যোগ দিন</h4>
-                    <p className="text-slate-400 text-sm">রক্তদান ছাড়াও আমাদের এই মহৎ কাজে আপনি স্বেচ্ছাসেবক হিসেবে অবদান রাখতে পারেন।</p>
+                    <p className="text-slate-400 text-sm">রক্তদান ছাড়াও আমাদের এই মহৎ কাজে আপনি স্বেচ্ছাসেবক হিসেবে অবদান রাখতে পারেন। আমরা আপনার অপেক্ষায় আছি।</p>
                   </div>
                   <Button className="bg-white text-slate-900 hover:bg-slate-100 rounded-full px-8 h-12 font-bold shrink-0">আবেদন করুন</Button>
                 </div>
@@ -612,7 +602,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 14. সহযোগী প্রতিষ্ঠান (Restored) */}
+      {/* 14. সহযোগী প্রতিষ্ঠান */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <p className="text-center text-muted-foreground font-bold uppercase tracking-widest text-xs mb-8">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
@@ -626,7 +616,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 15. কেন বেছে নিবেন? (Restored) */}
+      {/* 15. কেন বেছে নিবেন? */}
       <section className="py-12 bg-muted/5 border-y">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold font-headline mb-10">কেন RoktoDao বেছে নিবেন?</h2>
@@ -649,7 +639,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 16. সাধারণ জিজ্ঞাসা ও নিউজলেটার (Restored) */}
+      {/* 16. সাধারণ জিজ্ঞাসা ও নিউজলেটার */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16">
@@ -686,6 +676,7 @@ export default function Home() {
                   type="email" 
                   placeholder="আপনার ইমেইল ঠিকানা" 
                   className="flex-1 h-14 rounded-full px-6 border-2 border-primary/10 focus:border-primary outline-none transition-all"
+                  suppressHydrationWarning
                 />
                 <Button className="h-14 rounded-full px-10 bg-primary hover:bg-primary/90 text-lg font-bold">সাবস্ক্ৰাইব</Button>
               </div>

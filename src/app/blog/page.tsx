@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -129,6 +128,7 @@ export default function BlogPage() {
               type="email" 
               placeholder="আপনার ইমেইল" 
               className="flex-1 h-14 rounded-full px-8 bg-white/5 border border-white/10 text-white outline-none focus:border-primary transition-colors"
+              suppressHydrationWarning
             />
             <Button className="h-14 rounded-full px-10 bg-primary hover:bg-primary/90 text-lg font-bold">সাবস্ক্রাইব</Button>
           </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -126,7 +125,7 @@ export default function ContactPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email" className="text-base">ইমেইল ঠিকানা</Label>
-                        <Input id="email" type="email" placeholder="example@mail.com" className="h-12 rounded-xl bg-muted/30 border-none" required />
+                        <Input id="email" type="email" placeholder="example@mail.com" className="h-12 rounded-xl bg-muted/30 border-none" required suppressHydrationWarning />
                       </div>
                     </div>
                     <div className="space-y-2">
