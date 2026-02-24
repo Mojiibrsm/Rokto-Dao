@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { 
   Droplet, Heart, ShieldCheck, MapPin, ArrowRight, Search, Users, 
   CheckCircle, Phone, Share2, Clock, Loader2, 
-  ImageIcon, Smartphone, HandHeart, 
-  HelpCircle, Mail, Globe, Zap, Star, Quote, MessageSquare, Plus, Hospital, Award, Info, Facebook
+  Smartphone, HandHeart, 
+  Globe, Zap, Quote, Award
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -109,17 +109,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
-      {/* 1. Breaking News / Marquee - Compact */}
-      <div className="bg-primary text-white py-2 overflow-hidden border-b border-white/10 whitespace-nowrap relative">
-        <div className="animate-marquee inline-block hover-pause px-4">
-          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> জরুরী: শরীয়তপুর-এ B- রক্তের প্রয়োজন। যোগাযোগ করুন</span>
-          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> কক্সবাজার-এ AB+ রক্তের প্রয়োজন। যোগাযোগ করুন</span>
-          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> ঢাকা মেডিকেল কলেজে আজ সকালে ৩ ব্যাগ O+ রক্ত দেওয়া হয়েছে।</span>
-          <span className="mx-8 font-bold flex items-center gap-2"><Droplet className="h-4 w-4" /> চট্টগ্রামের পটিয়াতে একজন থ্যালাসেমিয়া রোগীর জন্য B- রক্ত প্রয়োজন।</span>
-        </div>
-      </div>
-
-      {/* 2. Hero Section - Compact */}
+      {/* 1. Hero Section - Compact */}
       <section className="relative w-full py-10 md:py-16 flex flex-col items-center justify-center bg-background text-center px-4 overflow-hidden border-b border-primary/5">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-50"></div>
         <div className="container mx-auto relative z-10 max-w-5xl space-y-6">
@@ -156,7 +146,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Stats Section */}
+      {/* 2. Stats Section */}
       <section className="bg-white py-8 border-b">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -176,7 +166,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Active Donors Section */}
+      {/* 3. Active Donors Section */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 space-y-1">
@@ -232,7 +222,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Process Section */}
+      {/* 4. Process Section */}
       <section className="bg-muted/10 py-12 border-y">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10 space-y-1">
@@ -257,7 +247,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Requests Section */}
+      {/* 5. Requests Section */}
       <section className="bg-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -318,7 +308,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Why Donate / Health Benefits */}
+      {/* 6. Why Donate / Health Benefits */}
       <section className="py-12 bg-primary/5">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -352,7 +342,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Eligibility Quiz Banner */}
+      {/* 7. Eligibility Quiz Banner */}
       <section className="container mx-auto px-4 py-8">
         <div className="bg-slate-950 rounded-[3rem] p-8 md:p-16 overflow-hidden relative group border border-white/5">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
@@ -390,7 +380,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. Blood Compatibility Section */}
+      {/* 8. Blood Compatibility Section */}
       <section className="py-12 bg-muted/5">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-8">
@@ -422,7 +412,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Founder's Message */}
+      {/* 9. Founder's Message */}
       <section className="py-16 bg-white border-y">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
@@ -444,7 +434,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 11. Testimonials */}
+      {/* 10. Testimonials */}
       <section className="py-16 bg-muted/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -475,7 +465,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 12. Gallery - Compact */}
+      {/* 11. Gallery - Compact */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
@@ -499,7 +489,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 13. App Promo Section */}
+      {/* 12. App Promo Section */}
       <section className="py-12 bg-slate-900 text-white overflow-hidden relative border-y border-white/5">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
         <div className="container mx-auto px-4">
@@ -534,7 +524,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 14. Partner Logos / Trust */}
+      {/* 13. Partner Logos / Trust */}
       <section className="py-12 bg-white grayscale opacity-50 overflow-hidden">
         <div className="container mx-auto px-4">
           <p className="text-center text-xs font-bold uppercase tracking-widest text-muted-foreground mb-8">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
@@ -546,7 +536,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 15. Why Choose Us */}
+      {/* 14. Why Choose Us */}
       <section className="py-16 bg-muted/10 border-y">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -569,7 +559,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 16. FAQ Section */}
+      {/* 15. FAQ Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-12">
@@ -580,7 +570,7 @@ export default function Home() {
           <Accordion type="single" collapsible className="w-full space-y-4">
             {[
               { q: "রক্তদানের জন্য সর্বনিম্ন বয়স ও ওজন কত?", a: "১৮ থেকে ৬৫ বছর বয়সী যেকোনো সুস্থ ব্যক্তি যার ওজন অন্তত ৫০ কেজি, তিনি রক্ত দিতে পারেন।" },
-              { q: "কারা রক্তদান করতে পারবেন না?", a: "যাদের রক্তে কোনো রোগ আছে, যারা গত ৪৮ ঘণ্টায় অ্যান্টিবায়োটিক নিয়েছেন বা কোনো বড় সার্জারি করেছেন, তারা রক্ত দিতে পারবেন না।" },
+              { q: "কারা রক্তদান করতে পারবেন না?", a: "যাদের রক্তে কোনো রোগ আছে, যারা গত ৪৮ ঘণ্টায় অ্যান্টিবায়োটিক নিয়েছেন বা কোনো বড় সার্জারি করেছেন, তারা রক্ত পারবেন না।" },
               { q: "কতদিন পর পর রক্তদান করা যায়?", a: "পুরুষেরা প্রতি ৩ মাস এবং মহিলারা প্রতি ৪ মাস অন্তর নিরাপদভাবে রক্তদান করতে পারেন।" },
               { q: "রক্ত দিতে কি কোনো টাকা লাগে?", a: "রক্তদান একটি সম্পূর্ণ মানবিক ও স্বেচ্ছাসেবী কাজ। RoktoDao কোনো আর্থিক লেনদেন সমর্থন করে না।" },
               { q: "রক্তদানের পর কি কোনো বিশ্রাম প্রয়োজন?", a: "রক্তদানের পর ১০-১৫ মিনিট বিশ্রাম নেওয়া এবং প্রচুর পানি বা জুস খাওয়া জরুরি।" }
@@ -594,7 +584,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 17. Newsletter - Compact */}
+      {/* 16. Newsletter - Compact */}
       <section className="py-12 bg-primary/5">
         <div className="container mx-auto px-4 max-w-4xl text-center space-y-8">
           <h2 className="text-3xl font-bold font-headline">আপডেট থাকতে চান?</h2>
@@ -611,7 +601,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 18. Final Emergency Contact - Compact */}
+      {/* 17. Final Emergency Contact - Compact */}
       <section className="bg-primary py-6 border-t border-white/10">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-white">
@@ -633,4 +623,4 @@ export default function Home() {
   );
 }
 
-import { Lock } from 'lucide-react';
+import { Lock, Facebook } from 'lucide-react';
