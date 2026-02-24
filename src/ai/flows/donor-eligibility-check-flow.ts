@@ -25,6 +25,10 @@ const DonorEligibilityCheckInputSchema = z.object({
   traveledToMalariaRiskArea: z
     .boolean()
     .describe('True if the donor has traveled to a malaria-risk area in the last 3 years, false otherwise.'),
+  additionalNotes: z
+    .string()
+    .optional()
+    .describe('Any additional health information, chronic diseases, or notes provided by the user.'),
 });
 export type DonorEligibilityCheckInput = z.infer<typeof DonorEligibilityCheckInputSchema>;
 
@@ -35,8 +39,11 @@ const DonorEligibilityCheckOutputSchema = z.object({
   reason: z
     .string()
     .describe(
-      'A brief explanation for the eligibility determination, or an encouraging message if eligible.'
+      'A brief explanation for the eligibility determination in Bengali.'
     ),
+  suggestions: z
+    .array(z.string())
+    .describe('A list of 2-4 actionable suggestions in Bengali based on the user\'s input.'),
 });
 export type DonorEligibilityCheckOutput = z.infer<typeof DonorEligibilityCheckOutputSchema>;
 
@@ -50,37 +57,35 @@ const donorEligibilityCheckPrompt = ai.definePrompt({
   name: 'donorEligibilityCheckPrompt',
   input: {schema: DonorEligibilityCheckInputSchema},
   output: {schema: DonorEligibilityCheckOutputSchema},
-  prompt: `You are an AI assistant specialized in providing preliminary information about blood donation eligibility. You will be given health-related questions from a potential donor. Your task is to provide a preliminary determination of their eligibility based on common guidelines. This is NOT a definitive medical assessment.
+  prompt: `আপনি একজন বিশেষজ্ঞ ডাক্তার এবং রক্তদান বিশেষজ্ঞ। আপনি একজন সম্ভাব্য রক্তদাতার তথ্যাবলি বিশ্লেষণ করে সিদ্ধান্ত দেবেন যে তিনি রক্তদান করতে পারবেন কি না।
 
-Here are the donor's answers:
-Age: {{{age}}} years old
-Weight: {{{weightLbs}}} lbs
-Felt sick recently (last 7 days): {{{feltSickRecently}}}
-Taking prescription medications: {{{takingMedications}}}
-Received tattoo or piercing (last 4 months): {{{receivedTattooOrPiercing}}}
-Traveled to malaria-risk area (last 3 years): {{{traveledToMalariaRiskArea}}}
+**গুরুত্বপূর্ণ:** আপনার উত্তর অবশ্যই সম্পূর্ণ বাংলায় হতে হবে।
 
-Based on these answers, provide a preliminary determination of eligibility. If the donor is likely ineligible, provide a concise reason based on the provided information. If they are likely eligible, provide an encouraging message and remind them that a final determination requires a full medical screening at the donation center.
+এখানে দাতার তথ্য দেওয়া হলো:
+- বয়স: {{{age}}} বছর
+- ওজন: {{{weightLbs}}} পাউন্ড (১১০ পাউন্ডের নিচে হলে সাধারণত অযোগ্য)
+- সম্প্রতি অসুস্থ (গত ৭ দিন): {{#if feltSickRecently}}হ্যাঁ{{else}}না{{/if}}
+- নিয়মিত ওষুধ সেবন করছেন: {{#if takingMedications}}হ্যাঁ{{else}}না{{/if}}
+- ট্যাটু বা পিয়ার্সিং করেছেন (গত ৪ মাস): {{#if receivedTattooOrPiercing}}হ্যাঁ{{else}}না{{/if}}
+- ম্যালেরিয়া প্রবণ এলাকায় ভ্রমণ (গত ৩ বছর): {{#if traveledToMalariaRiskArea}}হ্যাঁ{{else}}না{{/if}}
+- অতিরিক্ত তথ্য/রোগের বিবরণ: {{{additionalNotes}}}
 
-Common reasons for temporary deferral:
-- Age under 16 or over 99.
-- Weight under 110 lbs.
-- Recent illness (cold, flu, fever) within 7 days.
-- Recent tattoo or piercing within 4 months.
-- Travel to malaria-risk area within 3 years.
+আপনার কাজ:
+১. রক্তদানের যোগ্যতা যাচাই করা।
+২. "reason" ফিল্ডে বাংলায় একটি বিস্তারিত কারণ বা উৎসাহমূলক বার্তা দেওয়া।
+৩. "suggestions" ফিল্ডে ২-৪টি কার্যকর পরামর্শ দেওয়া (যেমন: প্রচুর পানি পান করা, বিশ্রাম নেওয়া, বা কতদিন অপেক্ষা করতে হবে)।
 
-Keep in mind that taking some medications may also lead to deferral, but without knowing the specific medication, you should only flag this as a potential issue if other factors are present or if you need more information.
+যদি ব্যবহারকারী কোনো জটিল রোগের কথা উল্লেখ করেন (যেমন: হেপাটাইটিস, এইডস, ক্যান্সার), তবে সরাসরি অযোগ্য ঘোষণা করুন এবং ডাক্তারের পরামর্শ নিতে বলুন।
 
-Example Output (JSON):
+উদাহরণ আউটপুট:
 {
   "isEligible": true,
-  "reason": "Based on the information provided, you appear to meet the basic requirements. A full medical screening will be conducted at the donation center."
-}
-
-Example Output (JSON):
-{
-  "isEligible": false,
-  "reason": "You have received a tattoo or piercing within the last 4 months, which typically requires a deferral period. Please check local guidelines for exact waiting times."
+  "reason": "আপনার দেওয়া তথ্য অনুযায়ী আপনি প্রাথমিকভবে রক্তদানের যোগ্য। আপনার স্বাস্থ্যের অবস্থা ভালো মনে হচ্ছে।",
+  "suggestions": [
+    "রক্তদানের পূর্বে অন্তত ২ গ্লাস পানি পান করুন।",
+    "রক্তদানের আগের রাতে ভালো ঘুম নিশ্চিত করুন।",
+    "রক্তদানের পর ১০-১৫ মিনিট বিশ্রাম নিন।"
+  ]
 }`,
 });
 
