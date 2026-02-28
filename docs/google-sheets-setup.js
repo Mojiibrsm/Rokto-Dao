@@ -1,5 +1,5 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Updated with Admin Password Fix)
+ * RoktoDao - Google Sheets Backend Setup Script (Updated for Gallery, Blogs, Team and Logs)
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -104,10 +104,14 @@ function getGalleryItems() {
 }
 
 function addGalleryItem(data) {
-  const sheet = SS.getSheetByName('Gallery');
-  const id = 'G' + Math.random().toString(36).substring(7).toUpperCase();
-  sheet.appendRow([id, data.imageurl, data.title || '', data.category || '', new Date().toISOString()]);
-  return jsonResponse({ success: true, id: id });
+  try {
+    const sheet = SS.getSheetByName('Gallery');
+    const id = 'G' + Math.random().toString(36).substring(7).toUpperCase();
+    sheet.appendRow([id, data.imageurl, data.title || '', data.category || '', new Date().toISOString()]);
+    return jsonResponse({ success: true, id: id });
+  } catch (err) {
+    return jsonResponse({ error: err.message });
+  }
 }
 
 function getBlogPosts() {
@@ -150,8 +154,7 @@ function logActivity(data) {
 }
 
 function getTeamMembers() {
-  const data = getSheetData(SS.getSheetByName('Team'));
-  return jsonResponse(data);
+  return jsonResponse(getSheetData(SS.getSheetByName('Team')));
 }
 
 function addTeamMember(data) {
@@ -189,7 +192,6 @@ function deleteEntry(data) {
   const rows = sheet.getDataRange().getValues();
   const headers = rows[0];
   
-  // Identify key column based on sheet name
   let keyCol = 0;
   if (['Team', 'Gallery', 'Blogs'].includes(data.sheetName)) {
     keyCol = headers.indexOf('ID');
@@ -207,8 +209,7 @@ function deleteEntry(data) {
 }
 
 function getDonors() { 
-  const data = getSheetData(SS.getSheetByName('Donors'));
-  return jsonResponse(data); 
+  return jsonResponse(getSheetData(SS.getSheetByName('Donors'))); 
 }
 
 function getGlobalStats() {
