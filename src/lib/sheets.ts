@@ -227,7 +227,16 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
 }
 
 export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
-  return postToSheets({ action: 'createRequest', ...data });
+  const result = await postToSheets({ action: 'createRequest', ...data });
+  
+  if (result && (result.success || result.id)) {
+    // SMS to Admin
+    const adminNumber = '01601519007';
+    const adminMessage = `নতুন রক্তের অনুরোধ! গ্রুপ: ${data.bloodType}, হাসপাতাল: ${data.hospitalName}, ফোন: ${data.phone}. বিস্তারিত ড্যাশবোর্ডে দেখুন। RoktoDao.`;
+    await sendSMS(adminNumber, adminMessage);
+  }
+  
+  return result;
 }
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
