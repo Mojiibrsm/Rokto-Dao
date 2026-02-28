@@ -53,7 +53,7 @@ const DISEASES = [
 ];
 
 const formSchema = z.object({
-  patientName: z.string().min(2, 'রোগীর নাম দিন'),
+  patientName: z.string().optional().or(z.literal('')),
   bloodType: z.string().min(1, 'রক্তের গ্রুপ নির্বাচন করুন'),
   hospitalName: z.string().min(2, 'হাসপাতালের নাম দিন'),
   district: z.string().min(1, 'জেলা নির্বাচন করুন'),
@@ -214,9 +214,9 @@ export default function NewRequestPage() {
                   name="patientName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>রোগীর নাম *</FormLabel>
+                      <FormLabel>রোগীর নাম (ঐচ্ছিক)</FormLabel>
                       <FormControl>
-                        <Input placeholder="রোগীর পুরো নাম লিখুন" {...field} />
+                        <Input placeholder="রোগীর নাম (না দিলেও চলবে)" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

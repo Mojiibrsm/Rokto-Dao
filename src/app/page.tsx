@@ -71,7 +71,7 @@ export default function Home() {
     const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
 
 🩸 রক্তের গ্রুপ: *${req.bloodType}*
-👤 রোগী: ${req.patientName}${diseasePart}
+👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}${diseasePart}
 🏥 হাসপাতাল: ${req.hospitalName}
 📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}
 🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ
@@ -176,7 +176,7 @@ export default function Home() {
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleSearch} className="h-16 md:h-auto px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl shrink-0 shadow-xl shadow-primary/30 transition-all font-black text-2xl gap-3">
+              <Button onClick={handleSearch} className="h-16 md:h-auto px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-xl shadow-primary/30 transition-all font-black text-2xl gap-3">
                 <Search className="h-7 w-7" /> অনুসন্ধান
               </Button>
             </div>
@@ -324,7 +324,7 @@ export default function Home() {
                   <CardHeader className="p-8 pb-4">
                     <div className="flex justify-between items-start gap-4">
                       <div className="space-y-2">
-                        <CardTitle className="text-3xl font-black group-hover:text-primary transition-colors">{req.patientName}</CardTitle>
+                        <CardTitle className="text-3xl font-black group-hover:text-primary transition-colors">{req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}</CardTitle>
                         <CardDescription className="flex items-center gap-2 mt-2 font-bold text-lg text-muted-foreground leading-snug">
                           <MapPin className="h-6 w-6 text-primary shrink-0" /> {req.hospitalName}
                         </CardDescription>

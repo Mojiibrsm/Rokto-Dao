@@ -28,7 +28,7 @@ export default function RequestsPage() {
     const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
 
 🩸 রক্তের গ্রুপ: *${req.bloodType}*
-👤 রোগী: ${req.patientName}
+👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}
 🩺 রোগ: ${req.disease || 'উল্লেখ নেই'}${req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}
 🏥 হাসপাতাল: ${req.hospitalName}
 📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}
@@ -99,7 +99,7 @@ export default function RequestsPage() {
             <Card key={req.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all rounded-[1.5rem] group">
               <CardHeader className={`${req.isUrgent ? 'bg-primary' : 'bg-slate-800'} text-white p-6`}>
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-xl font-bold">{req.patientName}</CardTitle>
+                  <CardTitle className="text-xl font-bold">{req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}</CardTitle>
                   <Badge className="bg-white text-primary border-none font-black px-3 py-0.5 text-[10px]">
                     {req.isUrgent ? 'জরুরি' : 'Approved'}
                   </Badge>
