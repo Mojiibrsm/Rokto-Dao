@@ -63,12 +63,12 @@ export function Navigation() {
             </div>
           </Link>
           
-          <div className="hidden lg:flex items-center gap-4 xl:gap-8 mx-4">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-6 mx-4">
             {navLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href} 
-                className="text-[15px] font-bold transition-all hover:text-primary text-muted-foreground hover:scale-105 whitespace-nowrap"
+                className="text-[14px] xl:text-[15px] font-bold transition-all hover:text-primary text-muted-foreground hover:scale-105 whitespace-nowrap"
               >
                 {link.label}
               </Link>

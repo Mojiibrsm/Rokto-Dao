@@ -95,7 +95,7 @@ function getTeamMembers() {
 function addTeamMember(data) {
   const sheet = SS.getSheetByName('Team');
   const id = Math.random().toString(36).substring(7);
-  sheet.appendRow([id, data.name, data.role, data.bio, data.imageUrl, data.twitter || '', data.linkedin || '', data.email || '']);
+  sheet.appendRow([id, data.name, data.role, data.bio, data.imageurl, data.twitter || '', data.linkedin || '', data.email || '']);
   return jsonResponse({ success: true, id: id });
 }
 
@@ -111,7 +111,7 @@ function updateTeamMember(data) {
       sheet.getRange(rowNum, headers.indexOf('Name') + 1).setValue(data.name);
       sheet.getRange(rowNum, headers.indexOf('Role') + 1).setValue(data.role);
       sheet.getRange(rowNum, headers.indexOf('Bio') + 1).setValue(data.bio);
-      sheet.getRange(rowNum, headers.indexOf('Image URL') + 1).setValue(data.imageUrl);
+      sheet.getRange(rowNum, headers.indexOf('Image URL') + 1).setValue(data.imageurl);
       sheet.getRange(rowNum, headers.indexOf('Twitter') + 1).setValue(data.twitter || '');
       sheet.getRange(rowNum, headers.indexOf('Linkedin') + 1).setValue(data.linkedin || '');
       sheet.getRange(rowNum, headers.indexOf('Email') + 1).setValue(data.email || '');
