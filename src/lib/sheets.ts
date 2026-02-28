@@ -50,6 +50,26 @@ export type TeamMember = {
   email?: string;
 };
 
+export type GalleryItem = {
+  id: string;
+  imageurl: string;
+  title: string;
+  category: string;
+  createdat: string;
+};
+
+export type BlogPost = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  author: string;
+  imageurl: string;
+  createdat: string;
+};
+
 export type ActivityLog = {
   timestamp: string;
   username: string;
@@ -182,6 +202,28 @@ export async function addTeamMember(data: Omit<TeamMember, 'id'>) {
 
 export async function updateTeamMember(id: string, data: Partial<TeamMember>) {
   return postToSheets({ action: 'updateTeamMember', id, ...data });
+}
+
+export async function getGallery(): Promise<GalleryItem[]> {
+  const data = await fetchFromSheets('getGallery');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function addGalleryItem(data: { imageurl: string; title: string; category: string }) {
+  return postToSheets({ action: 'addGalleryItem', ...data });
+}
+
+export async function getBlogs(): Promise<BlogPost[]> {
+  const data = await fetchFromSheets('getBlogs');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function addBlog(data: Omit<BlogPost, 'id' | 'createdat'>) {
+  return postToSheets({ action: 'addBlog', ...data });
+}
+
+export async function updateBlog(id: string, data: Partial<BlogPost>) {
+  return postToSheets({ action: 'updateBlog', id, ...data });
 }
 
 export async function deleteEntry(sheetName: string, keyValue: string) {

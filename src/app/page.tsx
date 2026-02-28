@@ -10,7 +10,7 @@ import {
   Smartphone, HandHeart, 
   Globe, Zap, Quote, Award, Activity,
   Info, MessageSquare, ExternalLink, ChevronDown, CheckCircle2,
-  UserPlus, HeartPulse
+  UserPlus, HeartPulse, Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -18,16 +18,17 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getBloodRequests, getDonors, type BloodRequest, type Donor } from '@/lib/sheets';
+import { getBloodRequests, getDonors, getGallery, type BloodRequest, type Donor, type GalleryItem } from '@/lib/sheets';
 import { DISTRICTS } from '@/lib/bangladesh-data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingDonors, setLoadingDonors] = useState(true);
+  const [loadingGallery, setLoadingGallery] = useState(true);
   const [selectedBloodType, setSelectedBloodType] = useState<string>('যেকোনো গ্রুপ');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('যেকোনো জেলা');
   const router = useRouter();
@@ -37,18 +38,22 @@ export default function Home() {
     async function loadData() {
       setLoadingRequests(true);
       setLoadingDonors(true);
+      setLoadingGallery(true);
       try {
-        const [requestsData, donorsData] = await Promise.all([
+        const [requestsData, donorsData, galleryData] = await Promise.all([
           getBloodRequests(),
-          getDonors()
+          getDonors(),
+          getGallery()
         ]);
         setRequests(requestsData.slice(0, 4));
         setDonors(donorsData.slice(0, 6));
+        setGalleryItems(galleryData.slice(0, 4));
       } catch (error) {
         console.error(error);
       } finally {
         setLoadingRequests(false);
         setLoadingDonors(false);
+        setLoadingGallery(false);
       }
     }
     loadData();
@@ -373,7 +378,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-20 items-center max-w-7xl mx-auto">
             <div className="relative h-[500px] lg:h-[700px] rounded-[4rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(211,29,42,0.4)] border-8 border-accent">
               <Image 
-                src={PlaceHolderImages.find(img => img.id === 'why-donate')?.imageUrl || "https://picsum.photos/seed/benefits/800/600"} 
+                src="https://image.mojib.me/uploads/General/1771907154_%E0%A6%95%E0%A7%87%E0%A6%A8%20%E0%A6%B0%E0%A6%95%E0%A7%8D%E0%A6%A4%20%E0%A6%A6%E0%A7%87%E0%A6%AC%E0%A7%87%E0%A6%A8.png" 
                 fill 
                 alt="রক্তদানের স্বাস্থ্য উপকারিতা" 
                 className="object-cover" 
@@ -413,7 +418,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Eligibility Quiz Banner (Premium Dark) */}
+      {/* 7. Gallery Section (Dynamic) */}
+      <section className="py-24 bg-accent/10 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-20 space-y-4">
+            <Badge className="bg-primary text-white border-none px-8 py-2 rounded-full text-sm font-black shadow-lg">গ্যালারি</Badge>
+            <h2 className="text-4xl md:text-6xl font-black font-headline">আমাদের কার্যক্রম</h2>
+            <p className="text-2xl text-muted-foreground font-bold">সাম্প্রতিক রক্তদান ক্যাম্পেইন ও আমাদের স্বেচ্ছাসেবকদের কিছু মুহূর্ত।</p>
+          </div>
+          {loadingGallery ? (
+            <div className="flex justify-center py-20"><Loader2 className="animate-spin h-16 w-16 text-primary" /></div>
+          ) : galleryItems.length === 0 ? (
+            <div className="text-center p-20 bg-white rounded-[3rem] shadow-xl">
+              <Camera className="h-16 w-16 mx-auto text-muted-foreground opacity-20 mb-4" />
+              <p className="text-xl font-bold text-muted-foreground">গ্যালারি আপাতত খালি।</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {galleryItems.map((item) => (
+                <div key={item.id} className="relative h-80 md:h-[450px] rounded-[3.5rem] overflow-hidden shadow-2xl hover:scale-105 transition-transform duration-700 cursor-pointer group border-4 border-white">
+                  <Image src={item.imageurl} fill alt={item.title} className="object-cover" />
+                  <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center backdrop-blur-sm p-6 text-center">
+                    <div className="bg-white p-4 rounded-full text-primary shadow-2xl transform scale-50 group-hover:scale-100 transition-transform duration-500 mb-4">
+                      <ExternalLink className="h-8 w-8 font-black" />
+                    </div>
+                    <p className="text-white font-black text-lg line-clamp-2">{item.title}</p>
+                    <Badge className="mt-2 bg-white/20 text-white backdrop-blur border-none font-bold uppercase text-[10px] tracking-widest">{item.category}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 8. Eligibility Quiz Banner (Premium Dark) */}
       <section className="container mx-auto px-4 py-16">
         <div className="bg-slate-950 rounded-[4rem] p-12 md:p-24 overflow-hidden relative group border-4 border-primary/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
           <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
@@ -437,7 +476,7 @@ export default function Home() {
             <div className="relative flex justify-center md:justify-end">
               <div className="relative w-full max-w-[450px] aspect-[3/4] rounded-[3rem] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] border-[12px] border-white/5 group-hover:scale-105 group-hover:rotate-2 transition-all duration-700 ease-out">
                 <Image 
-                  src={PlaceHolderImages.find(img => img.id === 'can-you-donate')?.imageUrl || "https://picsum.photos/seed/eligibility/600/800"} 
+                  src="https://image.mojib.me/uploads/General/1771907823_Can%20You%20Donate%20Blood%20Today.png" 
                   fill 
                   alt="Can You Donate Blood Today?" 
                   className="object-cover"
@@ -451,7 +490,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Blood Compatibility Section */}
+      {/* 9. Blood Compatibility Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-20 space-y-6">
@@ -482,7 +521,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. Founder's Message */}
+      {/* 10. Founder's Message */}
       <section className="py-24 bg-accent/30 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-primary/5 opacity-50"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -515,7 +554,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Testimonials */}
+      {/* 11. Testimonials */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
@@ -537,27 +576,6 @@ export default function Home() {
                   <p className="text-sm text-primary font-black uppercase tracking-widest mt-1">{t.role}</p>
                 </div>
               </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 11. Gallery Section */}
-      <section className="py-24 bg-accent/10 overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-20 space-y-4">
-            <Badge className="bg-primary text-white border-none px-8 py-2 rounded-full text-sm font-black shadow-lg">গ্যালারি</Badge>
-            <h2 className="text-4xl md:text-6xl font-black font-headline">আমাদের কার্যক্রম</h2>
-            <p className="text-2xl text-muted-foreground font-bold">সাম্প্রতিক রক্তদান ক্যাম্পেইন ও আমাদের স্বেচ্ছাসেবকদের কিছু মুহূর্ত।</p>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="relative h-80 md:h-[450px] rounded-[3.5rem] overflow-hidden shadow-2xl hover:scale-105 transition-transform duration-700 cursor-pointer group border-4 border-white">
-                <Image src={`https://picsum.photos/seed/camp${i}/600/800`} fill alt={`Camp ${i}`} className="object-cover" data-ai-hint="blood donation camp" />
-                <div className="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                  <div className="bg-white p-5 rounded-full text-primary shadow-2xl transform scale-50 group-hover:scale-100 transition-transform duration-500"><ExternalLink className="h-10 w-10 font-black" /></div>
-                </div>
-              </div>
             ))}
           </div>
         </div>
@@ -593,7 +611,7 @@ export default function Home() {
             </div>
             <div className="relative h-[500px] md:h-[750px] flex justify-center lg:justify-end">
               <div className="relative w-full max-w-[380px] h-full shadow-[0_60px_120px_rgba(0,0,0,0.6)] border-[15px] border-slate-800 rounded-[4rem] overflow-hidden group hover:scale-105 transition-all duration-700">
-                <Image src={PlaceHolderImages.find(img => img.id === 'mobile-app-promo')?.imageUrl || "https://picsum.photos/seed/app/600/1200"} fill alt="RoktoDao Mobile App Promo" className="object-cover" data-ai-hint="mobile app" />
+                <Image src="https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png" fill alt="RoktoDao Mobile App Promo" className="object-cover" data-ai-hint="mobile app" />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent"></div>
               </div>
             </div>

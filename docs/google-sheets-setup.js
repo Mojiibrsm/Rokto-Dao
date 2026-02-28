@@ -1,5 +1,5 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Updated with Team Management)
+ * RoktoDao - Google Sheets Backend Setup Script (Updated with Gallery & Blog Management)
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -10,6 +10,8 @@ const SCHEMA = {
   'BloodDrives': ['ID', 'Name', 'Location', 'Date', 'Time', 'Distance'],
   'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At', 'Disease', 'Disease Info', 'Created By'],
   'Team': ['ID', 'Name', 'Role', 'Bio', 'Image URL', 'Twitter', 'Linkedin', 'Email'],
+  'Gallery': ['ID', 'Image URL', 'Title', 'Category', 'Created At'],
+  'Blogs': ['ID', 'Title', 'Slug', 'Excerpt', 'Content', 'Category', 'Author', 'Image URL', 'Created At'],
   'Locations': ['District', 'Upazila', 'Union'],
   'Config': ['Key', 'Value'],
   'Logs': ['Timestamp', 'User Name', 'Phone', 'Action', 'Details']
@@ -49,6 +51,8 @@ function doGet(e) {
   if (action === 'getAppointments') return getAppointments(e.parameter.email);
   if (action === 'getLogs') return getLogs();
   if (action === 'getTeam') return getTeamMembers();
+  if (action === 'getGallery') return getGalleryItems();
+  if (action === 'getBlogs') return getBlogPosts();
   
   return jsonResponse({ error: 'Invalid action' });
 }
@@ -76,9 +80,56 @@ function doPost(e) {
   else if (action === 'createDrive') result = createDrive(data);
   else if (action === 'addTeamMember') result = addTeamMember(data);
   else if (action === 'updateTeamMember') result = updateTeamMember(data);
+  else if (action === 'addGalleryItem') result = addGalleryItem(data);
+  else if (action === 'addBlog') result = addBlog(data);
+  else if (action === 'updateBlog') result = updateBlog(data);
   
   PropertiesService.getScriptProperties().setProperty('LAST_UPDATE', new Date().getTime().toString());
   return result;
+}
+
+function getGalleryItems() {
+  return jsonResponse(getSheetData(SS.getSheetByName('Gallery')));
+}
+
+function addGalleryItem(data) {
+  const sheet = SS.getSheetByName('Gallery');
+  const id = 'G' + Math.random().toString(36).substring(7).toUpperCase();
+  sheet.appendRow([id, data.imageurl, data.title || '', data.category || '', new Date().toISOString()]);
+  return jsonResponse({ success: true, id: id });
+}
+
+function getBlogPosts() {
+  return jsonResponse(getSheetData(SS.getSheetByName('Blogs')));
+}
+
+function addBlog(data) {
+  const sheet = SS.getSheetByName('Blogs');
+  const id = 'B' + Math.random().toString(36).substring(7).toUpperCase();
+  sheet.appendRow([id, data.title, data.slug, data.excerpt, data.content, data.category, data.author, data.imageurl, new Date().toISOString()]);
+  return jsonResponse({ success: true, id: id });
+}
+
+function updateBlog(data) {
+  const sheet = SS.getSheetByName('Blogs');
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const idCol = headers.indexOf('ID');
+  
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][idCol].toString() === data.id.toString()) {
+      const rowNum = i + 1;
+      sheet.getRange(rowNum, headers.indexOf('Title') + 1).setValue(data.title);
+      sheet.getRange(rowNum, headers.indexOf('Slug') + 1).setValue(data.slug);
+      sheet.getRange(rowNum, headers.indexOf('Excerpt') + 1).setValue(data.excerpt);
+      sheet.getRange(rowNum, headers.indexOf('Content') + 1).setValue(data.content);
+      sheet.getRange(rowNum, headers.indexOf('Category') + 1).setValue(data.category);
+      sheet.getRange(rowNum, headers.indexOf('Author') + 1).setValue(data.author);
+      sheet.getRange(rowNum, headers.indexOf('Image URL') + 1).setValue(data.imageurl);
+      return jsonResponse({ success: true });
+    }
+  }
+  return jsonResponse({ error: 'Blog not found' });
 }
 
 function logActivity(data) {
@@ -126,7 +177,14 @@ function deleteEntry(data) {
   if (!sheet) return jsonResponse({ error: 'Sheet not found' });
   const rows = sheet.getDataRange().getValues();
   const headers = rows[0];
-  const keyCol = data.sheetName === 'Team' ? headers.indexOf('ID') : (data.sheetName === 'Donors' ? headers.indexOf('Phone') : 0);
+  
+  // Identify key column based on sheet name
+  let keyCol = 0;
+  if (['Team', 'Gallery', 'Blogs'].includes(data.sheetName)) {
+    keyCol = headers.indexOf('ID');
+  } else if (data.sheetName === 'Donors') {
+    keyCol = headers.indexOf('Phone');
+  }
   
   for (let i = 1; i < rows.length; i++) {
     if (rows[i][keyCol].toString() === data.keyValue.toString()) {

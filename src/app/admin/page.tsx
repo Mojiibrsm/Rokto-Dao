@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { 
   ShieldAlert, BellRing, Settings, Users, BarChart3, ArrowRight, 
   Loader2, Droplet, CalendarCheck, Database, RefreshCw, 
-  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus, FileUp, UserCheck, LogOut, History, Users2
+  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus, FileUp, UserCheck, LogOut, History, Users2, Image as ImageIcon, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getGlobalStats, seedLocationData } from '@/lib/sheets';
@@ -65,9 +65,10 @@ export default function AdminDashboard() {
 
   const tools = [
     { title: "Manage Donors", description: "Edit or remove existing donors from the system.", icon: UserCheck, href: "/admin/manage-donors", color: "text-red-600", bgColor: "bg-red-50" },
-    { title: "Add New Donor", description: "Directly add donors to the system.", icon: UserPlus, href: "/admin/add-donor", color: "text-blue-600", bgColor: "bg-blue-100" },
-    { title: "User Activity Logs", description: "Track who updated what and when.", icon: History, href: "/admin/logs", color: "text-emerald-600", bgColor: "bg-emerald-50" },
+    { title: "Manage Blogs", description: "Write and manage blog posts for awareness.", icon: FileText, href: "/admin/manage-blogs", color: "text-blue-600", bgColor: "bg-blue-50" },
+    { title: "Manage Gallery", description: "Add or remove images from the activities gallery.", icon: ImageIcon, href: "/admin/manage-gallery", color: "text-green-600", bgColor: "bg-green-50" },
     { title: "Manage Team", description: "Add, edit or remove team members info.", icon: Users2, href: "/admin/manage-team", color: "text-cyan-600", bgColor: "bg-cyan-50" },
+    { title: "User Activity Logs", description: "Track who updated what and when.", icon: History, href: "/admin/logs", color: "text-emerald-600", bgColor: "bg-emerald-50" },
     { title: "Bulk Donor Import", description: "Smart AI import from raw text records.", icon: FileUp, href: "/admin/bulk-donors", color: "text-purple-600", bgColor: "bg-purple-100" },
     { title: "Urgent Notification", description: "Generate personalized Bengali SMS messages.", icon: BellRing, href: "/admin/send-notification", color: "text-primary", bgColor: "bg-primary/10" },
     { title: "Fake Detector", description: "Check if a profile looks suspicious using AI.", icon: ShieldAlert, href: "/admin/fake-profile-detector", color: "text-amber-600", bgColor: "bg-amber-50" }
