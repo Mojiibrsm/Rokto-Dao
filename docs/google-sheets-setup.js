@@ -1,5 +1,5 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Updated with Gallery & Blog Management)
+ * RoktoDao - Google Sheets Backend Setup Script (Updated with Admin Password Fix)
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -86,6 +86,17 @@ function doPost(e) {
   
   PropertiesService.getScriptProperties().setProperty('LAST_UPDATE', new Date().getTime().toString());
   return result;
+}
+
+function getAdminPassword() {
+  const sheet = SS.getSheetByName('Config');
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === 'admin_password') {
+      return jsonResponse({ password: String(rows[i][1]).trim() });
+    }
+  }
+  return jsonResponse({ password: 'admin123' });
 }
 
 function getGalleryItems() {

@@ -20,8 +20,11 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Fetch the actual password from server (or default admin123)
       const serverPass = await getAdminPassword();
-      if (password === serverPass) {
+      
+      // Trim input to avoid issues with accidental spaces
+      if (password.trim() === serverPass.trim()) {
         localStorage.setItem('roktodao_admin_auth', 'true');
         toast({ title: "সফল!", description: "অ্যাডমিন প্যানেলে স্বাগতম।" });
         router.push('/admin');
