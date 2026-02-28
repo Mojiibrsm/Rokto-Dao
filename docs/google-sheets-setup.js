@@ -1,5 +1,5 @@
 /**
- * RoktoDao - Google Sheets Backend Setup Script (Updated with Password & Logs)
+ * RoktoDao - Google Sheets Backend Setup Script (Updated with Team Management)
  */
 
 const SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -9,6 +9,7 @@ const SCHEMA = {
   'Appointments': ['ID', 'Drive ID', 'Drive Name', 'User Email', 'User Name', 'Date', 'Time', 'Status'],
   'BloodDrives': ['ID', 'Name', 'Location', 'Date', 'Time', 'Distance'],
   'Requests': ['ID', 'Patient Name', 'Blood Type', 'Hospital Name', 'District', 'Area', 'Union', 'Phone', 'Needed When', 'Bags Needed', 'Is Urgent', 'Status', 'Created At', 'Disease', 'Disease Info', 'Created By'],
+  'Team': ['ID', 'Name', 'Role', 'Bio', 'Image URL', 'Twitter', 'Linkedin', 'Email'],
   'Locations': ['District', 'Upazila', 'Union'],
   'Config': ['Key', 'Value'],
   'Logs': ['Timestamp', 'User Name', 'Phone', 'Action', 'Details']
@@ -29,7 +30,6 @@ function initSheets() {
       const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       const targetHeaders = SCHEMA[name];
       if (existingHeaders.length < targetHeaders.length) {
-        // Add missing columns if any
         const newHeaders = targetHeaders.slice(existingHeaders.length);
         sheet.getRange(1, existingHeaders.length + 1, 1, newHeaders.length).setValues([newHeaders]).setFontWeight('bold').setBackground('#fce4ec');
       }
@@ -48,6 +48,7 @@ function doGet(e) {
   if (action === 'getAdminPass') return getAdminPassword();
   if (action === 'getAppointments') return getAppointments(e.parameter.email);
   if (action === 'getLogs') return getLogs();
+  if (action === 'getTeam') return getTeamMembers();
   
   return jsonResponse({ error: 'Invalid action' });
 }
@@ -73,6 +74,8 @@ function doPost(e) {
   else if (action === 'updateStatus') result = updateEntryStatus(data);
   else if (action === 'deleteEntry') result = deleteEntry(data);
   else if (action === 'createDrive') result = createDrive(data);
+  else if (action === 'addTeamMember') result = addTeamMember(data);
+  else if (action === 'updateTeamMember') result = updateTeamMember(data);
   
   PropertiesService.getScriptProperties().setProperty('LAST_UPDATE', new Date().getTime().toString());
   return result;
@@ -84,88 +87,59 @@ function logActivity(data) {
   return jsonResponse({ success: true });
 }
 
-function setDonorPassword(data) {
-  const sheet = SS.getSheetByName('Donors');
-  const rows = sheet.getDataRange().getValues();
-  const headers = rows[0];
-  const passCol = headers.indexOf('Password') + 1;
-  const phoneCol = headers.indexOf('Phone');
-  const emailCol = headers.indexOf('Email');
-  
-  for (let i = 1; i < rows.length; i++) {
-    if (rows[i][phoneCol].toString() === data.phone.toString() || rows[i][emailCol].toString().toLowerCase() === data.email?.toLowerCase()) {
-      sheet.getRange(i + 1, passCol).setValue(data.password || '');
-      return jsonResponse({ success: true });
-    }
-  }
-  return jsonResponse({ error: 'User not found' });
+function getTeamMembers() {
+  const data = getSheetData(SS.getSheetByName('Team'));
+  return jsonResponse(data);
 }
 
-function createBloodRequest(data) {
-  const sheet = SS.getSheetByName('Requests');
+function addTeamMember(data) {
+  const sheet = SS.getSheetByName('Team');
   const id = Math.random().toString(36).substring(7);
-  sheet.appendRow([
-    id, 
-    data.patientName, 
-    data.bloodType, 
-    data.hospitalName, 
-    data.district, 
-    data.area || '', 
-    data.union || '', 
-    data.phone, 
-    data.neededWhen, 
-    data.bagsNeeded, 
-    data.isUrgent ? 'Yes' : 'No', 
-    'Pending', 
-    new Date().toISOString(),
-    data.disease || '',
-    data.diseaseInfo || '',
-    data.createdBy || 'Public'
-  ]);
+  sheet.appendRow([id, data.name, data.role, data.bio, data.imageUrl, data.twitter || '', data.linkedin || '', data.email || '']);
   return jsonResponse({ success: true, id: id });
 }
 
-function updateDonorProfile(data) {
-  const sheet = SS.getSheetByName('Donors');
+function updateTeamMember(data) {
+  const sheet = SS.getSheetByName('Team');
   const rows = sheet.getDataRange().getValues();
   const headers = rows[0];
-  const emailCol = headers.indexOf('Email');
-  const phoneCol = headers.indexOf('Phone');
-  const searchKey = data.originalKey; 
+  const idCol = headers.indexOf('ID');
+  
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i][emailCol].toString().toLowerCase() === searchKey.toLowerCase() || rows[i][phoneCol].toString() === searchKey.toString()) {
+    if (rows[i][idCol].toString() === data.id.toString()) {
       const rowNum = i + 1;
-      if (data.fullName) sheet.getRange(rowNum, headers.indexOf('Full Name') + 1).setValue(data.fullName);
-      if (data.phone) sheet.getRange(rowNum, headers.indexOf('Phone') + 1).setValue(data.phone);
-      if (data.district) sheet.getRange(rowNum, headers.indexOf('District') + 1).setValue(data.district);
-      if (data.area) sheet.getRange(rowNum, headers.indexOf('Area') + 1).setValue(data.area);
-      if (data.organization) sheet.getRange(rowNum, headers.indexOf('Organization') + 1).setValue(data.organization);
-      if (data.totalDonations !== undefined) sheet.getRange(rowNum, headers.indexOf('Total Donations') + 1).setValue(data.totalDonations);
-      if (data.lastDonationDate) sheet.getRange(rowNum, headers.indexOf('Last Donation Date') + 1).setValue(data.lastDonationDate);
+      sheet.getRange(rowNum, headers.indexOf('Name') + 1).setValue(data.name);
+      sheet.getRange(rowNum, headers.indexOf('Role') + 1).setValue(data.role);
+      sheet.getRange(rowNum, headers.indexOf('Bio') + 1).setValue(data.bio);
+      sheet.getRange(rowNum, headers.indexOf('Image URL') + 1).setValue(data.imageUrl);
+      sheet.getRange(rowNum, headers.indexOf('Twitter') + 1).setValue(data.twitter || '');
+      sheet.getRange(rowNum, headers.indexOf('Linkedin') + 1).setValue(data.linkedin || '');
+      sheet.getRange(rowNum, headers.indexOf('Email') + 1).setValue(data.email || '');
       return jsonResponse({ success: true });
     }
   }
-  return jsonResponse({ error: 'Donor not found' });
+  return jsonResponse({ error: 'Member not found' });
+}
+
+function deleteEntry(data) {
+  const sheet = SS.getSheetByName(data.sheetName);
+  if (!sheet) return jsonResponse({ error: 'Sheet not found' });
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const keyCol = data.sheetName === 'Team' ? headers.indexOf('ID') : (data.sheetName === 'Donors' ? headers.indexOf('Phone') : 0);
+  
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][keyCol].toString() === data.keyValue.toString()) {
+      sheet.deleteRow(i + 1);
+      return jsonResponse({ success: true });
+    }
+  }
+  return jsonResponse({ error: 'Entry not found' });
 }
 
 function getDonors() { 
   const data = getSheetData(SS.getSheetByName('Donors'));
   return jsonResponse(data); 
-}
-
-function getLogs() {
-  const sheet = SS.getSheetByName('Logs');
-  const data = getSheetData(sheet);
-  return jsonResponse(data.reverse().slice(0, 200)); // Return last 200 logs
-}
-
-function getAdminPassword() {
-  const sheet = SS.getSheetByName('Config');
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === 'admin_password') return jsonResponse({ password: data[i][1] });
-  }
-  return jsonResponse({ password: 'admin123' });
 }
 
 function getGlobalStats() {
@@ -197,16 +171,6 @@ function registerDonor(data) {
 }
 
 function getBloodRequests() { return jsonResponse(getSheetData(SS.getSheetByName('Requests'))); }
-function getBloodDrives() { return jsonResponse(getSheetData(SS.getSheetByName('BloodDrives'))); }
-
-function getAppointments(email) {
-  const sheet = SS.getSheetByName('Appointments');
-  const data = getSheetData(sheet);
-  if (!email) return jsonResponse(data);
-  const filtered = data.filter(row => row.useremail.toString().toLowerCase() === email.toLowerCase());
-  return jsonResponse(filtered);
-}
-
 function jsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }

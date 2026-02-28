@@ -39,6 +39,17 @@ export type BloodRequest = {
   createdBy?: string;
 };
 
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  imageurl: string;
+  twitter?: string;
+  linkedin?: string;
+  email?: string;
+};
+
 export type ActivityLog = {
   timestamp: string;
   username: string;
@@ -158,4 +169,21 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
 
 export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
   return postToSheets({ action: 'createRequest', ...data });
+}
+
+export async function getTeamMembers(): Promise<TeamMember[]> {
+  const data = await fetchFromSheets('getTeam');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function addTeamMember(data: Omit<TeamMember, 'id'>) {
+  return postToSheets({ action: 'addTeamMember', ...data });
+}
+
+export async function updateTeamMember(id: string, data: Partial<TeamMember>) {
+  return postToSheets({ action: 'updateTeamMember', id, ...data });
+}
+
+export async function deleteEntry(sheetName: string, keyValue: string) {
+  return postToSheets({ action: 'deleteEntry', sheetName, keyValue });
 }
