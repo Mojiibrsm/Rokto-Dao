@@ -134,7 +134,7 @@ export default function Home() {
           </div>
           
           <div className="max-w-4xl mx-auto pt-8">
-            <div className="bg-white p-4 rounded-[2.5rem] shadow-2xl border-4 border-primary/10 flex flex-col md:flex-row gap-4">
+            <div className="bg-white p-4 rounded-[2.5rem] shadow-2xl border-4 border-primary/10 flex flex-col md:row gap-4">
               <div className="flex flex-col md:flex-row flex-1 divide-y md:divide-y-0 md:divide-x-2 divide-primary/5">
                 <div className="flex-1 px-6 py-3">
                   <label className="block text-[11px] font-black text-primary uppercase text-left mb-2 tracking-wider">রক্তের গ্রুপ</label>
@@ -683,6 +683,7 @@ export default function Home() {
                 type="email" 
                 placeholder="আপনার ইমেইল ঠিকানা" 
                 className="flex-1 h-20 rounded-[2.5rem] px-10 bg-white/15 border-4 border-white/30 text-white placeholder:text-white/70 outline-none focus:bg-white/20 focus:border-white transition-all text-2xl font-bold shadow-inner"
+                suppressHydrationWarning
               />
               <Button className="h-20 rounded-[2.5rem] px-16 bg-white text-primary hover:bg-accent text-3xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95">সাবস্ক্রাইব</Button>
             </div>

@@ -63,7 +63,7 @@ export default function BlogPage() {
                 রক্তদান সম্পর্কে জানুন, অন্যকে উদ্বুদ্ধ করুন এবং জীবন বাঁচাতে আপনার জ্ঞান বাড়ান।
               </p>
             </div>
-            <div className="relative h-[300px] md:h-[400px] rounded-[3rem] overflow-hidden shadow-2xl">
+            <div className="relative h-[300px] md:h-[450px] rounded-[3rem] overflow-hidden shadow-2xl">
               <Image 
                 src={blogHeroImg} 
                 fill 
