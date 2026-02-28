@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Service layer for interacting with Google Sheets.
+ * @fileOverview Service layer for interacting with Google Sheets and SMS API.
  */
 
 export type Donor = {
@@ -80,6 +80,31 @@ export type ActivityLog = {
 
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 
+/**
+ * Sends SMS using Anbu InfoSec API
+ */
+async function sendSMS(recipient: string, message: string) {
+  try {
+    // Normalize phone number (Ensure it's in 01XXXXXXXXX format)
+    let phone = String(recipient).replace(/\D/g, '');
+    if (phone.length === 10) phone = '0' + phone;
+
+    const res = await fetch('https://sms.anbuinfosec.dev/api/v1/sms/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: "anbu_sms_mgq589nm_9mgblyt069h",
+        recipient: phone,
+        message: message
+      })
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("SMS API Error:", error);
+    return null;
+  }
+}
+
 async function postToSheets(payload: any) {
   if (!SHEETS_URL) throw new Error("Backend URL not configured.");
   try {
@@ -143,7 +168,14 @@ export async function getDonors(): Promise<Donor[]> {
 }
 
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
-  return postToSheets({ action: 'register', ...data });
+  const result = await postToSheets({ action: 'register', ...data });
+  
+  if (result.success) {
+    const smsMessage = `স্বাগতম ${data.fullName}! RoktoDao-তে নিবন্ধিত হওয়ার জন্য ধন্যবাদ। আপনার রক্তের গ্রুপ: ${data.bloodType}। মানবতার সেবায় পাশে থাকুন।`;
+    await sendSMS(data.phone, smsMessage);
+  }
+  
+  return result;
 }
 
 export async function updateDonorProfile(originalKey: string, data: Partial<Donor>) {
