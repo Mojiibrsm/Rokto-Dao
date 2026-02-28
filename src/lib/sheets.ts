@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -79,11 +80,17 @@ export type ActivityLog = {
 };
 
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
+const SMS_API_KEY = process.env.SMS_API_KEY;
 
 /**
  * Sends SMS using Anbu InfoSec API
  */
 async function sendSMS(recipient: string, message: string) {
+  if (!SMS_API_KEY) {
+    console.error("SMS API Key is missing in environment variables.");
+    return null;
+  }
+
   try {
     // Normalize phone number (Ensure it's in 01XXXXXXXXX format)
     let phone = String(recipient).replace(/\D/g, '');
@@ -93,7 +100,7 @@ async function sendSMS(recipient: string, message: string) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        apiKey: "anbu_sms_mgq589nm_9mgblyt069h",
+        apiKey: SMS_API_KEY,
         recipient: phone,
         message: message
       })
