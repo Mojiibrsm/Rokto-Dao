@@ -21,7 +21,7 @@ import Link from 'next/link';
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'নাম খুবই ছোট'),
-  email: z.string().email('সঠিক ইমেইল ঠিকানা দিন'),
+  email: z.string().email('সঠিক ইমেইল ঠিকানা দিন').optional().or(z.literal('')),
   phone: z.string().min(11, 'সঠিক ফোন নম্বর দিন'),
   bloodType: z.string().min(1, 'রক্তের গ্রুপ নির্বাচন করুন'),
   district: z.string().min(1, 'জেলা নির্বাচন করুন'),
@@ -105,10 +105,14 @@ export default function RegisterPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const result = await registerDonor(values as any);
+      const result = await registerDonor({
+        ...values,
+        email: values.email || `no-email-${Date.now()}@roktodao.com`
+      } as any);
+      
       if (result.success) {
         localStorage.setItem('roktodao_user', JSON.stringify({
-          email: values.email,
+          email: values.email || '',
           fullName: values.fullName,
           bloodType: values.bloodType,
           phone: values.phone
@@ -169,7 +173,7 @@ export default function RegisterPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ইমেইল ঠিকানা *</FormLabel>
+                      <FormLabel>ইমেইল ঠিকানা (ঐচ্ছিক)</FormLabel>
                       <FormControl>
                         <Input placeholder="email@example.com" type="email" {...field} />
                       </FormControl>
