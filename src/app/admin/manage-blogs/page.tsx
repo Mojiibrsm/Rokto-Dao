@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getBlogs, addBlog, updateBlog, deleteEntry, type BlogPost } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Edit, Trash2, ArrowLeft, Save, FileText, User, Tag } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, ArrowLeft, Save, FileText, User, Tag, Bold, Italic, Link as LinkIcon, List, Heading1, Heading2, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 
 export default function ManageBlogsPage() {
@@ -21,6 +22,7 @@ export default function ManageBlogsPage() {
   const [editingBlog, setEditingBlog] = useState<Partial<BlogPost> | null>(null);
   const [isAddMode, setIsAddMode] = useState(false);
   const { toast } = useToast();
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -72,6 +74,38 @@ export default function ManageBlogsPage() {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const insertFormatting = (tag: string, type: 'wrap' | 'prefix' = 'wrap') => {
+    if (!contentRef.current || !editingBlog) return;
+    
+    const textarea = contentRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    
+    let replacement = '';
+    if (type === 'wrap') {
+      replacement = `${tag}${selected}${tag}`;
+    } else {
+      replacement = `\n${tag} ${selected}`;
+    }
+    
+    const newValue = text.substring(0, start) + replacement + text.substring(end);
+    setEditingBlog({ ...editingBlog, content: newValue });
+    
+    // Reset focus and selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + tag.length, start + tag.length + selected.length);
+    }, 0);
+  };
+
+  const insertLink = () => {
+    const url = prompt('URL প্রবেশ করান:', 'https://');
+    if (!url) return;
+    insertFormatting(`[লিংক টেক্সট](${url})`);
   };
 
   return (
@@ -162,65 +196,110 @@ export default function ManageBlogsPage() {
             <DialogTitle className="text-2xl font-black">{isAddMode ? 'নতুন ব্লগ লিখুন' : 'ব্লগ এডিট করুন'}</DialogTitle>
             <DialogDescription className="font-bold">সঠিক তথ্য দিয়ে আপনার ব্লগটি পাবলিশ করুন।</DialogDescription>
           </DialogHeader>
+          
           {editingBlog && (
             <form onSubmit={handleSave} className="space-y-6 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="font-bold">ব্লগ শিরোনাম *</Label>
-                  <Input value={editingBlog.title} onChange={e => {
-                    const title = e.target.value;
-                    const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-                    setEditingBlog({...editingBlog, title, slug});
-                  }} required className="rounded-xl h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold">ইউআরএল স্লাগ (Slug) *</Label>
-                  <Input value={editingBlog.slug} onChange={e => setEditingBlog({...editingBlog, slug: e.target.value})} required className="rounded-xl h-12 font-mono text-sm" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label className="font-bold">লেখক *</Label>
-                  <Input value={editingBlog.author} onChange={e => setEditingBlog({...editingBlog, author: e.target.value})} required className="rounded-xl h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold">ক্যাটাগরি *</Label>
-                  <select 
-                    value={editingBlog.category} 
-                    onChange={e => setEditingBlog({...editingBlog, category: e.target.value})}
-                    className="w-full h-12 rounded-xl border bg-white px-4 outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="Health">স্বাস্থ্য টিপস</option>
-                    <option value="Awareness">সচেতনতা</option>
-                    <option value="Eligibility">যোগ্যতা</option>
-                    <option value="Success">সফলতার গল্প</option>
-                    <option value="Other">অন্যান্য</option>
-                  </select>
-                </div>
-              </div>
+              <Tabs defaultValue="edit" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 h-12 rounded-xl bg-muted mb-6">
+                  <TabsTrigger value="edit" className="rounded-lg font-bold"><Edit className="h-4 w-4 mr-2" /> এডিট করুন</TabsTrigger>
+                  <TabsTrigger value="preview" className="rounded-lg font-bold"><Eye className="h-4 w-4 mr-2" /> প্রিভিউ দেখুন</TabsTrigger>
+                </TabsList>
 
-              <div className="space-y-2">
-                <Label className="font-bold">ফিচার্ড ইমেজ ইউআরএল (Image URL) *</Label>
-                <div className="flex gap-4">
-                  <Input value={editingBlog.imageurl} onChange={e => setEditingBlog({...editingBlog, imageurl: e.target.value})} placeholder="https://..." required className="rounded-xl h-12" />
-                  {editingBlog.imageurl && (
-                    <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0 border relative">
-                      <Image src={editingBlog.imageurl} fill alt="preview" className="object-cover" />
+                <TabsContent value="edit" className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="font-bold">ব্লগ শিরোনাম *</Label>
+                      <Input value={editingBlog.title} onChange={e => {
+                        const title = e.target.value;
+                        const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                        setEditingBlog({...editingBlog, title, slug});
+                      }} required className="rounded-xl h-12" />
                     </div>
-                  )}
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold">ইউআরএল স্লাগ (Slug) *</Label>
+                      <Input value={editingBlog.slug} onChange={e => setEditingBlog({...editingBlog, slug: e.target.value})} required className="rounded-xl h-12 font-mono text-sm" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="font-bold">লেখক *</Label>
+                      <Input value={editingBlog.author} onChange={e => setEditingBlog({...editingBlog, author: e.target.value})} required className="rounded-xl h-12" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-bold">ক্যাটাগরি *</Label>
+                      <select 
+                        value={editingBlog.category} 
+                        onChange={e => setEditingBlog({...editingBlog, category: e.target.value})}
+                        className="w-full h-12 rounded-xl border bg-white px-4 outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="Health">স্বাস্থ্য টিপস</option>
+                        <option value="Awareness">সচেতনতা</option>
+                        <option value="Eligibility">যোগ্যতা</option>
+                        <option value="Success">সফলতার গল্প</option>
+                        <option value="Other">অন্যান্য</option>
+                      </select>
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label className="font-bold">সংক্ষিপ্ত বর্ণনা (Excerpt) *</Label>
-                <Textarea value={editingBlog.excerpt} onChange={e => setEditingBlog({...editingBlog, excerpt: e.target.value})} required className="rounded-xl min-h-[80px]" placeholder="ব্লগের মূল কথাগুলো ২-৩ লাইনে লিখুন..." />
-              </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold">ফিচার্ড ইমেজ ইউআরএল (Image URL) *</Label>
+                    <div className="flex gap-4">
+                      <Input value={editingBlog.imageurl} onChange={e => setEditingBlog({...editingBlog, imageurl: e.target.value})} placeholder="https://..." required className="rounded-xl h-12" />
+                      {editingBlog.imageurl && (
+                        <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0 border relative">
+                          <Image src={editingBlog.imageurl} fill alt="preview" className="object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label className="font-bold">মূল কন্টেন্ট (Content) *</Label>
-                <Textarea value={editingBlog.content} onChange={e => setEditingBlog({...editingBlog, content: e.target.value})} required className="rounded-2xl min-h-[300px] font-body text-lg leading-relaxed" placeholder="আপনার পুরো ব্লগটি এখানে লিখুন..." />
-              </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold">সংক্ষিপ্ত বর্ণনা (Excerpt) *</Label>
+                    <Textarea value={editingBlog.excerpt} onChange={e => setEditingBlog({...editingBlog, excerpt: e.target.value})} required className="rounded-xl min-h-[80px]" placeholder="ব্লগের মূল কথাগুলো ২-৩ লাইনে লিখুন..." />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="font-bold flex justify-between items-center">
+                      <span>মূল কন্টেন্ট (Content) *</span>
+                      <span className="text-[10px] text-muted-foreground uppercase font-black">Markdown Support Active</span>
+                    </Label>
+                    
+                    {/* Toolbar */}
+                    <div className="flex flex-wrap gap-1 p-2 bg-muted rounded-t-xl border-x border-t">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting('**')} title="Bold" className="h-8 w-8 p-0"><Bold className="h-4 w-4" /></Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting('*')} title="Italic" className="h-8 w-8 p-0"><Italic className="h-4 w-4" /></Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting('#', 'prefix')} title="H1" className="h-8 w-8 p-0"><Heading1 className="h-4 w-4" /></Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting('##', 'prefix')} title="H2" className="h-8 w-8 p-0"><Heading2 className="h-4 w-4" /></Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => insertFormatting('-', 'prefix')} title="List" className="h-8 w-8 p-0"><List className="h-4 w-4" /></Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={insertLink} title="Link" className="h-8 w-8 p-0"><LinkIcon className="h-4 w-4" /></Button>
+                    </div>
+                    
+                    <Textarea 
+                      ref={contentRef}
+                      value={editingBlog.content} 
+                      onChange={e => setEditingBlog({...editingBlog, content: e.target.value})} 
+                      required 
+                      className="rounded-b-2xl rounded-t-none min-h-[350px] font-mono text-base leading-relaxed border-t-0" 
+                      placeholder="আপনার পুরো ব্লগটি এখানে লিখুন... **bold**, [link](url), # Heading ব্যবহার করুন।" 
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="preview" className="border-4 border-dashed rounded-[2rem] p-8 bg-slate-50 min-h-[500px]">
+                  <div className="prose prose-slate max-w-none">
+                    <h1 className="text-3xl font-black mb-4">{editingBlog.title || 'শিরোনাম ছাড়া ব্লগ'}</h1>
+                    {editingBlog.imageurl && (
+                      <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-6">
+                        <Image src={editingBlog.imageurl} fill alt="preview" className="object-cover" />
+                      </div>
+                    )}
+                    <div className="whitespace-pre-wrap font-body text-lg text-slate-700 leading-relaxed">
+                      {editingBlog.content || 'কোনো কন্টেন্ট নেই।'}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
 
               <DialogFooter className="pt-6">
                 <Button type="button" variant="ghost" onClick={() => setEditingBlog(null)} className="rounded-xl font-bold">বাতিল</Button>

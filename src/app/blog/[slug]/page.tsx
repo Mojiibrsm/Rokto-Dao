@@ -41,6 +41,71 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
     }
   };
 
+  /**
+   * Simple parser to convert basic markdown-like syntax to JSX.
+   * Supports: **bold**, *italic*, [text](url), # Heading, ## Heading
+   */
+  const renderFormattedContent = (content: string) => {
+    return content.split('\n').map((line, i) => {
+      if (!line.trim()) return <div key={i} className="h-4" />;
+
+      // Handle Headings
+      if (line.startsWith('# ')) {
+        return <h1 key={i} className="text-3xl font-black text-slate-900 mt-8 mb-4">{line.substring(2)}</h1>;
+      }
+      if (line.startsWith('## ')) {
+        return <h2 key={i} className="text-2xl font-black text-slate-900 mt-6 mb-3">{line.substring(3)}</h2>;
+      }
+      if (line.startsWith('- ')) {
+        return <li key={i} className="ml-6 list-disc text-slate-700 mb-2">{formatInline(line.substring(2))}</li>;
+      }
+
+      return <p key={i} className="mb-6 leading-relaxed">{formatInline(line)}</p>;
+    });
+  };
+
+  const formatInline = (text: string) => {
+    let parts: (string | JSX.Element)[] = [text];
+
+    // Bold: **text**
+    parts = parts.flatMap(part => {
+      if (typeof part !== 'string') return part;
+      const regex = /\*\*(.*?)\*\*/g;
+      const result = [];
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(part)) !== null) {
+        result.push(part.substring(lastIndex, match.index));
+        result.push(<strong key={match.index} className="font-black text-slate-950">{match[1]}</strong>);
+        lastIndex = regex.lastIndex;
+      }
+      result.push(part.substring(lastIndex));
+      return result;
+    });
+
+    // Links: [text](url)
+    parts = parts.flatMap(part => {
+      if (typeof part !== 'string') return part;
+      const regex = /\[(.*?)\]\((.*?)\)/g;
+      const result = [];
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(part)) !== null) {
+        result.push(part.substring(lastIndex, match.index));
+        result.push(
+          <a key={match.index} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline">
+            {match[1]}
+          </a>
+        );
+        lastIndex = regex.lastIndex;
+      }
+      result.push(part.substring(lastIndex));
+      return result;
+    });
+
+    return parts;
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6">
@@ -116,14 +181,8 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
       {/* 3. Main Content Section */}
       <section className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="prose prose-lg md:prose-xl max-w-none prose-slate prose-headings:font-headline prose-headings:font-black prose-headings:text-slate-900 prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:font-medium prose-img:rounded-[3rem] prose-a:text-primary prose-strong:text-slate-900">
-            {post.content.split('\n').map((para, i) => (
-              para.trim() ? (
-                <p key={i} className="mb-8">{para}</p>
-              ) : (
-                <div key={i} className="h-4" />
-              )
-            ))}
+          <div className="font-body text-xl md:text-2xl text-slate-700 leading-relaxed font-medium">
+            {renderFormattedContent(post.content)}
           </div>
 
           {/* Share & Tags */}
