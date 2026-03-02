@@ -68,18 +68,7 @@ export default function Home() {
 
   const handleShare = async (req: BloodRequest) => {
     const diseasePart = req.disease ? `\n🩺 রোগ: ${req.disease}${req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}` : '';
-    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
-
-🩸 রক্তের গ্রুপ: *${req.bloodType}*
-👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}${diseasePart}
-🏥 হাসপাতাল: ${req.hospitalName}
-📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}
-🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ
-⏰ কখন প্রয়োজন: ${req.neededWhen}
-📞 যোগাযোগ করুন: ${req.phone}
-
-🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।
-🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
+    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨\n\n🩸 রক্তের গ্রুপ: *${req.bloodType}*\n👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}${diseasePart}\n🏥 হাসপাতাল: ${req.hospitalName}\n📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}\n🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ\n⏰ কখন প্রয়োজন: ${req.neededWhen}\n📞 যোগাযোগ করুন: ${req.phone}\n\n🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।\n🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
 
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -295,7 +284,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Requests Section (High Focus Red) */}
+      {/* 5. Requests Section */}
       <section className="bg-primary/5 py-24 border-y-4 border-primary/10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-center md:text-left">
@@ -418,7 +407,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Gallery Section (Dynamic) */}
+      {/* 7. Gallery Section */}
       <section className="py-24 bg-accent/10 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
@@ -452,7 +441,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Eligibility Quiz Banner (Premium Dark) */}
+      {/* 8. Eligibility Banner */}
       <section className="container mx-auto px-4 py-16">
         <div className="bg-slate-950 rounded-[4rem] p-12 md:p-24 overflow-hidden relative group border-4 border-primary/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
           <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
@@ -619,7 +608,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 13. Partners Section */}
+      {/* 13. Partners */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -633,7 +622,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 14. Why Choose Us Section */}
+      {/* 14. Why Choose Us */}
       <section className="py-24 bg-accent/10 border-y-4 border-primary/5">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="text-center mb-20 space-y-4">
@@ -659,7 +648,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 15. FAQ Section */}
+      {/* 15. FAQ */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center mb-20 space-y-6">
@@ -686,7 +675,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 16. Newsletter Section (High Contrast Red) */}
+      {/* 16. Newsletter */}
       <section className="container mx-auto px-4 py-16">
         <div className="bg-primary rounded-[4rem] p-12 md:p-24 text-center text-white space-y-12 relative overflow-hidden shadow-[0_40px_80px_rgba(211,29,42,0.4)]">
           <div className="absolute top-0 left-0 w-full h-full bg-black/10"></div>
@@ -709,7 +698,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 17. Emergency Help Footer Section */}
+      {/* 17. Help Section */}
       <section className="py-24 bg-slate-950 text-white text-center relative border-t-8 border-primary">
         <div className="container mx-auto px-4 space-y-12">
           <div className="h-24 w-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-xl border-4 border-primary/30 animate-pulse shadow-2xl">
