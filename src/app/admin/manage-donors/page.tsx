@@ -6,15 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Search, Edit, Trash2, ArrowLeft, Save, X, Phone, Mail, MapPin, Copy, CheckSquare, Square } from 'lucide-react';
+import { Loader2, Search, Edit, Trash2, ArrowLeft, Save, Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
-import { Checkbox } from '@/components/ui/checkbox';
+import { DISTRICTS } from '@/lib/bangladesh-data';
 
 export default function ManageDonorsPage() {
   const [donors, setDonors] = useState<Donor[]>([]);
@@ -23,7 +22,6 @@ export default function ManageDonorsPage() {
   const [search, setSearch] = useState('');
   const [editingDonor, setEditingDonor] = useState<Donor | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedPhones, setSelectedPhones] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => { loadData(); }, []);
@@ -46,7 +44,7 @@ export default function ManageDonorsPage() {
   }, [search, donors]);
 
   const handleDelete = async (phone: string) => {
-    if (!confirm('Are you sure you want to delete this donor?')) return;
+    if (!confirm('আপনি কি নিশ্চিত যে এই দাতা তথ্যটি মুছে ফেলতে চান?')) return;
     try {
       const res = await deleteEntry('Donors', phone); 
       if (res.success) {
@@ -76,29 +74,6 @@ export default function ManageDonorsPage() {
     }
   };
 
-  const toggleSelect = (phone: string) => {
-    const newSet = new Set(selectedPhones);
-    if (newSet.has(phone)) newSet.delete(phone);
-    else newSet.add(phone);
-    setSelectedPhones(newSet);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedPhones.size === filteredDonors.length) {
-      setSelectedPhones(new Set());
-    } else {
-      setSelectedPhones(new Set(filteredDonors.map(d => d.phone)));
-    }
-  };
-
-  const handleCopySelected = () => {
-    if (selectedPhones.size === 0) return;
-    const selectedData = donors.filter(d => selectedPhones.has(d.phone));
-    const text = selectedData.map(d => `${d.fullName}\t${d.phone}\t${d.bloodType}\t${d.district}`).join('\n');
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: `${selectedPhones.size} records copied to clipboard.` });
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -107,21 +82,14 @@ export default function ManageDonorsPage() {
           <h1 className="text-3xl font-bold font-headline">Donor Management</h1>
         </div>
         
-        <div className="flex flex-1 w-full max-w-xl gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search name, phone or email..." 
-              className="pl-10"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          {selectedPhones.size > 0 && (
-            <Button onClick={handleCopySelected} className="gap-2 bg-blue-600 hover:bg-blue-700">
-              <Copy className="h-4 w-4" /> Copy ({selectedPhones.size})
-            </Button>
-          )}
+        <div className="relative flex-1 w-full max-w-xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="নাম, ফোন বা ইমেইল দিয়ে খুঁজুন..." 
+            className="pl-10"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
       </div>
 
@@ -129,12 +97,6 @@ export default function ManageDonorsPage() {
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead className="w-12">
-                <Checkbox 
-                  checked={filteredDonors.length > 0 && selectedPhones.size === filteredDonors.length} 
-                  onCheckedChange={toggleSelectAll} 
-                />
-              </TableHead>
               <TableHead>Donor Info</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Stats</TableHead>
@@ -143,18 +105,12 @@ export default function ManageDonorsPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="h-32 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} className="h-32 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></TableCell></TableRow>
             ) : filteredDonors.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="h-32 text-center text-muted-foreground">No donors found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} className="h-32 text-center text-muted-foreground">কোনো তথ্য পাওয়া যায়নি।</TableCell></TableRow>
             ) : (
               filteredDonors.map((donor, i) => (
-                <TableRow key={i} className={selectedPhones.has(donor.phone) ? 'bg-primary/5' : ''}>
-                  <TableCell>
-                    <Checkbox 
-                      checked={selectedPhones.has(donor.phone)} 
-                      onCheckedChange={() => toggleSelect(donor.phone)} 
-                    />
-                  </TableCell>
+                <TableRow key={i}>
                   <TableCell>
                     <div className="font-bold">{donor.fullName} <Badge variant="secondary" className="ml-2">{donor.bloodType}</Badge></div>
                     <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1"><Phone className="h-3 w-3" /> {donor.phone}</div>
@@ -162,7 +118,7 @@ export default function ManageDonorsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm font-medium">{donor.district}</div>
-                    <div className="text-xs text-muted-foreground">{donor.area}, {donor.union}</div>
+                    <div className="text-xs text-muted-foreground">{donor.area}</div>
                   </TableCell>
                   <TableCell>
                     <div className="text-xs font-bold">Donations: {donor.totalDonations}</div>
