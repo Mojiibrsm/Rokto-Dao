@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -92,7 +91,6 @@ async function sendSMS(recipient: string, message: string) {
   }
 
   try {
-    // Normalize phone number (Ensure it's in 01XXXXXXXXX format)
     let phone = String(recipient).replace(/\D/g, '');
     if (phone.length === 10) phone = '0' + phone;
 
@@ -230,7 +228,6 @@ export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status
   const result = await postToSheets({ action: 'createRequest', ...data });
   
   if (result && (result.success || result.id)) {
-    // SMS to Admin
     const adminNumber = '01601519007';
     const adminMessage = `নতুন রক্তের অনুরোধ! গ্রুপ: ${data.bloodType}, হাসপাতাল: ${data.hospitalName}, ফোন: ${data.phone}. বিস্তারিত ড্যাশবোর্ডে দেখুন। RoktoDao.`;
     await sendSMS(adminNumber, adminMessage);

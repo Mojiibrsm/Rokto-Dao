@@ -35,8 +35,7 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [districts, setDistricts] = useState<LocationEntry[]>([]);
   const [upazilas, setUpazilas] = useState<LocationEntry[]>([]);
-  const [unions, setUnions] = useState<LocationEntry[]>([]);
-  const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false, unions: false });
+  const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false });
   const [districtSearch, setDistrictSearch] = useState('');
   const [popoverOpen, setPopoverOpen] = useState(false);
   
@@ -59,7 +58,6 @@ export default function RegisterPage() {
   });
 
   const selectedDistrict = form.watch('district');
-  const selectedUpazila = form.watch('area');
 
   useEffect(() => {
     async function loadDistricts() {
@@ -82,25 +80,9 @@ export default function RegisterPage() {
         setUpazilas([]);
       }
       form.setValue('area', '');
-      form.setValue('union', '');
     }
     loadUpazillas();
   }, [selectedDistrict, form]);
-
-  useEffect(() => {
-    async function loadUnions() {
-      if (selectedDistrict && selectedUpazila) {
-        setLoadingLocations(prev => ({ ...prev, unions: true }));
-        const data = await getUnionsApi(selectedUpazila, selectedDistrict);
-        setUnions(data);
-        setLoadingLocations(prev => ({ ...prev, unions: false }));
-      } else {
-        setUnions([]);
-      }
-      form.setValue('union', '');
-    }
-    loadUnions();
-  }, [selectedUpazila, selectedDistrict, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -221,7 +203,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-primary/10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-2xl border border-primary/10">
                 <FormField
                   control={form.control}
                   name="district"
@@ -307,31 +289,6 @@ export default function RegisterPage() {
                         <SelectContent>
                           <SelectItem value="N/A">জানি না / নেই</SelectItem>
                           {upazilas.map(u => (
-                            <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="union"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        ইউনিয়ন (ঐচ্ছিক) {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila || selectedUpazila === 'N/A'}>
-                        <FormControl>
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="সিলেক্ট করুন" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="N/A">জানি না / নেই</SelectItem>
-                          {unions.map(u => (
                             <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}
                         </SelectContent>

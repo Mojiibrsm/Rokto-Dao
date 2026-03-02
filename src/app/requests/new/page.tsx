@@ -5,52 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, ArrowRight, Loader2, Search, Check, ChevronsUpDown, Plus, Hospital, Activity } from 'lucide-react';
+import { Droplet, ArrowLeft, ArrowRight, Loader2, Hospital, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { createBloodRequest } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
-import { getDistricts, getUpazillas, getUnionsApi, type LocationEntry } from '@/lib/bangladesh-api';
-import { getDynamicHospitals } from '@/lib/hospital-api';
-import { HOSPITALS } from '@/lib/hospital-data';
-import { cn } from '@/lib/utils';
+import { getDistricts, getUpazillas, type LocationEntry } from '@/lib/bangladesh-api';
 import Link from 'next/link';
-
-const DISEASES = [
-  "থ্যালাসেমিয়া", 
-  "ডেঙ্গু", 
-  "লিউকেমিয়া", 
-  "ক্যান্সার", 
-  "তীব্র রক্তস্বল্পতা (অ্যানিমিয়া)", 
-  "রক্তশূন্যতা (হিমোগ্লোবিন স্বল্পতা)",
-  "সিকেল সেল রোগ", 
-  "হিমোফিলিয়া", 
-  "অ্যাপ্লাস্টিক অ্যানিমিয়া", 
-  "দীর্ঘমেয়াদি কিডনি রোগ", 
-  "কিডনি ডায়ালাইসিস",
-  "লিভার সিরোসিস", 
-  "পাকস্থলী বা অন্ত্রের রক্তক্ষরণ", 
-  "প্রসবকালীন জটিলতা (Maternity)",
-  "প্রসবজনিত অতিরিক্ত রক্তক্ষরণ", 
-  "সিজারিয়ান অপারেশন (C-Section)",
-  "ম্যালেরিয়া", 
-  "বোন ম্যারো রোগ", 
-  "দুর্ঘটনাজনিত রক্তক্ষরণ", 
-  "অস্ত্রোপচার (বড় অপারেশন)", 
-  "হৃদরোগের অস্ত্রোপচার (Heart Surgery)",
-  "রক্তের প্লাটিলেট ঘাটতি", 
-  "অভ্যন্তরীণ রক্তক্ষরণ", 
-  "গুরুতর আঘাত", 
-  "হার্ট ব্লক",
-  "রক্তসংক্রান্ত বিরল রোগ", 
-  "অন্যান্য"
-];
 
 const formSchema = z.object({
   patientName: z.string().optional().or(z.literal('')),
@@ -71,14 +36,8 @@ export default function NewRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [districts, setDistricts] = useState<LocationEntry[]>([]);
   const [upazilas, setUpazilas] = useState<LocationEntry[]>([]);
-  const [unions, setUnions] = useState<LocationEntry[]>([]);
-  const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false, unions: false });
+  const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false });
   
-  const [hospitalSearch, setHospitalSearch] = useState('');
-  const [hospitalPopoverOpen, setHospitalPopoverOpen] = useState(false);
-  const [dynamicHospitals, setDynamicHospitals] = useState<string[]>([]);
-  const [loadingHospitals, setLoadingHospitals] = useState(false);
-
   const router = useRouter();
   const { toast } = useToast();
 
@@ -101,12 +60,6 @@ export default function NewRequestPage() {
   });
 
   const selectedDistrict = form.watch('district');
-  const selectedUpazila = form.watch('area');
-  const selectedDisease = form.watch('disease');
-
-  // Logic to determine if extra info is needed
-  const needsHb = ["থ্যালাসেমিয়া", "তীব্র রক্তস্বল্পতা (অ্যানিমিয়া)", "রক্তশূন্যতা (হিমোগ্লোবিন স্বল্পতা)", "সিকেল সেল রোগ"].includes(selectedDisease || "");
-  const needsPlt = ["ডেঙ্গু", "রক্তের প্লাটিলেট ঘাটতি"].includes(selectedDisease || "");
 
   useEffect(() => {
     async function loadDistricts() {
@@ -119,46 +72,19 @@ export default function NewRequestPage() {
   }, []);
 
   useEffect(() => {
-    async function loadUpazillasAndHospitals() {
+    async function loadUpazillas() {
       if (selectedDistrict) {
         setLoadingLocations(prev => ({ ...prev, upazilas: true }));
         const data = await getUpazillas(selectedDistrict);
         setUpazilas(data);
         setLoadingLocations(prev => ({ ...prev, upazilas: false }));
-
-        setLoadingHospitals(true);
-        try {
-          const fetched = await getDynamicHospitals(selectedDistrict);
-          setDynamicHospitals(fetched);
-        } catch (e) {
-          setDynamicHospitals([]);
-        } finally {
-          setLoadingHospitals(false);
-        }
       } else {
         setUpazilas([]);
-        setDynamicHospitals([]);
       }
       form.setValue('area', '');
-      form.setValue('union', '');
     }
-    loadUpazillasAndHospitals();
+    loadUpazillas();
   }, [selectedDistrict, form]);
-
-  useEffect(() => {
-    async function loadUnions() {
-      if (selectedDistrict && selectedUpazila && selectedUpazila !== 'N/A') {
-        setLoadingLocations(prev => ({ ...prev, unions: true }));
-        const data = await getUnionsApi(selectedUpazila, selectedDistrict);
-        setUnions(data);
-        setLoadingLocations(prev => ({ ...prev, unions: false }));
-      } else {
-        setUnions([]);
-      }
-      form.setValue('union', '');
-    }
-    loadUnions();
-  }, [selectedUpazila, selectedDistrict, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -181,11 +107,6 @@ export default function NewRequestPage() {
       setIsSubmitting(false);
     }
   }
-
-  const combinedHospitals = Array.from(new Set([...HOSPITALS, ...dynamicHospitals]));
-  const filteredHospitals = combinedHospitals.filter(h => 
-    h.toLowerCase().includes(hospitalSearch.toLowerCase())
-  );
 
   return (
     <div className="container mx-auto px-4 py-12 flex flex-col items-center">
@@ -246,176 +167,24 @@ export default function NewRequestPage() {
                 />
               </div>
 
-              {/* Disease Selection Section */}
-              <div className="space-y-6 p-6 bg-muted/20 rounded-2xl border border-primary/5">
-                <div className="flex items-center gap-2 text-primary font-bold mb-2">
-                  <Activity className="h-5 w-5" /> রোগের তথ্য (ঐচ্ছিক)
-                </div>
-                <div className="grid grid-cols-1 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="disease"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>রোগের ধরন</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-white">
-                              <SelectValue placeholder="রোগ নির্বাচন করুন" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {DISEASES.map(d => (
-                              <SelectItem key={d} value={d}>{d}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Conditional Info Fields */}
-                  {needsHb && (
-                    <FormField
-                      control={form.control}
-                      name="diseaseInfo"
-                      render={({ field }) => (
-                        <FormItem className="animate-in slide-in-from-top-2 duration-300">
-                          <FormLabel className="text-secondary font-bold">হিমোগ্লোবিন লেভেল (Hb)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="যেমন: 6.5 g/dL" {...field} className="border-secondary/30 focus:border-secondary" />
-                          </FormControl>
-                          <FormDescription>রোগীর বর্তমান হিমোগ্লোবিনের মাত্রা লিখুন।</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {needsPlt && (
-                    <FormField
-                      control={form.control}
-                      name="diseaseInfo"
-                      render={({ field }) => (
-                        <FormItem className="animate-in slide-in-from-top-2 duration-300">
-                          <FormLabel className="text-blue-600 font-bold">প্লাটিলেট কাউন্ট</FormLabel>
-                          <FormControl>
-                            <Input placeholder="যেমন: 45,000" {...field} className="border-blue-200 focus:border-blue-500" />
-                          </FormControl>
-                          <FormDescription>রোগীর বর্তমান প্লাটিলেট সংখ্যা লিখুন।</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {selectedDisease === "অন্যান্য" && (
-                    <FormField
-                      control={form.control}
-                      name="diseaseInfo"
-                      render={({ field }) => (
-                        <FormItem className="animate-in slide-in-from-top-2 duration-300">
-                          <FormLabel>বিস্তারিত তথ্য</FormLabel>
-                          <FormControl>
-                            <Input placeholder="রোগ সম্পর্কে কিছু লিখুন" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </div>
-              </div>
-
               <FormField
                 control={form.control}
                 name="hospitalName"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="flex items-center justify-between">
-                      <span>হাসপাতালের নাম *</span>
-                      {loadingHospitals && <Badge variant="outline" className="animate-pulse py-0 h-5 text-[10px]">DGHS ডাটা লোড হচ্ছে...</Badge>}
-                    </FormLabel>
-                    <Popover open={hospitalPopoverOpen} onOpenChange={setHospitalPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between h-12 bg-white",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <div className="flex items-center gap-2 overflow-hidden">
-                              <Hospital className="h-4 w-4 shrink-0 text-primary" />
-                              <span className="truncate">{field.value ? field.value : "তালিকা থেকে খুঁজুন বা টাইপ করুন"}</span>
-                            </div>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                        <div className="flex items-center border-b px-3 bg-muted/20">
-                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                          <input
-                            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
-                            placeholder="হাসপাতাল বা ক্লিনিকের নাম..."
-                            value={hospitalSearch}
-                            onChange={(e) => setHospitalSearch(e.target.value)}
-                          />
-                        </div>
-                        <div className="max-h-[300px] overflow-y-auto p-1">
-                          {filteredHospitals.length === 0 ? (
-                            <div className="py-4 px-4 text-center">
-                              <p className="text-sm text-muted-foreground mb-3">তালিকায় নেই? আপনি যা লিখেছেন তা ব্যবহার করতে পারেন:</p>
-                              <Button 
-                                type="button"
-                                variant="secondary" 
-                                className="w-full justify-start gap-2"
-                                onClick={() => {
-                                  form.setValue("hospitalName", hospitalSearch);
-                                  setHospitalPopoverOpen(false);
-                                }}
-                              >
-                                <Plus className="h-4 w-4" /> "{hospitalSearch}" ব্যবহার করুন
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              {filteredHospitals.map((h) => (
-                                <div
-                                  key={h}
-                                  className={cn(
-                                    "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2.5 text-sm outline-none hover:bg-primary hover:text-white transition-colors",
-                                    field.value === h && "bg-primary/10 text-primary"
-                                  )}
-                                  onClick={() => {
-                                    form.setValue("hospitalName", h);
-                                    setHospitalPopoverOpen(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      field.value === h ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {h}
-                                </div>
-                              ))}
-                            </>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>হাসপাতালের নাম *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Hospital className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input className="pl-10" placeholder="হাসপাতালের নাম লিখুন" {...field} />
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-muted/30 rounded-2xl border border-primary/10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-muted/30 rounded-2xl border border-primary/10">
                 <FormField
                   control={form.control}
                   name="district"
@@ -457,31 +226,6 @@ export default function NewRequestPage() {
                         <SelectContent>
                           <SelectItem value="N/A">জানি না / নেই</SelectItem>
                           {upazilas.map(u => (
-                            <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="union"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        ইউনিয়ন {loadingLocations.unions && <Loader2 className="h-3 w-3 animate-spin" />}
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedUpazila || selectedUpazila === 'N/A'}>
-                        <FormControl>
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="সিলেক্ট করুন" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="N/A">জানি না / নেই</SelectItem>
-                          {unions.map(u => (
                             <SelectItem key={u.id} value={u.bn_name}>{u.bn_name}</SelectItem>
                           ))}
                         </SelectContent>
