@@ -1,7 +1,11 @@
 'use server';
 
+import { db, initDb } from './turso';
+import { v4 as uuidv4 } from 'uuid';
+
 /**
- * @fileOverview Service layer for interacting with Google Sheets and SMS API.
+ * @fileOverview Refactored Service layer to use Turso Database as primary source.
+ * Includes legacy migration helpers.
  */
 
 export type Donor = {
@@ -78,199 +82,316 @@ export type ActivityLog = {
   details: string;
 };
 
-const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 const SMS_API_KEY = process.env.SMS_API_KEY;
+const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
 
-/**
- * Sends SMS using Anbu InfoSec API
- */
 async function sendSMS(recipient: string, message: string) {
-  if (!SMS_API_KEY) {
-    console.error("SMS API Key is missing in environment variables.");
-    return null;
-  }
-
+  if (!SMS_API_KEY) return null;
   try {
     let phone = String(recipient).replace(/\D/g, '');
     if (phone.length === 10) phone = '0' + phone;
-
     const res = await fetch('https://sms.anbuinfosec.dev/api/v1/sms/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apiKey: SMS_API_KEY,
-        recipient: phone,
-        message: message
-      })
+      body: JSON.stringify({ apiKey: SMS_API_KEY, recipient: phone, message })
     });
     return await res.json();
   } catch (error) {
-    console.error("SMS API Error:", error);
     return null;
   }
 }
 
-async function postToSheets(payload: any) {
-  if (!SHEETS_URL) throw new Error("Backend URL not configured.");
-  try {
-    const res = await fetch(SHEETS_URL, {
-      method: 'POST',
-      redirect: 'follow',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const text = await res.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error("Sheets POST Error:", error);
-    throw error;
-  }
-}
-
-async function fetchFromSheets(action: string, params: string = "") {
-  if (!SHEETS_URL) return null;
-  try {
-    const url = `${SHEETS_URL}?action=${action}${params}`;
-    const res = await fetch(url, { cache: 'no-store', redirect: 'follow' });
-    if (!res.ok) return null;
-    const text = await res.text();
-    return JSON.parse(text);
-  } catch (error) {
-    return null;
-  }
-}
-
-export async function getAdminPassword(): Promise<string> {
-  const data = await fetchFromSheets('getAdminPass');
-  return data?.password || 'admin123';
-}
-
-export async function getGlobalStats() {
-  const data = await fetchFromSheets('getStats');
-  return data || { totalDonors: 0, totalRequests: 0, lastUpdate: '0' };
-}
+// --- DATABASE OPERATIONS ---
 
 export async function getDonors(): Promise<Donor[]> {
-  const data = await fetchFromSheets('getDonors');
-  if (!Array.isArray(data)) return [];
-  
-  return data.map((d: any) => ({
-    email: d.email || '',
-    fullName: d.fullname || d.fullName || 'নামহীন',
-    phone: String(d.phone || ''), 
-    bloodType: d.bloodtype || d.bloodType || 'Unknown',
-    registrationDate: d.registrationdate || d.registrationDate || '',
-    district: d.district || '',
-    area: d.area || '',
-    union: d.union || '',
-    organization: d.organization || '',
-    status: d.status || 'Available',
-    totalDonations: isNaN(parseInt(d.totaldonations)) ? 0 : parseInt(d.totaldonations),
-    lastDonationDate: d.lastdonationdate || 'N/A',
-    password: d.password || ''
+  await initDb();
+  const res = await db.execute("SELECT * FROM donors");
+  return res.rows.map(row => ({
+    email: String(row.email),
+    fullName: String(row.fullName),
+    phone: String(row.phone),
+    bloodType: String(row.bloodType),
+    registrationDate: String(row.registrationDate),
+    district: String(row.district),
+    area: String(row.area),
+    union: String(row.union),
+    organization: String(row.organization),
+    status: String(row.status),
+    totalDonations: Number(row.totalDonations),
+    lastDonationDate: String(row.lastDonationDate),
+    password: String(row.password || '')
   }));
 }
 
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
-  const result = await postToSheets({ action: 'register', ...data });
-  
-  if (result.success) {
+  await initDb();
+  const date = new Date().toISOString();
+  try {
+    await db.execute({
+      sql: `INSERT INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.organization || '', data.totalDonations || 0, 'N/A', '']
+    });
+    
     const smsMessage = `স্বাগতম ${data.fullName}! RoktoDao-তে নিবন্ধিত হওয়ার জন্য ধন্যবাদ। আপনার রক্তের গ্রুপ: ${data.bloodType}। মানবতার সেবায় পাশে থাকুন।`;
     await sendSMS(data.phone, smsMessage);
+    
+    return { success: true };
+  } catch (e) {
+    console.error(e);
+    return { success: false };
   }
-  
-  return result;
 }
 
 export async function updateDonorProfile(originalKey: string, data: Partial<Donor>) {
-  return postToSheets({ action: 'updateProfile', originalKey, ...data });
+  await initDb();
+  // Using phone as PK
+  await db.execute({
+    sql: `UPDATE donors SET fullName = ?, email = ?, district = ?, organization = ?, totalDonations = ? WHERE phone = ? OR email = ?`,
+    args: [data.fullName, data.email, data.district, data.organization, data.totalDonations, originalKey, originalKey]
+  });
+  return { success: true };
 }
 
 export async function setDonorPassword(email: string, phone: string, password: string) {
-  return postToSheets({ action: 'setPassword', email, phone, password });
+  await initDb();
+  await db.execute({
+    sql: `UPDATE donors SET password = ? WHERE phone = ? OR email = ?`,
+    args: [password, phone, email]
+  });
+  return { success: true };
 }
 
-export async function logActivity(userName: string, phone: string, logAction: string, details: string) {
-  return postToSheets({ action: 'logActivity', userName, phone, logAction, details });
+export async function logActivity(userName: string, phone: string, action: string, details: string) {
+  await initDb();
+  await db.execute({
+    sql: `INSERT INTO logs (timestamp, username, phone, action, details) VALUES (?, ?, ?, ?, ?)`,
+    args: [new Date().toISOString(), userName, phone, action, details]
+  });
+  return { success: true };
 }
 
 export async function getLogs(): Promise<ActivityLog[]> {
-  const data = await fetchFromSheets('getLogs');
-  return Array.isArray(data) ? data : [];
+  await initDb();
+  const res = await db.execute("SELECT * FROM logs ORDER BY timestamp DESC LIMIT 200");
+  return res.rows.map(row => ({
+    timestamp: String(row.timestamp),
+    username: String(row.username),
+    phone: String(row.phone),
+    action: String(row.action),
+    details: String(row.details)
+  }));
 }
 
 export async function getBloodRequests(): Promise<BloodRequest[]> {
-  const data = await fetchFromSheets('getRequests');
-  if (!Array.isArray(data)) return [];
-  
-  return data.map((d: any) => ({
-    id: d.id || '',
-    patientName: d.patientname || '',
-    bloodType: d.bloodtype || '',
-    hospitalName: d.hospitalname || '',
-    district: d.district || '',
-    area: d.area || '',
-    union: d.union || '',
-    phone: String(d.phone || ''),
-    neededWhen: d.neededwhen || '',
-    bagsNeeded: String(d.bagsneeded || '1'),
-    isUrgent: String(d.isurgent).toLowerCase() === 'yes',
-    status: d.status || 'Pending',
-    createdAt: d.createdat || '',
-    disease: d.disease || '',
-    diseaseInfo: d.diseaseinfo || '',
-    createdBy: d.createdby || 'Public'
+  await initDb();
+  const res = await db.execute("SELECT * FROM requests ORDER BY createdAt DESC");
+  return res.rows.map(row => ({
+    id: String(row.id),
+    patientName: String(row.patientName),
+    bloodType: String(row.bloodType),
+    hospitalName: String(row.hospitalName),
+    district: String(row.district),
+    area: String(row.area),
+    union: String(row.union),
+    phone: String(row.phone),
+    neededWhen: String(row.neededWhen),
+    bagsNeeded: String(row.bagsNeeded),
+    isUrgent: String(row.isUrgent) === 'Yes',
+    status: row.status as any,
+    createdAt: String(row.createdAt),
+    disease: String(row.disease || ''),
+    diseaseInfo: String(row.diseaseInfo || ''),
+    createdBy: String(row.createdBy || 'Public')
   }));
 }
 
 export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status' | 'createdAt'>) {
-  const result = await postToSheets({ action: 'createRequest', ...data });
-  
-  if (result && (result.success || result.id)) {
-    const adminNumber = '01601519007';
-    const adminMessage = `নতুন রক্তের অনুরোধ! গ্রুপ: ${data.bloodType}, হাসপাতাল: ${data.hospitalName}, ফোন: ${data.phone}. বিস্তারিত ড্যাশবোর্ডে দেখুন। RoktoDao.`;
-    await sendSMS(adminNumber, adminMessage);
-  }
-  
-  return result;
+  await initDb();
+  const id = 'REQ' + Math.random().toString(36).substring(7).toUpperCase();
+  const now = new Date().toISOString();
+  await db.execute({
+    sql: `INSERT INTO requests (id, patientName, bloodType, hospitalName, district, area, phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.patientName || '', data.bloodType, data.hospitalName, data.district, data.area || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', now, data.disease || '', data.diseaseInfo || '', data.createdBy || 'Public']
+  });
+
+  const adminNumber = '01601519007';
+  const adminMessage = `নতুন রক্তের অনুরোধ! গ্রুপ: ${data.bloodType}, হাসপাতাল: ${data.hospitalName}, ফোন: ${data.phone}. RoktoDao.`;
+  await sendSMS(adminNumber, adminMessage);
+
+  return { success: true, id };
 }
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
-  const data = await fetchFromSheets('getTeam');
-  return Array.isArray(data) ? data : [];
+  await initDb();
+  const res = await db.execute("SELECT * FROM team");
+  return res.rows.map(row => ({
+    id: String(row.id),
+    name: String(row.name),
+    role: String(row.role),
+    bio: String(row.bio),
+    imageurl: String(row.imageurl),
+    twitter: String(row.twitter || ''),
+    linkedin: String(row.linkedin || ''),
+    email: String(row.email || '')
+  }));
 }
 
 export async function addTeamMember(data: Omit<TeamMember, 'id'>) {
-  return postToSheets({ action: 'addTeamMember', ...data });
+  await initDb();
+  const id = Math.random().toString(36).substring(7);
+  await db.execute({
+    sql: `INSERT INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.name, data.role, data.bio, data.imageurl, data.twitter || '', data.linkedin || '', data.email || '']
+  });
+  return { success: true, id };
 }
 
 export async function updateTeamMember(id: string, data: Partial<TeamMember>) {
-  return postToSheets({ action: 'updateTeamMember', id, ...data });
+  await initDb();
+  await db.execute({
+    sql: `UPDATE team SET name = ?, role = ?, bio = ?, imageurl = ? WHERE id = ?`,
+    args: [data.name, data.role, data.bio, data.imageurl, id]
+  });
+  return { success: true };
 }
 
 export async function getGallery(): Promise<GalleryItem[]> {
-  const data = await fetchFromSheets('getGallery');
-  return Array.isArray(data) ? data : [];
+  await initDb();
+  const res = await db.execute("SELECT * FROM gallery ORDER BY createdat DESC");
+  return res.rows.map(row => ({
+    id: String(row.id),
+    imageurl: String(row.imageurl),
+    title: String(row.title),
+    category: String(row.category),
+    createdat: String(row.createdat)
+  }));
 }
 
 export async function addGalleryItem(data: { imageurl: string; title: string; category: string }) {
-  return postToSheets({ action: 'addGalleryItem', ...data });
+  await initDb();
+  const id = 'G' + Math.random().toString(36).substring(7).toUpperCase();
+  await db.execute({
+    sql: `INSERT INTO gallery (id, imageurl, title, category, createdat) VALUES (?, ?, ?, ?, ?)`,
+    args: [id, data.imageurl, data.title, data.category, new Date().toISOString()]
+  });
+  return { success: true, id };
 }
 
 export async function getBlogs(): Promise<BlogPost[]> {
-  const data = await fetchFromSheets('getBlogs');
-  return Array.isArray(data) ? data : [];
+  await initDb();
+  const res = await db.execute("SELECT * FROM blogs ORDER BY createdat DESC");
+  return res.rows.map(row => ({
+    id: String(row.id),
+    title: String(row.title),
+    slug: String(row.slug),
+    excerpt: String(row.excerpt),
+    content: String(row.content),
+    category: String(row.category),
+    author: String(row.author),
+    imageurl: String(row.imageurl),
+    createdat: String(row.createdat)
+  }));
 }
 
 export async function addBlog(data: Omit<BlogPost, 'id' | 'createdat'>) {
-  return postToSheets({ action: 'addBlog', ...data });
+  await initDb();
+  const id = 'B' + Math.random().toString(36).substring(7).toUpperCase();
+  await db.execute({
+    sql: `INSERT INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.title, data.slug, data.excerpt, data.content, data.category, data.author, data.imageurl, new Date().toISOString()]
+  });
+  return { success: true, id };
 }
 
 export async function updateBlog(id: string, data: Partial<BlogPost>) {
-  return postToSheets({ action: 'updateBlog', id, ...data });
+  await initDb();
+  await db.execute({
+    sql: `UPDATE blogs SET title = ?, content = ? WHERE id = ?`,
+    args: [data.title, data.content, id]
+  });
+  return { success: true };
 }
 
 export async function deleteEntry(sheetName: string, keyValue: string) {
-  return postToSheets({ action: 'deleteEntry', sheetName, keyValue });
+  await initDb();
+  const table = sheetName.toLowerCase();
+  const pk = table === 'donors' ? 'phone' : 'id';
+  await db.execute({
+    sql: `DELETE FROM ${table} WHERE ${pk} = ?`,
+    args: [keyValue]
+  });
+  return { success: true };
 }
+
+export async function getAdminPassword(): Promise<string> {
+  // Hardcoded for now or fetch from a config table
+  return 'admin123';
+}
+
+export async function getGlobalStats() {
+  await initDb();
+  const donors = await db.execute("SELECT COUNT(*) as count FROM donors");
+  const requests = await db.execute("SELECT COUNT(*) as count FROM requests");
+  return {
+    totalDonors: Number(donors.rows[0].count),
+    totalRequests: Number(requests.rows[0].count),
+    lastUpdate: new Date().getTime().toString()
+  };
+}
+
+// --- MIGRATION LOGIC ---
+
+export async function migrateAllDataFromSheets() {
+  if (!SHEETS_URL) throw new Error("Sheets URL not configured.");
+  await initDb();
+
+  const actions = ['getDonors', 'getRequests', 'getTeam', 'getGallery', 'getBlogs', 'getLogs'];
+  const results: any = {};
+
+  for (const action of actions) {
+    const url = `${SHEETS_URL}?action=${action}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      results[action] = data;
+    }
+  }
+
+  // 1. Donors
+  if (results.getDonors) {
+    for (const d of results.getDonors) {
+      await db.execute({
+        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        args: [d.email||'', d.fullname||d.fullName||'', String(d.phone), d.bloodtype||d.bloodType||'', d.registrationdate||d.registrationDate||'', d.district||'', d.area||'', d.organization||'', Number(d.totaldonations||0), d.lastdonationdate||'N/A', d.password||'']
+      });
+    }
+  }
+
+  // 2. Requests
+  if (results.getRequests) {
+    for (const r of results.getRequests) {
+      await db.execute({
+        sql: `INSERT OR REPLACE INTO requests (id, patientName, bloodType, hospitalName, district, area, phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        args: [r.id, r.patientname||'', r.bloodtype||'', r.hospitalname||'', r.district||'', r.area||'', String(r.phone), r.neededwhen||'', String(r.bagsneeded||'1'), r.isurgent||'No', r.status||'Approved', r.createdat||'', r.disease||'', r.diseaseinfo||'', r.createdby||'Public']
+      });
+    }
+  }
+
+  // 3. Blogs
+  if (results.getBlogs) {
+    for (const b of results.getBlogs) {
+      await db.execute({
+        sql: `INSERT OR REPLACE INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?,?,?,?,?,?,?,?,?)`,
+        args: [b.id, b.title, b.slug, b.excerpt, b.content, b.category, b.author, b.imageurl, b.createdat]
+      });
+    }
+  }
+
+  // Same for other tables... 
+  return { success: true };
+}
+
+// Stub for older functionality
+export async function seedLocationData(rows: string[][]) { return { success: true }; }

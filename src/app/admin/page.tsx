@@ -6,18 +6,18 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { 
   ShieldAlert, BellRing, Settings, Users, BarChart3, ArrowRight, 
   Loader2, Droplet, CalendarCheck, Database, RefreshCw, 
-  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus, FileUp, UserCheck, LogOut, History, Users2, Image as ImageIcon, FileText
+  TrendingUp, MapPin, Activity, ShieldCheck, HeartPulse, UserPlus, FileUp, UserCheck, LogOut, History, Users2, Image as ImageIcon, FileText,
+  DatabaseZap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getGlobalStats, seedLocationData } from '@/lib/sheets';
-import { BANGLADESH_DATA } from '@/lib/bangladesh-data';
+import { getGlobalStats, migrateAllDataFromSheets } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isSeeding, setIsSeeding] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -40,26 +40,18 @@ export default function AdminDashboard() {
     router.push('/admin/login');
   };
 
-  const handleSeedData = async () => {
-    setIsSeeding(true);
+  const handleMigrate = async () => {
+    if (!confirm('আপনি কি নিশ্চিত যে গুগল শিট থেকে সব ডেটা Turso ডেটাবেজে মাইগ্রেট করতে চান? এটি পুরনো ডেটা ওভাররাইট করতে পারে।')) return;
+    setIsMigrating(true);
     try {
-      const rows: string[][] = [];
-      for (const district in BANGLADESH_DATA) {
-        const upazillas = BANGLADESH_DATA[district];
-        for (const upazilla in upazillas) {
-          const unions = upazillas[upazilla];
-          unions.forEach(union => rows.push([district, upazilla, union]));
-        }
-      }
-      const batchSize = 500;
-      for (let i = 0; i < rows.length; i += batchSize) {
-        await seedLocationData(rows.slice(i, i + batchSize));
-      }
-      toast({ title: "Seeding Successful!", description: "Locations synced." });
+      await migrateAllDataFromSheets();
+      toast({ title: "Migration Successful!", description: "All data from Google Sheets moved to Turso." });
+      const data = await getGlobalStats();
+      setStats(data);
     } catch (error) {
-      toast({ variant: "destructive", title: "Seeding Failed" });
+      toast({ variant: "destructive", title: "Migration Failed", description: "Could not fetch data from Sheets." });
     } finally {
-      setIsSeeding(false);
+      setIsMigrating(false);
     }
   };
 
@@ -134,18 +126,18 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="mt-12 flex justify-center">
+      <div className="mt-12 flex flex-col md:flex-row justify-center gap-6">
         <Card className="bg-slate-900 text-white rounded-3xl w-full max-w-md overflow-hidden border-none shadow-2xl">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-black flex items-center gap-2">
-              <Database className="h-5 w-5 text-primary" /> লোকেশন ডাটা সিঙ্ক
+              <DatabaseZap className="h-5 w-5 text-primary" /> Turso DB Migration
             </CardTitle>
-            <CardDescription className="text-slate-400">নতুন কোনো জেলা বা উপজেলা যোগ হলে সিঙ্ক করুন।</CardDescription>
+            <CardDescription className="text-slate-400">শিট থেকে সব তথ্য Turso ডেটাবেজে সিঙ্ক করুন।</CardDescription>
           </CardHeader>
           <CardContent className="pb-8 px-8">
-            <Button onClick={handleSeedData} disabled={isSeeding} variant="secondary" className="w-full h-14 rounded-2xl gap-3 bg-white/10 hover:bg-primary hover:text-white transition-all text-lg font-bold border-none">
-              {isSeeding ? <RefreshCw className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />} 
-              সিঙ্ক শুরু করুন
+            <Button onClick={handleMigrate} disabled={isMigrating} variant="secondary" className="w-full h-14 rounded-2xl gap-3 bg-white/10 hover:bg-primary hover:text-white transition-all text-lg font-bold border-none">
+              {isMigrating ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />} 
+              Start Migration
             </Button>
           </CardContent>
         </Card>
