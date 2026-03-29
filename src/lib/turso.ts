@@ -25,7 +25,7 @@ export async function initDb() {
   initPromise = (async () => {
     try {
       await db.batch([
-        // 1. Donors Table - Escaped reserved keyword "union"
+        // 1. Donors Table - Added role column
         `CREATE TABLE IF NOT EXISTS donors (
           email TEXT,
           fullName TEXT,
@@ -39,9 +39,10 @@ export async function initDb() {
           status TEXT DEFAULT 'Available',
           totalDonations INTEGER DEFAULT 0,
           lastDonationDate TEXT,
-          password TEXT
+          password TEXT,
+          role TEXT DEFAULT 'user'
         )`,
-        // 2. Blood Requests Table - Escaped reserved keyword "union"
+        // 2. Blood Requests Table
         `CREATE TABLE IF NOT EXISTS requests (
           id TEXT PRIMARY KEY,
           patientName TEXT,
@@ -120,6 +121,14 @@ export async function initDb() {
           status TEXT DEFAULT 'Scheduled'
         )`
       ], "write");
+      
+      // Try to add role column to existing databases if it doesn't exist
+      try {
+        await db.execute("ALTER TABLE donors ADD COLUMN role TEXT DEFAULT 'user'");
+      } catch (e) {
+        // Column might already exist
+      }
+      
       console.log("Database tables initialized successfully.");
     } catch (error) {
       initPromise = null; // Reset to allow retry on next call

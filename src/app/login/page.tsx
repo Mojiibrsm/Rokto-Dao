@@ -78,8 +78,14 @@ export default function LoginPage() {
       email: user.email,
       phone: user.phone,
       fullName: user.fullName,
-      bloodType: user.bloodType
+      bloodType: user.bloodType,
+      role: user.role || 'user'
     }));
+    
+    // If admin, also set admin auth for simple protection bypass
+    if (user.role === 'admin') {
+      localStorage.setItem('roktodao_admin_auth', 'true');
+    }
     
     logActivity(user.fullName, user.phone, 'Login', 'User successfully logged into dashboard');
     

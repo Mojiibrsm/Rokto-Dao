@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { getDonors, updateDonorProfile, setDonorPassword, logActivity } from '@/lib/sheets';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle } from 'lucide-react';
+import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -152,11 +153,26 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h2 className="text-2xl font-black font-headline">{user?.fullName}</h2>
-                <p className="text-muted-foreground font-bold">{user?.phone}</p>
+                <div className="flex flex-col items-center gap-1">
+                  <p className="text-muted-foreground font-bold">{user?.phone}</p>
+                  {donorDetails?.role === 'admin' && (
+                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100 font-black uppercase text-[10px] tracking-widest px-3">
+                      <Shield className="h-3 w-3 mr-1" /> Admin Account
+                    </Badge>
+                  )}
+                </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleLogout} className="w-full text-red-600 border-red-200 hover:bg-red-50 h-12 rounded-2xl font-bold">
-                <LogOut className="h-5 w-5 mr-2" /> লগআউট করুন
-              </Button>
+              
+              <div className="w-full space-y-3">
+                {donorDetails?.role === 'admin' && (
+                  <Button variant="outline" className="w-full bg-slate-900 text-white hover:bg-slate-800 h-12 rounded-2xl font-bold border-none" asChild>
+                    <Link href="/admin"><ShieldCheck className="h-5 w-5 mr-2" /> অ্যাডমিন প্যানেল</Link>
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={handleLogout} className="w-full text-red-600 border-red-200 hover:bg-red-50 h-12 rounded-2xl font-bold">
+                  <LogOut className="h-5 w-5 mr-2" /> লগআউট করুন
+                </Button>
+              </div>
             </div>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">

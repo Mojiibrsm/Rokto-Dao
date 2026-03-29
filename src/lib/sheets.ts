@@ -20,6 +20,7 @@ export type Donor = {
   totalDonations?: number;
   lastDonationDate?: string;
   password?: string;
+  role?: 'user' | 'admin';
 };
 
 export type BloodRequest = {
@@ -126,7 +127,8 @@ export async function getDonors(): Promise<Donor[]> {
     status: String(row.status || ''),
     totalDonations: Number(row.totalDonations || 0),
     lastDonationDate: String(row.lastDonationDate || ''),
-    password: String(row.password || '')
+    password: String(row.password || ''),
+    role: (row.role || 'user') as any
   }));
 }
 
@@ -134,10 +136,15 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   await initDb();
   const date = new Date().toISOString();
   try {
+    // Check if this is the first user
+    const countRes = await db.execute("SELECT COUNT(*) as count FROM donors");
+    const count = Number(countRes.rows[0].count);
+    const role = count === 0 ? 'admin' : 'user';
+
     await db.execute({
-      sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.union || '', data.organization || '', data.totalDonations || 0, 'N/A', '']
+      sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.union || '', data.organization || '', data.totalDonations || 0, 'N/A', '', role]
     });
     
     const smsMessage = `স্বাগতম ${data.fullName}! RoktoDao-তে নিবন্ধিত হওয়ার জন্য ধন্যবাদ। আপনার রক্তের গ্রুপ: ${data.bloodType}। মানবতার সেবায় পাশে থাকুন।`;
@@ -155,8 +162,8 @@ export async function bulkRegisterDonors(donors: any[]) {
   try {
     for (const d of donors) {
       await db.execute({
-        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           d.email || `bulk-${Date.now()}-${Math.random()}@roktodao.com`, 
           d.fullName, 
@@ -169,7 +176,8 @@ export async function bulkRegisterDonors(donors: any[]) {
           d.organization || '', 
           0, 
           'N/A', 
-          ''
+          '',
+          'user'
         ]
       });
     }
@@ -447,8 +455,8 @@ export async function migrateAllDataFromSheets() {
   if (results.getDonors) {
     for (const d of results.getDonors) {
       await db.execute({
-        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-        args: [d.email||'', d.fullname||d.fullName||'', String(d.phone), d.bloodtype||d.bloodType||'', d.registrationdate||d.registrationDate||'', d.district||'', d.area||'', d.union||'', d.organization||'', Number(d.totaldonations||0), d.lastdonationdate||'N/A', d.password||'']
+        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        args: [d.email||'', d.fullname||d.fullName||'', String(d.phone), d.bloodtype||d.bloodType||'', d.registrationdate||d.registrationDate||'', d.district||'', d.area||'', d.union||'', d.organization||'', Number(d.totaldonations||0), d.lastdonationdate||'N/A', d.password||'', 'user']
       });
     }
   }
