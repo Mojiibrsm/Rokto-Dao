@@ -1,11 +1,9 @@
 'use server';
 
 import { db, initDb } from './turso';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
- * @fileOverview Refactored Service layer to use Turso Database as primary source.
- * Includes legacy migration helpers.
+ * @fileOverview Service layer using Turso Database as primary source.
  */
 
 export type Donor = {
@@ -41,6 +39,15 @@ export type BloodRequest = {
   disease?: string;
   diseaseInfo?: string;
   createdBy?: string;
+};
+
+export type BloodDrive = {
+  id: string;
+  name: string;
+  location: string;
+  date: string;
+  time: string;
+  distance?: string;
 };
 
 export type TeamMember = {
@@ -107,18 +114,18 @@ export async function getDonors(): Promise<Donor[]> {
   await initDb();
   const res = await db.execute("SELECT * FROM donors");
   return res.rows.map(row => ({
-    email: String(row.email),
-    fullName: String(row.fullName),
-    phone: String(row.phone),
-    bloodType: String(row.bloodType),
-    registrationDate: String(row.registrationDate),
-    district: String(row.district),
-    area: String(row.area),
-    union: String(row.union),
-    organization: String(row.organization),
-    status: String(row.status),
-    totalDonations: Number(row.totalDonations),
-    lastDonationDate: String(row.lastDonationDate),
+    email: String(row.email || ''),
+    fullName: String(row.fullName || ''),
+    phone: String(row.phone || ''),
+    bloodType: String(row.bloodType || ''),
+    registrationDate: String(row.registrationDate || ''),
+    district: String(row.district || ''),
+    area: String(row.area || ''),
+    union: String(row.union || ''),
+    organization: String(row.organization || ''),
+    status: String(row.status || ''),
+    totalDonations: Number(row.totalDonations || 0),
+    lastDonationDate: String(row.lastDonationDate || ''),
     password: String(row.password || '')
   }));
 }
@@ -128,7 +135,7 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   const date = new Date().toISOString();
   try {
     await db.execute({
-      sql: `INSERT INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) 
+      sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.organization || '', data.totalDonations || 0, 'N/A', '']
     });
@@ -143,9 +150,37 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   }
 }
 
+export async function bulkRegisterDonors(donors: any[]) {
+  await initDb();
+  try {
+    for (const d of donors) {
+      await db.execute({
+        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          d.email || `bulk-${Date.now()}-${Math.random()}@roktodao.com`, 
+          d.fullName, 
+          d.phone, 
+          d.bloodType, 
+          new Date().toISOString(), 
+          d.district || '', 
+          d.area || '', 
+          d.organization || '', 
+          0, 
+          'N/A', 
+          ''
+        ]
+      });
+    }
+    return { success: true, count: donors.length };
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+}
+
 export async function updateDonorProfile(originalKey: string, data: Partial<Donor>) {
   await initDb();
-  // Using phone as PK
   await db.execute({
     sql: `UPDATE donors SET fullName = ?, email = ?, district = ?, organization = ?, totalDonations = ? WHERE phone = ? OR email = ?`,
     args: [data.fullName, data.email, data.district, data.organization, data.totalDonations, originalKey, originalKey]
@@ -188,18 +223,18 @@ export async function getBloodRequests(): Promise<BloodRequest[]> {
   const res = await db.execute("SELECT * FROM requests ORDER BY createdAt DESC");
   return res.rows.map(row => ({
     id: String(row.id),
-    patientName: String(row.patientName),
-    bloodType: String(row.bloodType),
-    hospitalName: String(row.hospitalName),
-    district: String(row.district),
-    area: String(row.area),
-    union: String(row.union),
-    phone: String(row.phone),
-    neededWhen: String(row.neededWhen),
-    bagsNeeded: String(row.bagsNeeded),
+    patientName: String(row.patientName || ''),
+    bloodType: String(row.bloodType || ''),
+    hospitalName: String(row.hospitalName || ''),
+    district: String(row.district || ''),
+    area: String(row.area || ''),
+    union: String(row.union || ''),
+    phone: String(row.phone || ''),
+    neededWhen: String(row.neededWhen || ''),
+    bagsNeeded: String(row.bagsNeeded || '1'),
     isUrgent: String(row.isUrgent) === 'Yes',
-    status: row.status as any,
-    createdAt: String(row.createdAt),
+    status: (row.status || 'Approved') as any,
+    createdAt: String(row.createdAt || ''),
     disease: String(row.disease || ''),
     diseaseInfo: String(row.diseaseInfo || ''),
     createdBy: String(row.createdBy || 'Public')
@@ -222,6 +257,49 @@ export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status
 
   return { success: true, id };
 }
+
+// --- BLOOD DRIVES & APPOINTMENTS ---
+
+export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
+  await initDb();
+  let sql = "SELECT * FROM drives";
+  let args: any[] = [];
+  if (query) {
+    sql += " WHERE name LIKE ? OR location LIKE ?";
+    args = [`%${query}%`, `%${query}%`];
+  }
+  const res = await db.execute({ sql, args });
+  return res.rows.map(row => ({
+    id: String(row.id),
+    name: String(row.name),
+    location: String(row.location),
+    date: String(row.date),
+    time: String(row.time),
+    distance: String(row.distance || '0 km')
+  }));
+}
+
+export async function createBloodDrive(data: Omit<BloodDrive, 'id'>) {
+  await initDb();
+  const id = 'D' + Math.random().toString(36).substring(7).toUpperCase();
+  await db.execute({
+    sql: `INSERT INTO drives (id, name, location, date, time, distance) VALUES (?, ?, ?, ?, ?, ?)`,
+    args: [id, data.name, data.location, data.date, data.time, data.distance || '0 km']
+  });
+  return { success: true, id };
+}
+
+export async function scheduleAppointment(data: any) {
+  await initDb();
+  const id = 'APT' + Math.random().toString(36).substring(7).toUpperCase();
+  await db.execute({
+    sql: `INSERT INTO appointments (id, driveId, driveName, userEmail, userName, date, time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.driveId, data.driveName, data.userEmail, data.userName, data.date, data.time, 'Scheduled']
+  });
+  return { success: true, id };
+}
+
+// --- OTHER ENTITIES ---
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
   await initDb();
@@ -317,7 +395,7 @@ export async function updateBlog(id: string, data: Partial<BlogPost>) {
 export async function deleteEntry(sheetName: string, keyValue: string) {
   await initDb();
   const table = sheetName.toLowerCase();
-  const pk = table === 'donors' ? 'phone' : 'id';
+  const pk = (table === 'donors') ? 'phone' : 'id';
   await db.execute({
     sql: `DELETE FROM ${table} WHERE ${pk} = ?`,
     args: [keyValue]
@@ -326,19 +404,22 @@ export async function deleteEntry(sheetName: string, keyValue: string) {
 }
 
 export async function getAdminPassword(): Promise<string> {
-  // Hardcoded for now or fetch from a config table
   return 'admin123';
 }
 
 export async function getGlobalStats() {
   await initDb();
-  const donors = await db.execute("SELECT COUNT(*) as count FROM donors");
-  const requests = await db.execute("SELECT COUNT(*) as count FROM requests");
-  return {
-    totalDonors: Number(donors.rows[0].count),
-    totalRequests: Number(requests.rows[0].count),
-    lastUpdate: new Date().getTime().toString()
-  };
+  try {
+    const donors = await db.execute("SELECT COUNT(*) as count FROM donors");
+    const requests = await db.execute("SELECT COUNT(*) as count FROM requests");
+    return {
+      totalDonors: Number(donors.rows[0]?.count || 0),
+      totalRequests: Number(requests.rows[0]?.count || 0),
+      lastUpdate: new Date().getTime().toString()
+    };
+  } catch (e) {
+    return { totalDonors: 0, totalRequests: 0, lastUpdate: '0' };
+  }
 }
 
 // --- MIGRATION LOGIC ---
@@ -347,19 +428,21 @@ export async function migrateAllDataFromSheets() {
   if (!SHEETS_URL) throw new Error("Sheets URL not configured.");
   await initDb();
 
-  const actions = ['getDonors', 'getRequests', 'getTeam', 'getGallery', 'getBlogs', 'getLogs'];
+  const actions = ['getDonors', 'getRequests', 'getTeam', 'getGallery', 'getBlogs', 'getLogs', 'getDrives'];
   const results: any = {};
 
   for (const action of actions) {
-    const url = `${SHEETS_URL}?action=${action}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      results[action] = data;
+    try {
+      const url = `${SHEETS_URL}?action=${action}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        results[action] = await res.json();
+      }
+    } catch (e) {
+      console.error(`Migration error for ${action}:`, e);
     }
   }
 
-  // 1. Donors
   if (results.getDonors) {
     for (const d of results.getDonors) {
       await db.execute({
@@ -369,7 +452,6 @@ export async function migrateAllDataFromSheets() {
     }
   }
 
-  // 2. Requests
   if (results.getRequests) {
     for (const r of results.getRequests) {
       await db.execute({
@@ -379,7 +461,6 @@ export async function migrateAllDataFromSheets() {
     }
   }
 
-  // 3. Blogs
   if (results.getBlogs) {
     for (const b of results.getBlogs) {
       await db.execute({
@@ -389,9 +470,14 @@ export async function migrateAllDataFromSheets() {
     }
   }
 
-  // Same for other tables... 
+  if (results.getDrives) {
+    for (const dr of results.getDrives) {
+      await db.execute({
+        sql: `INSERT OR REPLACE INTO drives (id, name, location, date, time, distance) VALUES (?,?,?,?,?,?)`,
+        args: [dr.id, dr.name, dr.location, dr.date, dr.time, dr.distance || '0 km']
+      });
+    }
+  }
+
   return { success: true };
 }
-
-// Stub for older functionality
-export async function seedLocationData(rows: string[][]) { return { success: true }; }

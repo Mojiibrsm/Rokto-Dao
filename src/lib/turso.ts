@@ -1,10 +1,8 @@
-'use server';
-
 import { createClient } from "@libsql/client";
 
 /**
  * @fileOverview Turso Database Client configuration.
- * Uses environment variables for security and flexibility.
+ * This file does NOT use 'use server' because it exports a database object.
  */
 
 const url = process.env.TURSO_URL || "libsql://rokto-rokto.aws-ap-northeast-1.turso.io";
@@ -21,7 +19,6 @@ export const db = createClient({
 
 /**
  * Initializes the database tables if they don't exist.
- * This is called before every major database operation to ensure schema integrity.
  */
 export async function initDb() {
   try {
@@ -114,6 +111,32 @@ export async function initDb() {
         phone TEXT,
         action TEXT,
         details TEXT
+      )
+    `);
+
+    // 7. Blood Drives Table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS drives (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        location TEXT,
+        date TEXT,
+        time TEXT,
+        distance TEXT DEFAULT '0 km'
+      )
+    `);
+
+    // 8. Appointments Table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS appointments (
+        id TEXT PRIMARY KEY,
+        driveId TEXT,
+        driveName TEXT,
+        userEmail TEXT,
+        userName TEXT,
+        date TEXT,
+        time TEXT,
+        status TEXT DEFAULT 'Scheduled'
       )
     `);
   } catch (error) {
