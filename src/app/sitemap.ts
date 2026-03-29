@@ -2,15 +2,14 @@ import { MetadataRoute } from 'next';
 import { getBlogs } from '@/lib/sheets';
 
 /**
- * @fileOverview SEO এর জন্য ডাইনামিক সাইটম্যাপ জেনারেটর। 
- * এটি সাইটের সব স্ট্যাটিক পেজ এবং ব্লগের লিঙ্কগুলো সার্চ ইঞ্জিনের কাছে পৌঁছে দেয়।
+ * @fileOverview SEO ফ্রেন্ডলি ডাইনামিক সাইটম্যাপ জেনারেটর।
  */
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // আপনার ডোমেইনটি www সহ হলে এখানে www যোগ করুন
   const baseUrl = 'https://roktodao.com';
 
-  // ১. সাইটের সাধারণ বা স্ট্যাটিক লিঙ্কসমূহ
-  const routes = [
+  const staticRoutes = [
     '',
     '/about',
     '/donors',
@@ -30,7 +29,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1 : 0.8,
   }));
 
-  // ২. ব্লগের ডাইনামিক লিঙ্কসমূহ (গুগল শিট থেকে সংগৃহীত)
   let blogEntries: MetadataRoute.Sitemap = [];
   try {
     const blogs = await getBlogs();
@@ -41,8 +39,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
   } catch (error) {
-    console.error('Sitemap blog generation error:', error);
+    console.error('Sitemap blog error:', error);
   }
 
-  return [...routes, ...blogEntries];
+  return [...staticRoutes, ...blogEntries];
 }
