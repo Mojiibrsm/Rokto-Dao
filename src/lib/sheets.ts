@@ -4,6 +4,7 @@ import { db, initDb } from './turso';
 
 /**
  * @fileOverview Service layer using Turso Database as primary source.
+ * Handles data fetching, registration, and migration from Google Sheets.
  */
 
 export type Donor = {
@@ -137,7 +138,6 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   await initDb();
   const date = new Date().toISOString();
   try {
-    // Check if this is the first user
     const countRes = await db.execute("SELECT COUNT(*) as count FROM donors");
     const count = Number(countRes.rows[0].count);
     const role = count === 0 ? 'admin' : 'user';
@@ -268,8 +268,6 @@ export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status
   return { success: true, id };
 }
 
-// --- BLOOD DRIVES & APPOINTMENTS ---
-
 export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
   await initDb();
   let sql = "SELECT * FROM drives";
@@ -308,8 +306,6 @@ export async function scheduleAppointment(data: any) {
   });
   return { success: true, id };
 }
-
-// --- OTHER ENTITIES ---
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
   await initDb();
@@ -453,39 +449,106 @@ export async function migrateAllDataFromSheets() {
     }
   }
 
-  if (results.getDonors) {
+  // Migrate Donors
+  if (results.getDonors && Array.isArray(results.getDonors)) {
     for (const d of results.getDonors) {
-      await db.execute({
-        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        args: [d.email||'', d.fullname||d.fullName||'', String(d.phone), d.bloodtype||d.bloodType||'', d.registrationdate||d.registrationDate||'', d.district||'', d.area||'', d.union||'', d.organization||'', Number(d.totaldonations||0), d.lastdonationdate||'N/A', d.password||'', 'user']
-      });
+      try {
+        await db.execute({
+          sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+          args: [
+            d.email || '', 
+            d.fullname || d.fullName || '', 
+            String(d.phone || ''), 
+            d.bloodtype || d.bloodType || '', 
+            d.registrationdate || d.registrationDate || new Date().toISOString(), 
+            d.district || '', 
+            d.area || '', 
+            d.union || '', 
+            d.organization || '', 
+            Number(d.totaldonations || d.totalDonations || 0), 
+            d.lastdonationdate || d.lastDonationDate || 'N/A', 
+            d.password || '', 
+            'user'
+          ]
+        });
+      } catch (e) { console.error('Donor insert error:', e); }
     }
   }
 
-  if (results.getRequests) {
+  // Migrate Requests
+  if (results.getRequests && Array.isArray(results.getRequests)) {
     for (const r of results.getRequests) {
-      await db.execute({
-        sql: `INSERT OR REPLACE INTO requests (id, patientName, bloodType, hospitalName, district, area, "union", phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        args: [r.id, r.patientname||'', r.bloodtype||'', r.hospitalname||'', r.district||'', r.area||'', r.union||'', String(r.phone), r.neededwhen||'', String(r.bagsneeded||'1'), r.isurgent||'No', r.status||'Approved', r.createdat||'', r.disease||'', r.diseaseinfo||'', r.createdby||'Public']
-      });
+      try {
+        await db.execute({
+          sql: `INSERT OR REPLACE INTO requests (id, patientName, bloodType, hospitalName, district, area, "union", phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+          args: [
+            r.id, 
+            r.patientname || r.patientName || '', 
+            r.bloodtype || r.bloodType || '', 
+            r.hospitalname || r.hospitalName || '', 
+            r.district || '', 
+            r.area || '', 
+            r.union || '', 
+            String(r.phone || ''), 
+            r.neededwhen || r.neededWhen || '', 
+            String(r.bagsneeded || r.bagsNeeded || '1'), 
+            String(r.isurgent || r.isUrgent || 'No') === 'Yes' ? 'Yes' : 'No', 
+            r.status || 'Approved', 
+            r.createdat || r.createdAt || new Date().toISOString(), 
+            r.disease || '', 
+            r.diseaseinfo || r.diseaseInfo || '', 
+            r.createdby || r.createdBy || 'Public'
+          ]
+        });
+      } catch (e) { console.error('Request insert error:', e); }
     }
   }
 
-  if (results.getBlogs) {
+  // Migrate Blogs
+  if (results.getBlogs && Array.isArray(results.getBlogs)) {
     for (const b of results.getBlogs) {
-      await db.execute({
-        sql: `INSERT OR REPLACE INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?,?,?,?,?,?,?,?,?)`,
-        args: [b.id, b.title, b.slug, b.excerpt, b.content, b.category, b.author, b.imageurl, b.createdat]
-      });
+      try {
+        await db.execute({
+          sql: `INSERT OR REPLACE INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?,?,?,?,?,?,?,?,?)`,
+          args: [b.id, b.title, b.slug, b.excerpt, b.content, b.category, b.author, b.imageurl, b.createdat || new Date().toISOString()]
+        });
+      } catch (e) { console.error('Blog insert error:', e); }
     }
   }
 
-  if (results.getDrives) {
+  // Migrate Team
+  if (results.getTeam && Array.isArray(results.getTeam)) {
+    for (const t of results.getTeam) {
+      try {
+        await db.execute({
+          sql: `INSERT OR REPLACE INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?,?,?,?,?,?,?,?)`,
+          args: [t.id, t.name, t.role, t.bio, t.imageurl, t.twitter || '', t.linkedin || '', t.email || '']
+        });
+      } catch (e) { console.error('Team insert error:', e); }
+    }
+  }
+
+  // Migrate Gallery
+  if (results.getGallery && Array.isArray(results.getGallery)) {
+    for (const g of results.getGallery) {
+      try {
+        await db.execute({
+          sql: `INSERT OR REPLACE INTO gallery (id, imageurl, title, category, createdat) VALUES (?,?,?,?,?)`,
+          args: [g.id, g.imageurl, g.title, g.category, g.createdat || new Date().toISOString()]
+        });
+      } catch (e) { console.error('Gallery insert error:', e); }
+    }
+  }
+
+  // Migrate Drives
+  if (results.getDrives && Array.isArray(results.getDrives)) {
     for (const dr of results.getDrives) {
-      await db.execute({
-        sql: `INSERT OR REPLACE INTO drives (id, name, location, date, time, distance) VALUES (?,?,?,?,?,?)`,
-        args: [dr.id, dr.name, dr.location, dr.date, dr.time, dr.distance || '0 km']
-      });
+      try {
+        await db.execute({
+          sql: `INSERT OR REPLACE INTO drives (id, name, location, date, time, distance) VALUES (?,?,?,?,?,?)`,
+          args: [dr.id, dr.name, dr.location, dr.date, dr.time, dr.distance || '0 km']
+        });
+      } catch (e) { console.error('Drive insert error:', e); }
     }
   }
 
