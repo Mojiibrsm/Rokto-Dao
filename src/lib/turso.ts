@@ -25,7 +25,7 @@ export async function initDb() {
   initPromise = (async () => {
     try {
       await db.batch([
-        // 1. Donors Table
+        // 1. Donors Table - Escaped reserved keyword "union"
         `CREATE TABLE IF NOT EXISTS donors (
           email TEXT,
           fullName TEXT,
@@ -34,14 +34,14 @@ export async function initDb() {
           registrationDate TEXT,
           district TEXT,
           area TEXT,
-          union TEXT,
+          "union" TEXT,
           organization TEXT,
           status TEXT DEFAULT 'Available',
           totalDonations INTEGER DEFAULT 0,
           lastDonationDate TEXT,
           password TEXT
         )`,
-        // 2. Blood Requests Table
+        // 2. Blood Requests Table - Escaped reserved keyword "union"
         `CREATE TABLE IF NOT EXISTS requests (
           id TEXT PRIMARY KEY,
           patientName TEXT,
@@ -49,7 +49,7 @@ export async function initDb() {
           hospitalName TEXT,
           district TEXT,
           area TEXT,
-          union TEXT,
+          "union" TEXT,
           phone TEXT,
           neededWhen TEXT,
           bagsNeeded TEXT,

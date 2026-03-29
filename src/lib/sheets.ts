@@ -135,9 +135,9 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   const date = new Date().toISOString();
   try {
     await db.execute({
-      sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.organization || '', data.totalDonations || 0, 'N/A', '']
+      sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.union || '', data.organization || '', data.totalDonations || 0, 'N/A', '']
     });
     
     const smsMessage = `স্বাগতম ${data.fullName}! RoktoDao-তে নিবন্ধিত হওয়ার জন্য ধন্যবাদ। আপনার রক্তের গ্রুপ: ${data.bloodType}। মানবতার সেবায় পাশে থাকুন।`;
@@ -155,8 +155,8 @@ export async function bulkRegisterDonors(donors: any[]) {
   try {
     for (const d of donors) {
       await db.execute({
-        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           d.email || `bulk-${Date.now()}-${Math.random()}@roktodao.com`, 
           d.fullName, 
@@ -165,6 +165,7 @@ export async function bulkRegisterDonors(donors: any[]) {
           new Date().toISOString(), 
           d.district || '', 
           d.area || '', 
+          d.union || '',
           d.organization || '', 
           0, 
           'N/A', 
@@ -182,8 +183,8 @@ export async function bulkRegisterDonors(donors: any[]) {
 export async function updateDonorProfile(originalKey: string, data: Partial<Donor>) {
   await initDb();
   await db.execute({
-    sql: `UPDATE donors SET fullName = ?, email = ?, district = ?, organization = ?, totalDonations = ? WHERE phone = ? OR email = ?`,
-    args: [data.fullName, data.email, data.district, data.organization, data.totalDonations, originalKey, originalKey]
+    sql: `UPDATE donors SET fullName = ?, email = ?, district = ?, area = ?, "union" = ?, organization = ?, totalDonations = ? WHERE phone = ? OR email = ?`,
+    args: [data.fullName, data.email, data.district, data.area, data.union, data.organization, data.totalDonations, originalKey, originalKey]
   });
   return { success: true };
 }
@@ -246,9 +247,9 @@ export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status
   const id = 'REQ' + Math.random().toString(36).substring(7).toUpperCase();
   const now = new Date().toISOString();
   await db.execute({
-    sql: `INSERT INTO requests (id, patientName, bloodType, hospitalName, district, area, phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [id, data.patientName || '', data.bloodType, data.hospitalName, data.district, data.area || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', now, data.disease || '', data.diseaseInfo || '', data.createdBy || 'Public']
+    sql: `INSERT INTO requests (id, patientName, bloodType, hospitalName, district, area, "union", phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, data.patientName || '', data.bloodType, data.hospitalName, data.district, data.area || '', data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', now, data.disease || '', data.diseaseInfo || '', data.createdBy || 'Public']
   });
 
   const adminNumber = '01601519007';
@@ -446,8 +447,8 @@ export async function migrateAllDataFromSheets() {
   if (results.getDonors) {
     for (const d of results.getDonors) {
       await db.execute({
-        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-        args: [d.email||'', d.fullname||d.fullName||'', String(d.phone), d.bloodtype||d.bloodType||'', d.registrationdate||d.registrationDate||'', d.district||'', d.area||'', d.organization||'', Number(d.totaldonations||0), d.lastdonationdate||'N/A', d.password||'']
+        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        args: [d.email||'', d.fullname||d.fullName||'', String(d.phone), d.bloodtype||d.bloodType||'', d.registrationdate||d.registrationDate||'', d.district||'', d.area||'', d.union||'', d.organization||'', Number(d.totaldonations||0), d.lastdonationdate||'N/A', d.password||'']
       });
     }
   }
@@ -455,8 +456,8 @@ export async function migrateAllDataFromSheets() {
   if (results.getRequests) {
     for (const r of results.getRequests) {
       await db.execute({
-        sql: `INSERT OR REPLACE INTO requests (id, patientName, bloodType, hospitalName, district, area, phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        args: [r.id, r.patientname||'', r.bloodtype||'', r.hospitalname||'', r.district||'', r.area||'', String(r.phone), r.neededwhen||'', String(r.bagsneeded||'1'), r.isurgent||'No', r.status||'Approved', r.createdat||'', r.disease||'', r.diseaseinfo||'', r.createdby||'Public']
+        sql: `INSERT OR REPLACE INTO requests (id, patientName, bloodType, hospitalName, district, area, "union", phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        args: [r.id, r.patientname||'', r.bloodtype||'', r.hospitalname||'', r.district||'', r.area||'', r.union||'', String(r.phone), r.neededwhen||'', String(r.bagsneeded||'1'), r.isurgent||'No', r.status||'Approved', r.createdat||'', r.disease||'', r.diseaseinfo||'', r.createdby||'Public']
       });
     }
   }
