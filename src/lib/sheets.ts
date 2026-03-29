@@ -92,6 +92,7 @@ export type ActivityLog = {
 
 const SMS_API_KEY = process.env.SMS_API_KEY;
 const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 async function sendSMS(recipient: string, message: string) {
   if (!SMS_API_KEY) return null;
@@ -413,7 +414,7 @@ export async function deleteEntry(sheetName: string, keyValue: string) {
 }
 
 export async function getAdminPassword(): Promise<string> {
-  return 'admin123';
+  return ADMIN_PASSWORD;
 }
 
 export async function getGlobalStats() {
