@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/toaster';
-import { Droplet, Facebook } from 'lucide-react';
+import { Droplet } from 'lucide-react';
 import Link from 'next/link';
 import { FooterYear } from '@/components/footer-year';
 
@@ -13,7 +13,7 @@ export const viewport: Viewport = {
 };
 
 // আপনার ডোমেইন অনুযায়ী এটি আপডেট করা হয়েছে
-const baseUrl = 'https://roktodao.bartanow.com';
+const baseUrl = 'https://roktodao.pro.bd';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

@@ -7,7 +7,7 @@ import { getBlogs } from '@/lib/sheets';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // আপনার ডোমেইন অনুযায়ী আপডেট করা হয়েছে
-  const baseUrl = 'https://roktodao.bartanow.com';
+  const baseUrl = 'https://roktodao.pro.bd';
 
   const staticRoutes = [
     '',
