@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Plus, Edit, Trash2, ArrowLeft, Save, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
+import { format } from 'date-fns';
 
 export default function ManageBlogsPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
@@ -134,7 +136,7 @@ export default function ManageBlogsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>ব্লগ শিরোনাম *</Label>
-                  <Input value={editingBlog.title} onChange={e => {
+                  <Input value={editingBlog.title || ''} onChange={e => {
                     const title = e.target.value;
                     const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
                     setEditingBlog({...editingBlog, title, slug});
@@ -142,34 +144,34 @@ export default function ManageBlogsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Slug (URL) *</Label>
-                  <Input value={editingBlog.slug} onChange={e => setEditingBlog({...editingBlog, slug: e.target.value})} required />
+                  <Input value={editingBlog.slug || ''} onChange={e => setEditingBlog({...editingBlog, slug: e.target.value})} required />
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>লেখক *</Label>
-                  <Input value={editingBlog.author} onChange={e => setEditingBlog({...editingBlog, author: e.target.value})} required />
+                  <Input value={editingBlog.author || ''} onChange={e => setEditingBlog({...editingBlog, author: e.target.value})} required />
                 </div>
                 <div className="space-y-2">
                   <Label>ক্যাটাগরি</Label>
-                  <Input value={editingBlog.category} onChange={e => setEditingBlog({...editingBlog, category: e.target.value})} />
+                  <Input value={editingBlog.category || ''} onChange={e => setEditingBlog({...editingBlog, category: e.target.value})} />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>ইমেজ ইউআরএল *</Label>
-                <Input value={editingBlog.imageurl} onChange={e => setEditingBlog({...editingBlog, imageurl: e.target.value})} placeholder="https://..." required />
+                <Input value={editingBlog.imageurl || ''} onChange={e => setEditingBlog({...editingBlog, imageurl: e.target.value})} placeholder="https://..." required />
               </div>
 
               <div className="space-y-2">
                 <Label>সংক্ষিপ্ত বর্ণনা (Excerpt) *</Label>
-                <Textarea value={editingBlog.excerpt} onChange={e => setEditingBlog({...editingBlog, excerpt: e.target.value})} required />
+                <Textarea value={editingBlog.excerpt || ''} onChange={e => setEditingBlog({...editingBlog, excerpt: e.target.value})} required />
               </div>
 
               <div className="space-y-2">
                 <Label>ব্লগ কন্টেন্ট *</Label>
-                <Textarea value={editingBlog.content} onChange={e => setEditingBlog({...editingBlog, content: e.target.value})} required className="min-h-[200px]" />
+                <Textarea value={editingBlog.content || ''} onChange={e => setEditingBlog({...editingBlog, content: e.target.value})} required className="min-h-[200px]" />
               </div>
 
               <DialogFooter>
