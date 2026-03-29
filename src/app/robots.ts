@@ -5,7 +5,8 @@ import { MetadataRoute } from 'next';
  */
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://roktodao.com';
+  // আপনার ডোমেইন অনুযায়ী আপডেট করা হয়েছে
+  const baseUrl = 'https://roktodao.bartanow.com';
 
   return {
     rules: {

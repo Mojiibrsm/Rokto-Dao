@@ -12,8 +12,8 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// আপনার যদি সাইট www.roktodao.com হয় তবে নিচে www যোগ করুন
-const baseUrl = 'https://roktodao.com';
+// আপনার ডোমেইন অনুযায়ী এটি আপডেট করা হয়েছে
+const baseUrl = 'https://roktodao.bartanow.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
