@@ -4,7 +4,6 @@ import { db, initDb } from './turso';
 
 /**
  * @fileOverview Service layer using Turso Database as primary source.
- * Handles data fetching, registration, and migration from Google Sheets.
  */
 
 export type Donor = {
@@ -170,14 +169,14 @@ export async function bulkRegisterDonors(donors: any[]) {
           d.fullName, 
           d.phone, 
           d.bloodType, 
-          new Date().toISOString(), 
+          d.registrationDate || new Date().toISOString(), 
           d.district || '', 
           d.area || '', 
           d.union || '',
           d.organization || '', 
-          0, 
-          'N/A', 
-          '',
+          d.totalDonations || 0, 
+          d.lastDonationDate || 'N/A', 
+          d.password || '',
           'user'
         ]
       });

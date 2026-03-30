@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database, MapPin, Building2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database, MapPin, Building2, Mail, Calendar, Key } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -106,14 +106,14 @@ export default function BulkDonorsPage() {
         router.push('/admin');
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "ইম্পোর্ট ব্যর্থ", description: "গুগল শিট আপডেট করার সময় সমস্যা হয়েছে।" });
+      toast({ variant: "destructive", title: "ইম্পোর্ট ব্যর্থ", description: "ডাটাবেজ আপডেট করার সময় সমস্যা হয়েছে।" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 py-12 max-w-5xl">
       <div className="mb-8 flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin"><ArrowLeft className="h-5 w-5" /></Link>
@@ -129,9 +129,9 @@ export default function BulkDonorsPage() {
                 <Sparkles className="h-8 w-8" />
               </div>
               <div>
-                <CardTitle className="text-3xl">AI Data Parser</CardTitle>
+                <CardTitle className="text-3xl">Excel/Text Data Parser</CardTitle>
                 <CardDescription className="text-lg">
-                  যেকোনো অগোছালো ডাটা পেস্ট করুন। AI সংগঠন বা টিমের নামসহ সব ঠিক করে নেবে।
+                  Excel থেকে রো কপি করে এখানে পেস্ট করুন। AI সব তথ্য (ইমেইল, তারিখ, সংখ্যা) সাজিয়ে নেবে।
                 </CardDescription>
               </div>
             </div>
@@ -139,13 +139,12 @@ export default function BulkDonorsPage() {
           <CardContent className="pt-8 px-10 space-y-8">
             <Alert className="bg-blue-50 border-blue-200 rounded-2xl">
               <Info className="h-5 w-5 text-blue-600" />
-              <AlertTitle className="text-blue-800 font-bold mb-1">স্মার্ট ইনপুট সাপোর্ট!</AlertTitle>
+              <AlertTitle className="text-blue-800 font-bold mb-1">এক্সেল ফরম্যাট সাপোর্ট!</AlertTitle>
               <AlertDescription className="text-blue-700">
-                AI স্বয়ংক্রিয়ভাবে সংগঠন বা টিমের নাম এবং উপজেলা খুঁজে নেবে এবং বাংলায় রূপান্তর করবে।
+                কলামগুলোর নাম যাই হোক, AI সেগুলোকে ইমেইল, ফোন, তারিখ এবং মোট রক্তদান সংখ্যা অনুযায়ী আলাদা করতে পারে।
               </AlertDescription>
             </Alert>
 
-            {/* Global Organization Field */}
             <div className="space-y-3 p-6 bg-primary/5 rounded-3xl border border-primary/10">
               <div className="flex items-center gap-2 mb-1">
                 <Building2 className="h-5 w-5 text-primary" />
@@ -158,17 +157,14 @@ export default function BulkDonorsPage() {
                 value={globalOrg}
                 onChange={e => setGlobalOrg(e.target.value)}
               />
-              <p className="text-sm text-muted-foreground italic">
-                * যদি সবার জন্য একই সংগঠনের নাম দিতে চান তবে এখানে লিখুন। এটি টেক্সটে থাকা নামকে ওভাররাইড করবে।
-              </p>
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="bulkData" className="text-lg font-bold">রক্তদাতার ডাটা ইনপুট দিন</Label>
+              <Label htmlFor="bulkData" className="text-lg font-bold">Excel বা অগোছালো ডাটা পেস্ট করুন</Label>
               <Textarea 
                 id="bulkData" 
-                placeholder="যেমন: Faisal, B+, 01815... Coxbazar PS Maheshkhali" 
-                className="min-h-[350px] font-mono text-base rounded-3xl bg-muted/20 focus:bg-white transition-all p-6 border-2 focus:border-primary"
+                placeholder="যেমন: Faisal	mojib@mail.com	01815...	B+	2024-01-01	Coxbazar..." 
+                className="min-h-[350px] font-mono text-sm rounded-3xl bg-muted/20 focus:bg-white transition-all p-6 border-2 focus:border-primary"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
               />
@@ -211,40 +207,51 @@ export default function BulkDonorsPage() {
             </CardHeader>
             <CardContent className="px-10">
               <div className="border rounded-2xl overflow-hidden overflow-x-auto shadow-sm">
-                <table className="w-full text-base">
+                <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="px-6 py-4 text-left font-bold">নাম</th>
+                      <th className="px-6 py-4 text-left font-bold">নাম ও ইমেইল</th>
                       <th className="px-6 py-4 text-left font-bold">ফোন ও গ্রুপ</th>
-                      <th className="px-6 py-4 text-left font-bold">সংগঠন</th>
                       <th className="px-6 py-4 text-left font-bold">অবস্থান</th>
+                      <th className="px-6 py-4 text-left font-bold">দান ও তারিখ</th>
+                      <th className="px-6 py-4 text-left font-bold">অতিরিক্ত</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y bg-white">
                     {preview.map((d, i) => (
                       <tr key={i} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-6 py-4 font-bold">{d.fullName}</td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <Badge className="bg-primary h-8 w-8 flex items-center justify-center font-black rounded-lg">
-                              {d.bloodType}
-                            </Badge>
-                            <span className="font-mono text-sm text-muted-foreground">{d.phone}</span>
+                          <div className="flex flex-col">
+                            <span className="font-bold">{d.fullName}</span>
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1"><Mail className="h-2 w-2" /> {d.email || 'N/A'}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          {d.organization ? (
-                            <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 flex items-center gap-1.5 w-fit">
-                              <Users className="h-3 w-3" /> {d.organization}
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-primary h-7 w-7 flex items-center justify-center font-black rounded-lg text-xs">
+                              {d.bloodType}
                             </Badge>
-                          ) : <span className="text-muted-foreground italic text-sm">নেই</span>}
+                            <span className="font-mono text-xs">{d.phone}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="font-bold flex items-center gap-1">
+                            <span className="font-bold flex items-center gap-1 text-xs">
                               <MapPin className="h-3 w-3 text-primary" /> {d.district}
                             </span>
-                            <span className="text-xs text-muted-foreground ml-4">{d.area || 'N/A'}</span>
+                            <span className="text-[10px] text-muted-foreground ml-4">{d.area || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="secondary" className="w-fit text-[10px] font-bold">Donations: {d.totalDonations}</Badge>
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1"><Calendar className="h-2 w-2" /> Last: {d.lastDonationDate || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            {d.organization && <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold border border-blue-100">{d.organization}</span>}
+                            {d.password && <span className="text-[10px] flex items-center gap-1 text-amber-600"><Key className="h-2 w-2" /> Has Pass</span>}
                           </div>
                         </td>
                       </tr>
