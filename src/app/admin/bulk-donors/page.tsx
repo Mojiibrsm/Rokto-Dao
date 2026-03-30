@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { bulkRegisterDonors, getDonors } from '@/lib/sheets';
 import { parseDonorData } from '@/ai/flows/donor-data-parser-flow';
@@ -9,25 +9,72 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database, MapPin, Building2, Mail, Calendar, Key } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, CheckCircle2, AlertTriangle, Info, Sparkles, Wand2, ShieldCheck, Database, MapPin, Building2, Mail, Calendar, Key, FileUp, FileSpreadsheet, FileText, X } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import * as XLSX from 'xlsx';
 
 export default function BulkDonorsPage() {
   const [inputText, setInputText] = useState('');
   const [globalOrg, setGlobalOrg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isReadingFile, setIsReadingFile] = useState(false);
   const [preview, setPreview] = useState<any[]>([]);
   const [duplicatesCount, setDuplicatesCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const router = useRouter();
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsReadingFile(true);
+    const reader = new FileReader();
+
+    try {
+      if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+        reader.onload = (evt) => {
+          const bstr = evt.target?.result;
+          const wb = XLSX.read(bstr, { type: 'binary' });
+          const wsname = wb.SheetNames[0];
+          const ws = wb.Sheets[wsname];
+          const data = XLSX.utils.sheet_to_txt(ws);
+          setInputText(data);
+          setIsReadingFile(false);
+          toast({ title: "ফাইল রিড সম্পন্ন", description: "এখন 'Extract Data with AI' বাটনে ক্লিক করুন।" });
+        };
+        reader.readAsBinaryString(file);
+      } else if (file.name.endsWith('.pdf')) {
+        // PDF client-side text extraction is complex without heavy libraries
+        // We inform the user to copy-paste or convert to Excel for better results
+        toast({ 
+          variant: "destructive", 
+          title: "PDF সরাসরি সাপোর্ট করছে না", 
+          description: "অনুগ্রহ করে PDF থেকে ডাটা কপি করে নিচে পেস্ট করুন অথবা Excel ব্যবহার করুন।" 
+        });
+        setIsReadingFile(false);
+      } else {
+        reader.onload = (evt) => {
+          const text = evt.target?.result as string;
+          setInputText(text);
+          setIsReadingFile(false);
+        };
+        reader.readAsText(file);
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ variant: "destructive", title: "ফাইল রিডে ত্রুটি", description: "ফাইলটি পড়া সম্ভব হয়নি।" });
+      setIsReadingFile(false);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (inputText.trim() === '') {
-      toast({ variant: "destructive", title: "তথ্য পাওয়া যায়নি", description: "অনুগ্রহ করে রক্তদাতার তথ্য ইনপুট দিন।" });
+      toast({ variant: "destructive", title: "তথ্য পাওয়া যায়নি", description: "অনুগ্রহ করে রক্তদাতার তথ্য পেস্ট করুন বা ফাইল আপলোড করুন।" });
       return;
     }
 
@@ -51,7 +98,6 @@ export default function BulkDonorsPage() {
       let dupes = 0;
 
       parsedDonors.forEach(newDonor => {
-        // Safe conversion to string and cleanup
         const cleanNewPhone = String(newDonor.phone || '').replace(/\D/g, '');
         const newNameLower = String(newDonor.fullName || '').toLowerCase().trim();
         
@@ -69,7 +115,6 @@ export default function BulkDonorsPage() {
         if (isDuplicate) {
           dupes++;
         } else {
-          // Apply global organization if provided, otherwise keep parsed one
           uniqueNewData.push({
             ...newDonor,
             organization: globalOrg.trim() || newDonor.organization || ''
@@ -131,40 +176,63 @@ export default function BulkDonorsPage() {
               <div>
                 <CardTitle className="text-3xl">Excel/Text Data Parser</CardTitle>
                 <CardDescription className="text-lg">
-                  Excel থেকে রো কপি করে এখানে পেস্ট করুন। AI সব তথ্য (ইমেইল, তারিখ, সংখ্যা) সাজিয়ে নেবে।
+                  Excel ফাইল আপলোড করুন অথবা রো কপি করে এখানে পেস্ট করুন। AI সব তথ্য সাজিয়ে নেবে।
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-8 px-10 space-y-8">
-            <Alert className="bg-blue-50 border-blue-200 rounded-2xl">
-              <Info className="h-5 w-5 text-blue-600" />
-              <AlertTitle className="text-blue-800 font-bold mb-1">এক্সেল ফরম্যাট সাপোর্ট!</AlertTitle>
-              <AlertDescription className="text-blue-700">
-                কলামগুলোর নাম যাই হোক, AI সেগুলোকে ইমেইল, ফোন, তারিখ এবং মোট রক্তদান সংখ্যা অনুযায়ী আলাদা করতে পারে।
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-3 p-6 bg-primary/5 rounded-3xl border border-primary/10">
-              <div className="flex items-center gap-2 mb-1">
-                <Building2 className="h-5 w-5 text-primary" />
-                <Label htmlFor="globalOrg" className="text-lg font-bold">সংগঠন বা টিমের নাম (ঐচ্ছিক)</Label>
+            {/* File Upload Zone */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div 
+                className="border-4 border-dashed border-primary/20 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 hover:bg-primary/5 transition-colors cursor-pointer group"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept=".xlsx,.xls,.csv,.txt"
+                  onChange={handleFileUpload} 
+                />
+                <div className="h-16 w-16 rounded-2xl bg-white shadow-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <FileSpreadsheet className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg">Excel/CSV ফাইল আপলোড</p>
+                  <p className="text-xs text-muted-foreground">ড্র্যাগ করুন অথবা এখানে ক্লিক করুন</p>
+                </div>
+                {isReadingFile && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
               </div>
-              <Input 
-                id="globalOrg"
-                placeholder="যেমন: Sandhani / Red Crescent (সবাই এই টিমে যুক্ত হবে)" 
-                className="h-14 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg"
-                value={globalOrg}
-                onChange={e => setGlobalOrg(e.target.value)}
-              />
+
+              <div className="space-y-3 p-6 bg-primary/5 rounded-3xl border border-primary/10 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-1">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  <Label htmlFor="globalOrg" className="text-lg font-bold">সংগঠন বা টিমের নাম (ঐচ্ছিক)</Label>
+                </div>
+                <Input 
+                  id="globalOrg"
+                  placeholder="যেমন: Sandhani / Red Crescent" 
+                  className="h-14 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg"
+                  value={globalOrg}
+                  onChange={e => setGlobalOrg(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="bulkData" className="text-lg font-bold">Excel বা অগোছালো ডাটা পেস্ট করুন</Label>
+            <div className="space-y-3 relative">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bulkData" className="text-lg font-bold">টেক্সট ডাটা বা কপি-পেস্ট</Label>
+                {inputText && (
+                  <Button variant="ghost" size="sm" onClick={() => setInputText('')} className="text-red-500 hover:text-red-600 font-bold">
+                    <X className="h-4 w-4 mr-1" /> পরিষ্কার করুন
+                  </Button>
+                )}
+              </div>
               <Textarea 
                 id="bulkData" 
-                placeholder="যেমন: Faisal	mojib@mail.com	01815...	B+	2024-01-01	Coxbazar..." 
-                className="min-h-[350px] font-mono text-sm rounded-3xl bg-muted/20 focus:bg-white transition-all p-6 border-2 focus:border-primary"
+                placeholder="Excel থেকে রো কপি করে এখানে পেস্ট করুন..." 
+                className="min-h-[300px] font-mono text-sm rounded-3xl bg-muted/20 focus:bg-white transition-all p-6 border-2 focus:border-primary"
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
               />
@@ -172,7 +240,7 @@ export default function BulkDonorsPage() {
 
             <Button 
               onClick={handleAnalyze} 
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isReadingFile}
               className="w-full h-16 bg-primary hover:bg-primary/90 rounded-2xl font-bold text-xl gap-3 shadow-xl shadow-primary/10 transition-all active:scale-95"
             >
               {isAnalyzing ? (
