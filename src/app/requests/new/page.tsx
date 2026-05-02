@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import dynamic from 'next/dynamic';
-import { Droplet, ArrowLeft, ArrowRight, Loader2, Hospital, WifiOff, CloudUpload, RefreshCw, AlertCircle, MapPin, Navigation, Sparkles } from 'lucide-react';
+import { Droplet, ArrowLeft, ArrowRight, Loader2, Hospital, WifiOff, CloudUpload, AlertCircle, MapPin, Navigation, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -42,7 +42,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Haversine distance
 function getDist(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -121,7 +120,6 @@ export default function NewRequestPage() {
         setUpazilas(data);
         setLoadingLocations(prev => ({ ...prev, upazilas: false }));
         
-        // Initial hospital suggestions based on district
         const inDistrict = HOSPITALS.filter(h => h.district === selectedDistrict);
         setSuggestedHospitals(inDistrict);
       } else {
@@ -135,7 +133,6 @@ export default function NewRequestPage() {
 
   const handleLocationPicked = (lat: number, lng: number) => {
     setCoords({ lat, lng });
-    // Suggest nearest 5 hospitals based on lat/lng
     const withDistance = HOSPITALS.map(h => ({
       ...h,
       distance: getDist(lat, lng, h.lat, h.lng)
@@ -158,14 +155,26 @@ export default function NewRequestPage() {
     }
   };
 
-  const saveOffline = (values: FormValues) => {
-    localStorage.setItem('roktodao_offline_request', JSON.stringify(values));
-    setHasOfflineData(true);
-    toast({
-      title: "অফলাইনে সেভ হয়েছে",
-      description: "ইন্টারনেট না থাকায় আপনার তথ্যটি ফোনে সেভ করা হলো। অনলাইন হলে এটি অটো-সিঙ্ক হবে।",
-    });
-  };
+  async function onSubmit(values: FormValues) {
+    if (!navigator.onLine) {
+      localStorage.setItem('roktodao_offline_request', JSON.stringify(values));
+      setHasOfflineData(true);
+      toast({ title: "অফলাইনে সেভ হয়েছে" });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const result = await createBloodRequest(values as any);
+      if (result && (result.success || result.id)) {
+        toast({ title: "অনুরোধ সফলভাবে জমা হয়েছে!" });
+        router.push('/requests');
+      }
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   const handleSync = async () => {
     const saved = localStorage.getItem('roktodao_offline_request');
@@ -177,36 +186,15 @@ export default function NewRequestPage() {
       if (result && result.success) {
         localStorage.removeItem('roktodao_offline_request');
         setHasOfflineData(false);
-        toast({ title: "সিঙ্ক সফল!", description: "অফলাইনে সেভ করা অনুরোধটি লাইভ করা হয়েছে।" });
+        toast({ title: "সিঙ্ক সফল!" });
         router.push('/requests');
       }
     } catch (e) {
-      toast({ variant: "destructive", title: "সিঙ্ক ব্যর্থ", description: "আবার চেষ্টা করুন।" });
+      console.error(e);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  async function onSubmit(values: FormValues) {
-    if (!navigator.onLine) {
-      saveOffline(values);
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      const result = await createBloodRequest(values as any);
-      if (result && (result.success || result.id)) {
-        toast({ title: "অনুরোধ সফলভাবে জমা হয়েছে!", description: "আপনার অনুরোধটি এখন লাইভ দেখা যাচ্ছে।" });
-        router.push('/requests');
-      } else {
-        saveOffline(values);
-      }
-    } catch (error: any) {
-      saveOffline(values);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
 
   return (
     <div className="container mx-auto px-4 py-12 flex flex-col items-center">
@@ -249,7 +237,6 @@ export default function NewRequestPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
               
-              {/* Map Selection Section */}
               <div className="space-y-6">
                  <div className="flex items-center justify-between">
                     <FormLabel className="text-lg font-black flex items-center gap-2">
@@ -309,7 +296,6 @@ export default function NewRequestPage() {
                         </div>
                       </FormControl>
                       
-                      {/* Auto Suggestions UI */}
                       {suggestedHospitals.length > 0 && (
                         <div className="mt-3 p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 animate-in fade-in slide-in-from-top-2">
                            <p className="text-[10px] font-black uppercase text-primary mb-3 flex items-center gap-2">
@@ -320,10 +306,10 @@ export default function NewRequestPage() {
                                 <Button 
                                   key={i} 
                                   type="button" 
-                                  variant="secondary" 
+                                  variant="outline" 
                                   size="sm"
                                   onClick={() => form.setValue('hospitalName', h.name)}
-                                  className="text-[11px] font-bold h-7 rounded-full bg-white border hover:bg-primary hover:text-white transition-all"
+                                  className="text-[11px] font-bold h-7 rounded-full bg-white border-primary/20 text-slate-800 hover:bg-primary hover:text-white transition-all shadow-sm px-4"
                                 >
                                   {h.name}
                                 </Button>

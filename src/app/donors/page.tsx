@@ -11,12 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed, MessageSquare, Lock, LogIn, Trophy } from 'lucide-react';
+import { MapPin, Phone, Search, Loader2, ExternalLink, Map as MapIcon, Grid, Navigation, MessageSquare, Lock, LogIn, Trophy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { DISTRICT_COORDS } from '@/lib/coordinates';
 import { useToast } from '@/hooks/use-toast';
 import { normalizePhone } from '@/lib/utils';
+import { PresenceBadge } from '@/components/presence-badge';
 
 const DonorMap = dynamic(() => import('@/components/donor-map'), { 
   ssr: false,
@@ -26,16 +27,14 @@ const DonorMap = dynamic(() => import('@/components/donor-map'), {
 const CACHE_KEY = 'roktodao_donors_cache';
 const CACHE_TIME_KEY = 'roktodao_donors_last_sync';
 
-// WhatsApp Icon SVG
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.353-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.506-.173-.005-.371-.007-.57-.007-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.216 1.36.186 1.871.11.57-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.87 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
 );
 
-// Haversine distance formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371; // km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -51,7 +50,6 @@ function DonorsContent() {
   const [loading, setLoading] = useState(true);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [upazilas, setUpazilas] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const searchParams = useSearchParams();
@@ -80,14 +78,6 @@ function DonorsContent() {
       }));
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    if (filters.district !== 'যেকোনো জেলা' && BANGLADESH_DATA[filters.district]) {
-      setUpazilas(Object.keys(BANGLADESH_DATA[filters.district]));
-    } else {
-      setUpazilas([]);
-    }
-  }, [filters.district]);
 
   const loadDonorsData = async () => {
     setLoading(true);
@@ -119,7 +109,6 @@ function DonorsContent() {
     let filtered = data;
     if (filters.bloodType !== 'যেকোনো গ্রুপ') filtered = filtered.filter(d => d.bloodType === filters.bloodType);
     if (filters.district !== 'যেকোনো জেলা') filtered = filtered.filter(d => d.district?.toLowerCase() === filters.district?.toLowerCase());
-    if (filters.area !== 'যেকোনো উপজেলা') filtered = filtered.filter(d => d.area?.toLowerCase() === filters.area?.toLowerCase());
     
     if (filters.radius > 0 && userLocation) {
       filtered = filtered.filter(d => {
@@ -130,9 +119,11 @@ function DonorsContent() {
         return dist <= filters.radius;
       });
     }
-
     setDonors(filtered);
   };
+
+  useEffect(() => { loadDonorsData(); }, []);
+  useEffect(() => { if (allDonors.length > 0) applyFilters(allDonors); }, [filters, allDonors, userLocation]);
 
   const handleDetectLocation = () => {
     setDetectingLocation(true);
@@ -142,28 +133,15 @@ function DonorsContent() {
           const { latitude, longitude } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
           setDetectingLocation(false);
-          toast({ title: "লোকেশন শনাক্ত হয়েছে!", description: "এখন আপনার আশেপাশে রক্তদাতা খুঁজতে পারবেন।" });
+          toast({ title: "লোকেশন শনাক্ত হয়েছে!" });
           if (filters.radius === 0) setFilters(f => ({ ...f, radius: 10 }));
         },
-        (error) => {
-          setDetectingLocation(false);
-          toast({ variant: "destructive", title: "ব্যর্থ হয়েছে", description: "অনুগ্রহ করে লোকেশন পারমিশন দিন।" });
-        }
+        () => setDetectingLocation(false)
       );
-    } else {
-      setDetectingLocation(false);
-      toast({ variant: "destructive", title: "সাপোর্ট নেই", description: "আপনার ব্রাউজারে লোকেশন সার্ভিস কাজ করছে না।" });
     }
   };
 
-  useEffect(() => { loadDonorsData(); }, []);
-  useEffect(() => { if (allDonors.length > 0) applyFilters(allDonors); }, [filters, allDonors, userLocation]);
-
-  const isSearching = filters.bloodType !== 'যেকোনো গ্রুপ' || 
-                      filters.district !== 'যেকোনো জেলা' || 
-                      filters.area !== 'যেকোনো উপজেলা' || 
-                      filters.radius > 0;
-  
+  const isSearching = filters.bloodType !== 'যেকোনো গ্রুপ' || filters.district !== 'যেকোনো জেলা' || filters.radius > 0;
   const visibleLimit = isSearching ? 5 : 10;
   const visibleDonors = isLoggedIn ? donors : donors.slice(0, visibleLimit);
 
@@ -179,22 +157,8 @@ function DonorsContent() {
              <Link href="/leaderboard"><Trophy className="mr-2 h-4 w-4" /> লিডারবোর্ড</Link>
            </Button>
            <div className="flex bg-muted p-1 rounded-xl shrink-0">
-            <Button 
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('grid')}
-              className="rounded-lg font-bold gap-2"
-            >
-              <Grid className="h-4 w-4" /> লিস্ট
-            </Button>
-            <Button 
-              variant={viewMode === 'map' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('map')}
-              className="rounded-lg font-bold gap-2"
-            >
-              <MapIcon className="h-4 w-4" /> ম্যাপ
-            </Button>
+            <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="rounded-lg font-bold gap-2"><Grid className="h-4 w-4" /> লিস্ট</Button>
+            <Button variant={viewMode === 'map' ? 'secondary' : 'ghost'} size="sm" onClick={() => setViewMode('map')} className="rounded-lg font-bold gap-2"><MapIcon className="h-4 w-4" /> ম্যাপ</Button>
           </div>
         </div>
       </div>
@@ -225,56 +189,29 @@ function DonorsContent() {
           <div className="md:col-span-2 space-y-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
             <div className="flex items-center justify-between">
                <label className="text-xs font-black text-primary uppercase tracking-widest">আশেপাশে খুঁজুন (Radius)</label>
-               <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleDetectLocation} 
-                disabled={detectingLocation}
-                className={`h-8 px-3 rounded-full text-[10px] font-black uppercase ${userLocation ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'}`}
-               >
+               <Button variant="ghost" size="sm" onClick={handleDetectLocation} disabled={detectingLocation} className={`h-8 px-3 rounded-full text-[10px] font-black uppercase ${userLocation ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'}`}>
                  {detectingLocation ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
                  {userLocation ? 'Detected' : 'Detect My Location'}
                </Button>
             </div>
-            
             <div className="flex items-center gap-6">
-              <Slider 
-                value={[filters.radius]} 
-                onValueChange={(val) => setFilters(f => ({ ...f, radius: val[0] }))}
-                max={50}
-                step={5}
-                disabled={!userLocation}
-                className="flex-1"
-              />
-              <div className="w-16 text-center font-black text-primary">
-                {filters.radius === 0 ? 'Off' : `${filters.radius} KM`}
-              </div>
+              <Slider value={[filters.radius]} onValueChange={(val) => setFilters(f => ({ ...f, radius: val[0] }))} max={50} step={5} disabled={!userLocation} className="flex-1" />
+              <div className="w-16 text-center font-black text-primary">{filters.radius === 0 ? 'Off' : `${filters.radius} KM`}</div>
             </div>
           </div>
-        </div>
-
-        <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-t pt-6">
-           <p className="text-sm font-bold text-muted-foreground italic">
-             {donors.length} জন রক্তদাতা পাওয়া গেছে।
-           </p>
-           <Button onClick={loadDonorsData} className="h-12 bg-primary hover:bg-primary/90 text-lg font-bold gap-3 rounded-xl px-10">
-             <Search className="h-5 w-5" /> অনুসন্ধান রিফ্রেশ
-           </Button>
         </div>
       </Card>
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
       ) : viewMode === 'map' ? (
-        <div className="animate-in fade-in duration-500">
-           <DonorMap donors={donors} />
-        </div>
+        <div className="animate-in fade-in duration-500"><DonorMap donors={donors} /></div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-in slide-in-from-bottom-4 duration-500">
           {visibleDonors.map((donor, idx) => {
             const cleanPhone = normalizePhone(donor.phone);
-            const waLink = `https://wa.me/880${cleanPhone}?text=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
-            const smsLink = `sms:+880${cleanPhone}?body=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
+            const waLink = `https://wa.me/880${cleanPhone}?text=আসসালামু আলাইকুম...`;
+            const smsLink = `sms:+880${cleanPhone}?body=আসসালামু আলাইকুম...`;
             const badge = getDonorBadge(donor.totalDonations || 0);
 
             return (
@@ -287,14 +224,10 @@ function DonorsContent() {
                       </div>
                       <div className="space-y-0.5">
                         <CardTitle className="text-lg group-hover/link:text-primary transition-colors line-clamp-1">{donor.fullName}</CardTitle>
+                        <PresenceBadge phone={donor.phone} />
                         <CardDescription className="flex items-center gap-1 text-[11px] font-bold">
-                          <MapPin className="h-3 w-3 text-primary" /> {donor.area || 'N/A'}, {donor.district}
+                          <MapPin className="h-3 w-3 text-primary" /> {donor.district}
                         </CardDescription>
-                        {badge && (
-                          <Badge className={`${badge.bgColor} ${badge.color} border-none font-black text-[8px] uppercase tracking-tighter h-4 px-2`}>
-                            {badge.icon} {badge.label}
-                          </Badge>
-                        )}
                       </div>
                     </Link>
                     <Badge className="bg-primary text-white text-lg font-black h-10 w-10 flex items-center justify-center p-0 rounded-xl shadow-md border-2 border-white">{donor.bloodType}</Badge>
@@ -303,35 +236,17 @@ function DonorsContent() {
                 <CardContent className="pt-4 space-y-4 flex-grow px-6">
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
-                      <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">শেষ রক্তদান</p>
-                      <p className="font-bold text-foreground truncate">{donor.lastDonationDate || 'N/A'}</p>
-                    </div>
-                    <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
                       <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">মোট রক্তদান</p>
                       <p className="font-black text-foreground">{donor.totalDonations || 0} বার</p>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-center gap-4 pt-2">
-                    <Button size="icon" variant="outline" className="h-10 w-10 rounded-full bg-green-50 border-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm" asChild>
-                      <a href={waLink} target="_blank" rel="noopener noreferrer">
-                        <WhatsAppIcon className="h-5 w-5" />
-                      </a>
-                    </Button>
-                    <Button size="icon" variant="outline" className="h-10 w-10 rounded-full bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm" asChild>
-                      <a href={smsLink}>
-                        <MessageSquare className="h-5 w-5" />
-                      </a>
-                    </Button>
+                    <div className="p-2.5 bg-muted/30 rounded-xl border flex items-center justify-center">
+                       {badge && <Badge className={`${badge.bgColor} ${badge.color} border-none font-black text-[8px] uppercase tracking-tighter h-5 px-2`}>{badge.icon} {badge.label}</Badge>}
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter className="p-0 border-t flex">
-                  <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
-                    <a href={`tel:${donor.phone}`}><Phone className="h-5 w-5" /> কল করুন</a>
-                  </Button>
-                  <Button variant="ghost" className="flex-1 h-14 rounded-none text-primary font-bold gap-2" asChild>
-                    <Link href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-4 w-4" /></Link>
-                  </Button>
+                  <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild><a href={`tel:${donor.phone}`}><Phone className="h-5 w-5" /> কল করুন</a></Button>
+                  <Button variant="ghost" className="flex-1 h-14 rounded-none text-primary font-bold gap-2" asChild><Link href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-4 w-4" /></Link></Button>
                 </CardFooter>
               </Card>
             );
@@ -339,19 +254,11 @@ function DonorsContent() {
 
           {!isLoggedIn && donors.length > visibleLimit && (
             <Card className="overflow-hidden border-2 border-dashed border-primary/30 rounded-[2rem] bg-accent/20 flex flex-col items-center justify-center p-10 text-center space-y-6 relative min-h-[300px]">
-               <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] z-0"></div>
                <div className="relative z-10 space-y-4">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
-                    <Lock className="h-10 w-10 text-primary" />
-                  </div>
+                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20"><Lock className="h-10 w-10 text-primary" /></div>
                   <h3 className="text-2xl font-black font-headline">আরও {donors.length - visibleLimit} জন দাতা আছেন!</h3>
-                  <p className="text-muted-foreground font-bold leading-relaxed max-w-xs mx-auto">
-                    সব রক্তদাতার তথ্য এবং সরাসরি যোগাযোগের সুবিধা পেতে আপনাকে লগইন করতে হবে।
-                  </p>
                   <div className="flex flex-col gap-3 pt-2">
-                    <Button asChild className="rounded-full h-12 px-10 bg-primary font-black shadow-xl shadow-primary/20">
-                       <Link href="/login"><LogIn className="mr-2 h-5 w-5" /> লগইন করুন</Link>
-                    </Button>
+                    <Button asChild className="rounded-full h-12 px-10 bg-primary font-black shadow-xl shadow-primary/20"><Link href="/login"><LogIn className="mr-2 h-5 w-5" /> লগইন করুন</Link></Button>
                     <Link href="/register" className="text-sm font-black text-primary hover:underline">এখনও একাউন্ট নেই? নিবন্ধন করুন</Link>
                   </div>
                </div>
