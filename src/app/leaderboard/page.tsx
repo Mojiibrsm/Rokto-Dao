@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getDonors, type Donor } from '@/lib/sheets';
-import { getDonorBadge } from '@/lib/gamification';
+import { getDonorBadge, DONOR_BADGES } from '@/lib/gamification';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,7 +54,7 @@ export default function LeaderboardPage() {
         </div>
       ) : (
         <div className="grid gap-6">
-          {/* Top 3 Podiums (Optional UI Enhancement) */}
+          {/* Top 3 Podiums */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             {donors.slice(0, 3).map((donor, i) => {
               const badge = getDonorBadge(donor.totalDonations || 0);
