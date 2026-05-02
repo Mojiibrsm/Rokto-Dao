@@ -6,32 +6,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplet, Loader2, ArrowRight, Phone, Mail, KeyRound, AlertCircle, ShieldCheck, HelpCircle, User, MapPin, MessageSquare, Facebook, Globe, CheckCircle2, Send } from 'lucide-react';
+import { Droplet, Loader2, ArrowRight, Phone, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { getDonors, logActivity, setDonorPassword, sendPasswordResetOtp } from '@/lib/sheets';
+import { getDonors, logActivity } from '@/lib/sheets';
 import { normalizePhone } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DISTRICTS } from '@/lib/bangladesh-data';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState(''); 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loginStep, setStep] = useState(1); // 1: Identifier, 2: Password, 3: Reset Selection, 4: Security Questions, 5: New Pass, 6: OTP Verify
+  const [step, setStep] = useState(1); // 1: Identifier, 2: Password
   const [foundUser, setFoundUser] = useState<any>(null);
-  
-  // OTP States
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [userOtpInput, setUserOtpInput] = useState('');
-
-  // Security Question States
-  const [resetData, setResetData] = useState({
-    fullName: '',
-    bloodType: '',
-    district: '',
-    newPass: ''
-  });
 
   const router = useRouter();
   const { toast } = useToast();
@@ -86,80 +72,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleSendOtp = async () => {
-    if (!foundUser) return;
-    setLoading(true);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(otp);
-    
-    try {
-      const res = await sendPasswordResetOtp(foundUser.phone, otp);
-      if (res && res.status === 'success') {
-        toast({ title: "OTP পাঠানো হয়েছে!", description: "আপনার ফোনে আসা ৬ সংখ্যার কোডটি এখানে দিন।" });
-        setStep(6);
-      } else {
-        toast({ variant: "destructive", title: "OTP পাঠানো যায়নি", description: "SMS সার্ভারে সমস্যা হচ্ছে। বিকল্প পদ্ধতি চেষ্টা করুন।" });
-      }
-    } catch (e) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "SMS পাঠাতে সমস্যা হয়েছে।" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (userOtpInput === generatedOtp) {
-      setStep(5); // Go to set new password
-      toast({ title: "যাচাই সফল!", description: "এখন আপনার নতুন পাসওয়ার্ড সেট করুন।" });
-    } else {
-      toast({ variant: "destructive", title: "ভুল কোড", description: "সঠিক OTP কোড দিন।" });
-    }
-  };
-
-  const handleSecurityCheck = (e: React.FormEvent) => {
-    e.preventDefault();
-    let correctCount = 0;
-    
-    if (resetData.fullName.toLowerCase().trim() === foundUser.fullName.toLowerCase().trim()) correctCount++;
-    if (resetData.bloodType === foundUser.bloodType) correctCount++;
-    if (resetData.district === foundUser.district) correctCount++;
-
-    if (correctCount >= 2) {
-      setStep(5); // Go to set new password
-    } else {
-      toast({
-        variant: "destructive",
-        title: "তথ্য মেলেনি",
-        description: "কমপক্ষে ২টি তথ্য সঠিক হতে হবে। আবার চেষ্টা করুন।"
-      });
-    }
-  };
-
-  const handleNewPassSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (resetData.newPass.length < 6) {
-      toast({ variant: "destructive", title: "দুর্বল পাসওয়ার্ড", description: "কমপক্ষে ৬ সংখ্যার পাসওয়ার্ড দিন।" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await setDonorPassword(foundUser.email, foundUser.phone, resetData.newPass);
-      if (res.success) {
-        toast({ title: "সফল!", description: "পাসওয়ার্ড রিসেট হয়েছে। এখন নতুন পাসওয়ার্ড দিয়ে লগইন করুন।" });
-        setStep(1);
-        setIdentifier(foundUser.phone);
-        setPassword('');
-        setUserOtpInput('');
-        setGeneratedOtp('');
-      }
-    } catch (e) {
-      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const completeLogin = (user: any) => {
     localStorage.setItem('roktodao_user', JSON.stringify({
       email: user.email,
@@ -191,17 +103,14 @@ export default function LoginPage() {
           <div className="mx-auto h-20 w-20 rounded-3xl bg-primary flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
             <Droplet className="h-10 w-10 text-white fill-white" />
           </div>
-          <CardTitle className="text-3xl font-black font-headline">
-            {loginStep === 1 || loginStep === 2 ? "প্রবেশ করুন" : "পাসওয়ার্ড রিসেট"}
-          </CardTitle>
+          <CardTitle className="text-3xl font-black font-headline">প্রবেশ করুন</CardTitle>
           <CardDescription className="text-base">
-            {loginStep < 3 ? "আপনার নিবন্ধিত অ্যাকাউন্ট দিয়ে ড্যাশবোর্ডে প্রবেশ করুন।" : "আপনার তথ্য যাচাই করে পাসওয়ার্ড পুনরুদ্ধার করুন।"}
+            আপনার নিবন্ধিত অ্যাকাউন্ট দিয়ে ড্যাশবোর্ডে প্রবেশ করুন।
           </CardDescription>
         </CardHeader>
         
         <CardContent className="pt-8 px-8">
-          {/* STEP 1: IDENTIFIER */}
-          {loginStep === 1 && (
+          {step === 1 ? (
             <form onSubmit={handleIdentifierSubmit} className="space-y-6">
               <div className="space-y-3">
                 <Label htmlFor="identifier" className="text-lg font-bold">ইমেইল বা ফোন নম্বর</Label>
@@ -225,10 +134,7 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-          )}
-
-          {/* STEP 2: PASSWORD */}
-          {loginStep === 2 && (
+          ) : (
             <form onSubmit={handlePasswordSubmit} className="space-y-6 animate-in slide-in-from-right-4 duration-300">
               <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-2xl border mb-2">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
@@ -245,7 +151,7 @@ export default function LoginPage() {
                   <Label htmlFor="pass" className="text-lg font-bold flex items-center gap-2">
                     <KeyRound className="h-5 w-5 text-primary" /> পাসওয়ার্ড দিন
                   </Label>
-                  <button type="button" onClick={() => setStep(3)} className="text-xs text-primary font-bold hover:underline">পাসওয়ার্ড ভুলে গেছেন?</button>
+                  <Link href="/forgot" className="text-xs text-primary font-bold hover:underline">পাসওয়ার্ড ভুলে গেছেন?</Link>
                 </div>
                 <Input 
                   id="pass" 
@@ -266,128 +172,6 @@ export default function LoginPage() {
                   আবার চেষ্টা করুন
                 </Button>
               </div>
-            </form>
-          )}
-
-          {/* STEP 3: RESET OPTIONS */}
-          {loginStep === 3 && (
-            <div className="space-y-4 animate-in fade-in duration-300">
-              <p className="text-center font-bold text-muted-foreground mb-4">পাসওয়ার্ড রিসেট করার উপায় বেছে নিন:</p>
-              
-              <Button onClick={handleSendOtp} disabled={loading} variant="outline" className="w-full h-16 rounded-2xl border-2 border-primary/20 hover:bg-primary/5 text-lg font-bold gap-3">
-                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6 text-primary" />}
-                OTP এর মাধ্যমে (SMS)
-              </Button>
-
-              <Button onClick={() => setStep(4)} variant="outline" className="w-full h-16 rounded-2xl border-2 hover:bg-primary/5 text-lg font-bold gap-3">
-                <HelpCircle className="h-6 w-6 text-primary" /> সিকিউরিটি প্রশ্নের মাধ্যমে
-              </Button>
-
-              <div className="p-6 rounded-3xl bg-muted/30 border-2 border-dashed space-y-4 mt-4">
-                <p className="text-sm font-bold text-center">অথবা অ্যাডমিনের সাথে যোগাযোগ করুন:</p>
-                <div className="grid grid-cols-2 gap-3">
-                   <Button variant="outline" className="rounded-xl h-12 bg-white border-green-200 text-green-600 font-bold gap-2" asChild>
-                     <a href="https://wa.me/8801601519007" target="_blank" rel="noopener noreferrer"><MessageSquare className="h-4 w-4" /> WhatsApp</a>
-                   </Button>
-                   <Button variant="outline" className="rounded-xl h-12 bg-white border-blue-200 text-blue-600 font-bold gap-2" asChild>
-                     <a href="https://www.facebook.com/MoJiiB.RsM" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4" /> Facebook</a>
-                   </Button>
-                </div>
-              </div>
-              <Button variant="ghost" onClick={() => setStep(2)} className="w-full">ফিরে যান</Button>
-            </div>
-          )}
-
-          {/* STEP 4: SECURITY QUESTIONS */}
-          {loginStep === 4 && (
-            <form onSubmit={handleSecurityCheck} className="space-y-5 animate-in slide-in-from-bottom-4 duration-300">
-              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 text-xs font-bold text-primary flex gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0" /> নিচের ৩টি তথ্যের মধ্যে যেকোনো ২টি সঠিক হলে আপনি পাসওয়ার্ড রিসেট করতে পারবেন।
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><User className="h-4 w-4" /> আপনার পুরো নাম</Label>
-                <Input placeholder="নিবন্ধনকৃত নাম" value={resetData.fullName} onChange={e => setResetData({...resetData, fullName: e.target.value})} required />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Droplet className="h-4 w-4" /> রক্তের গ্রুপ</Label>
-                <Select value={resetData.bloodType} onValueChange={v => setResetData({...resetData, bloodType: v})}>
-                  <SelectTrigger><SelectValue placeholder="গ্রুপ নির্বাচন করুন" /></SelectTrigger>
-                  <SelectContent>{['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2"><MapPin className="h-4 w-4" /> আপনার জেলা</Label>
-                <Select value={resetData.district} onValueChange={v => setResetData({...resetData, district: v})}>
-                  <SelectTrigger><SelectValue placeholder="জেলা নির্বাচন করুন" /></SelectTrigger>
-                  <SelectContent>{DISTRICTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-
-              <Button type="submit" className="w-full h-14 bg-primary text-xl font-bold rounded-2xl shadow-xl">তথ্য যাচাই করুন</Button>
-              <Button variant="ghost" onClick={() => setStep(3)} className="w-full">বিকল্প পদ্ধতি</Button>
-            </form>
-          )}
-
-          {/* STEP 6: OTP VERIFY */}
-          {loginStep === 6 && (
-            <form onSubmit={handleVerifyOtp} className="space-y-6 animate-in zoom-in-95 duration-300">
-               <div className="text-center py-4">
-                  <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Send className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-xl font-bold">OTP যাচাই করুন</h3>
-                  <p className="text-sm text-muted-foreground">আপনার <strong>{foundUser?.phone}</strong> নম্বরে পাঠানো কোডটি লিখুন।</p>
-               </div>
-
-               <div className="space-y-3">
-                 <Label className="font-bold text-center block">৬ সংখ্যার কোড</Label>
-                 <Input 
-                   placeholder="XXXXXX" 
-                   className="h-16 rounded-xl border-2 focus:border-primary text-center text-3xl font-black tracking-[0.5em]"
-                   value={userOtpInput}
-                   onChange={e => setUserOtpInput(e.target.value.replace(/\D/g, '').substring(0, 6))}
-                   required
-                   autoFocus
-                 />
-               </div>
-               
-               <div className="flex flex-col gap-3">
-                  <Button type="submit" className="w-full h-14 bg-primary text-xl font-bold rounded-2xl shadow-xl">কোড যাচাই করুন</Button>
-                  <Button variant="ghost" type="button" onClick={() => setStep(3)} className="text-muted-foreground">আবার চেষ্টা করুন</Button>
-               </div>
-            </form>
-          )}
-
-          {/* STEP 5: NEW PASSWORD */}
-          {loginStep === 5 && (
-            <form onSubmit={handleNewPassSubmit} className="space-y-6 animate-in zoom-in-95 duration-300">
-               <div className="text-center py-4">
-                  <div className="h-16 w-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle2 className="h-10 w-10" />
-                  </div>
-                  <h3 className="text-xl font-bold">তথ্য সঠিক হয়েছে!</h3>
-                  <p className="text-sm text-muted-foreground">এখন আপনার নতুন পাসওয়ার্ড সেট করুন।</p>
-               </div>
-
-               <div className="space-y-3">
-                 <Label className="font-bold">নতুন পাসওয়ার্ড</Label>
-                 <Input 
-                   type="password" 
-                   placeholder="কমপক্ষে ৬ সংখ্যা..." 
-                   className="h-14 rounded-xl border-2 focus:border-primary text-center text-lg"
-                   value={resetData.newPass}
-                   onChange={e => setResetData({...resetData, newPass: e.target.value})}
-                   required
-                   autoFocus
-                 />
-               </div>
-               
-               <Button type="submit" className="w-full h-14 bg-primary text-xl font-bold rounded-2xl shadow-xl" disabled={loading}>
-                 {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "পাসওয়ার্ড সেভ করুন"}
-               </Button>
             </form>
           )}
         </CardContent>
