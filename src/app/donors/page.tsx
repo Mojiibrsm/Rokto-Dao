@@ -10,11 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { DISTRICT_COORDS } from '@/lib/coordinates';
 import { useToast } from '@/hooks/use-toast';
+import { normalizePhone } from '@/lib/utils';
 
 const DonorMap = dynamic(() => import('@/components/donor-map'), { 
   ssr: false,
@@ -23,6 +24,13 @@ const DonorMap = dynamic(() => import('@/components/donor-map'), {
 
 const CACHE_KEY = 'roktodao_donors_cache';
 const CACHE_TIME_KEY = 'roktodao_donors_last_sync';
+
+// WhatsApp Icon SVG
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.353-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.506-.173-.005-.371-.007-.57-.007-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.216 1.36.186 1.871.11.57-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.87 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.87 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+);
 
 // Haversine distance formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -245,62 +253,82 @@ function DonorsContent() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-in slide-in-from-bottom-4 duration-500">
-          {donors.map((donor, idx) => (
-            <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20 flex flex-col bg-white">
-              <CardHeader className="bg-primary/5 pb-3">
-                <div className="flex justify-between items-start">
-                  <Link href={`/donors/${donor.phone}`} className="flex items-center gap-3 group/link">
-                    <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl overflow-hidden relative shrink-0 shadow-md">
-                      {donor.imageUrl ? <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover" /> : (donor.fullName || 'D').substring(0, 1)}
-                    </div>
-                    <div className="space-y-0.5">
-                      <CardTitle className="text-lg group-hover/link:text-primary transition-colors line-clamp-1">{donor.fullName}</CardTitle>
-                      <CardDescription className="flex items-center gap-1 text-[11px] font-bold">
-                        <MapPin className="h-3 w-3 text-primary" /> {donor.area || 'N/A'}, {donor.district}
-                      </CardDescription>
-                      {userLocation && (donor.lat || DISTRICT_COORDS[donor.district || '']) && (
-                        <p className="text-[10px] font-black text-primary flex items-center gap-1">
-                          <LocateFixed className="h-2.5 w-2.5" /> 
-                          {Math.round(calculateDistance(
-                            userLocation.lat, userLocation.lng, 
-                            donor.lat || DISTRICT_COORDS[donor.district || '']?.[0], 
-                            donor.lng || DISTRICT_COORDS[donor.district || '']?.[1]
-                          ))} KM দূরে
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                  <Badge className="bg-primary text-white text-lg font-black h-10 w-10 flex items-center justify-center p-0 rounded-xl shadow-md border-2 border-white">{donor.bloodType}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4 flex-grow px-6">
-                {donor.totalDonations && donor.totalDonations > 0 ? (
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
-                      <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">শেষ রক্তদান</p>
-                      <p className="font-bold text-foreground truncate">{donor.lastDonationDate || 'N/A'}</p>
-                    </div>
-                    <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
-                      <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">মোট রক্তদান</p>
-                      <p className="font-black text-foreground">{donor.totalDonations} বার</p>
-                    </div>
+          {donors.map((donor, idx) => {
+            const cleanPhone = normalizePhone(donor.phone);
+            const waLink = `https://wa.me/880${cleanPhone}?text=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
+            const smsLink = `sms:+880${cleanPhone}?body=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
+
+            return (
+              <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20 flex flex-col bg-white">
+                <CardHeader className="bg-primary/5 pb-3">
+                  <div className="flex justify-between items-start">
+                    <Link href={`/donors/${donor.phone}`} className="flex items-center gap-3 group/link">
+                      <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl overflow-hidden relative shrink-0 shadow-md">
+                        {donor.imageUrl ? <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover" /> : (donor.fullName || 'D').substring(0, 1)}
+                      </div>
+                      <div className="space-y-0.5">
+                        <CardTitle className="text-lg group-hover/link:text-primary transition-colors line-clamp-1">{donor.fullName}</CardTitle>
+                        <CardDescription className="flex items-center gap-1 text-[11px] font-bold">
+                          <MapPin className="h-3 w-3 text-primary" /> {donor.area || 'N/A'}, {donor.district}
+                        </CardDescription>
+                        {userLocation && (donor.lat || DISTRICT_COORDS[donor.district || '']) && (
+                          <p className="text-[10px] font-black text-primary flex items-center gap-1">
+                            <LocateFixed className="h-2.5 w-2.5" /> 
+                            {Math.round(calculateDistance(
+                              userLocation.lat, userLocation.lng, 
+                              donor.lat || DISTRICT_COORDS[donor.district || '']?.[0], 
+                              donor.lng || DISTRICT_COORDS[donor.district || '']?.[1]
+                            ))} KM দূরে
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                    <Badge className="bg-primary text-white text-lg font-black h-10 w-10 flex items-center justify-center p-0 rounded-xl shadow-md border-2 border-white">{donor.bloodType}</Badge>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-green-600 font-bold text-xs bg-green-50 p-3 rounded-xl border border-green-100">
-                    <ShieldCheck className="h-4 w-4" /> ভেরিফাইড রক্তদাতা
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4 flex-grow px-6">
+                  {donor.totalDonations && donor.totalDonations > 0 ? (
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
+                        <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">শেষ রক্তদান</p>
+                        <p className="font-bold text-foreground truncate">{donor.lastDonationDate || 'N/A'}</p>
+                      </div>
+                      <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
+                        <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">মোট রক্তদান</p>
+                        <p className="font-black text-foreground">{donor.totalDonations} বার</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-green-600 font-bold text-xs bg-green-50 p-3 rounded-xl border border-green-100">
+                      <ShieldCheck className="h-4 w-4" /> ভেরিফাইড রক্তদাতা
+                    </div>
+                  )}
+                  
+                  {/* Quick Contact Icons */}
+                  <div className="flex justify-center gap-4 pt-2">
+                    <Button size="icon" variant="outline" className="h-10 w-10 rounded-full bg-green-50 border-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm" asChild>
+                      <a href={waLink} target="_blank" rel="noopener noreferrer">
+                        <WhatsAppIcon className="h-5 w-5" />
+                      </a>
+                    </Button>
+                    <Button size="icon" variant="outline" className="h-10 w-10 rounded-full bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm" asChild>
+                      <a href={smsLink}>
+                        <MessageSquare className="h-5 w-5" />
+                      </a>
+                    </Button>
                   </div>
-                )}
-              </CardContent>
-              <CardFooter className="p-0 border-t flex">
-                <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
-                  <a href={`tel:${donor.phone}`}><Phone className="h-5 w-5" /> কল করুন</a>
-                </Button>
-                <Button variant="ghost" className="flex-1 h-14 rounded-none text-primary font-bold gap-2" asChild>
-                  <Link href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-4 w-4" /></Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                </CardContent>
+                <CardFooter className="p-0 border-t flex">
+                  <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
+                    <a href={`tel:${donor.phone}`}><Phone className="h-5 w-5" /> কল করুন</a>
+                  </Button>
+                  <Button variant="ghost" className="flex-1 h-14 rounded-none text-primary font-bold gap-2" asChild>
+                    <Link href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-4 w-4" /></Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
