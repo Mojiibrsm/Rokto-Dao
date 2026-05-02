@@ -3,16 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getDonors, updateDonorProfile, setDonorPassword, logActivity } from '@/lib/sheets';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield } from 'lucide-react';
+import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield, Camera, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
+import { DISTRICTS } from '@/lib/bangladesh-data';
 import { useToast } from '@/hooks/use-toast';
 import { normalizePhone } from '@/lib/utils';
 
@@ -33,7 +34,8 @@ export default function DashboardPage() {
     union: '',
     organization: '',
     totalDonations: 0,
-    lastDonationDate: ''
+    lastDonationDate: '',
+    imageUrl: ''
   });
 
   const [passwordData, setPasswordData] = useState('');
@@ -74,7 +76,8 @@ export default function DashboardPage() {
             union: currentDonor.union || '',
             organization: currentDonor.organization || '',
             totalDonations: currentDonor.totalDonations || 0,
-            lastDonationDate: currentDonor.lastDonationDate === 'N/A' ? '' : currentDonor.lastDonationDate || ''
+            lastDonationDate: currentDonor.lastDonationDate === 'N/A' ? '' : currentDonor.lastDonationDate || '',
+            imageUrl: currentDonor.imageUrl || ''
           });
           setPasswordData(currentDonor.password || '');
         }
@@ -98,7 +101,7 @@ export default function DashboardPage() {
       });
       
       if (result.success) {
-        await logActivity(formData.fullName, formData.phone, 'Edit Profile', `User updated profile information`);
+        await logActivity(formData.fullName, formData.phone, 'Edit Profile', `User updated profile information and image`);
         toast({ title: "সফল!", description: "প্রোফাইল আপডেট করা হয়েছে।" });
         const updatedUser = { ...user, fullName: formData.fullName, email: formData.email, phone: formData.phone };
         localStorage.setItem('roktodao_user', JSON.stringify(updatedUser));
@@ -130,6 +133,7 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     localStorage.removeItem('roktodao_user');
+    localStorage.removeItem('roktodao_admin_auth');
     window.dispatchEvent(new Event('storage'));
     router.push('/');
   };
@@ -148,8 +152,12 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <Card className="border-t-8 border-t-primary shadow-2xl rounded-[2.5rem] overflow-hidden">
             <div className="bg-primary/5 p-10 flex flex-col items-center text-center gap-6">
-              <div className="h-24 w-24 rounded-3xl bg-primary flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-primary/20 rotate-3">
-                {user?.fullName?.substring(0, 1) || 'R'}
+              <div className="h-28 w-24 rounded-3xl bg-primary flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-primary/20 rotate-3 overflow-hidden relative">
+                {formData.imageUrl ? (
+                  <Image src={formData.imageUrl} fill alt="Profile" className="object-cover -rotate-3 scale-110" />
+                ) : (
+                  user?.fullName?.substring(0, 1) || 'R'
+                )}
               </div>
               <div>
                 <h2 className="text-2xl font-black font-headline">{user?.fullName}</h2>
@@ -218,6 +226,28 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="p-10 pt-8">
                   <form onSubmit={handleUpdateProfile} className="space-y-8">
+                    <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
+                       <div className="flex items-center gap-4 mb-2">
+                          <Camera className="h-6 w-6 text-primary" />
+                          <h4 className="font-black text-lg">প্রোফাইল ছবি</h4>
+                       </div>
+                       <div className="flex flex-col md:flex-row gap-6 items-center">
+                          <div className="h-32 w-32 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden relative shrink-0">
+                             {formData.imageUrl ? <Image src={formData.imageUrl} fill alt="Preview" className="object-cover" /> : <div className="h-full w-full flex items-center justify-center text-muted-foreground"><User className="h-10 w-10" /></div>}
+                          </div>
+                          <div className="flex-1 w-full space-y-3">
+                             <Label className="font-bold flex items-center gap-2"><LinkIcon className="h-4 w-4" /> ছবির লিঙ্ক (Image URL)</Label>
+                             <Input 
+                                value={formData.imageUrl} 
+                                onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
+                                placeholder="https://example.com/your-photo.jpg" 
+                                className="h-12 rounded-xl border-2 focus:border-primary"
+                             />
+                             <p className="text-[10px] text-muted-foreground">পরামর্শ: গুগল ড্রাইভ বা ফেসবুকের ছবির লিঙ্ক ব্যবহার করতে পারেন।</p>
+                          </div>
+                       </div>
+                    </div>
+
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <Label className="text-lg font-bold">পুরো নাম</Label>

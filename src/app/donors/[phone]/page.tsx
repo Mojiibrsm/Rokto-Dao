@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { 
   Phone, MapPin, Droplet, ShieldCheck, Calendar, HeartPulse, 
-  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare
+  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import { Loader2 } from 'lucide-react';
 
 /**
  * @fileOverview Individual public donor profile page.
- * Optimized for SEO and sharing.
+ * Displays profile image and stats.
  */
 
 export default function DonorProfilePage({ params }: { params: Promise<{ phone: string }> }) {
@@ -84,8 +84,12 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
         <div className="md:col-span-1 space-y-6">
           <Card className="border-t-8 border-t-primary shadow-2xl rounded-[2.5rem] overflow-hidden">
             <div className="bg-primary/5 p-10 flex flex-col items-center text-center gap-6">
-              <div className="h-32 w-32 rounded-3xl bg-primary flex items-center justify-center text-white text-5xl font-black shadow-xl shadow-primary/20 rotate-3">
-                {donor.fullName.substring(0, 1)}
+              <div className="h-32 w-32 rounded-3xl bg-primary flex items-center justify-center text-white text-5xl font-black shadow-xl shadow-primary/20 rotate-3 overflow-hidden relative">
+                {donor.imageUrl ? (
+                  <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover -rotate-3 scale-110" />
+                ) : (
+                  donor.fullName.substring(0, 1)
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-black font-headline leading-tight">{donor.fullName}</h1>

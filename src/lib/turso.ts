@@ -25,7 +25,7 @@ export async function initDb() {
   initPromise = (async () => {
     try {
       await db.batch([
-        // 1. Donors Table - Added role column
+        // 1. Donors Table - Added role and imageUrl columns
         `CREATE TABLE IF NOT EXISTS donors (
           email TEXT,
           fullName TEXT,
@@ -40,7 +40,8 @@ export async function initDb() {
           totalDonations INTEGER DEFAULT 0,
           lastDonationDate TEXT,
           password TEXT,
-          role TEXT DEFAULT 'user'
+          role TEXT DEFAULT 'user',
+          imageUrl TEXT
         )`,
         // 2. Blood Requests Table
         `CREATE TABLE IF NOT EXISTS requests (
@@ -122,12 +123,14 @@ export async function initDb() {
         )`
       ], "write");
       
-      // Try to add role column to existing databases if it doesn't exist
+      // Migration: Add role and imageUrl columns to existing databases if they don't exist
       try {
         await db.execute("ALTER TABLE donors ADD COLUMN role TEXT DEFAULT 'user'");
-      } catch (e) {
-        // Column might already exist
-      }
+      } catch (e) {}
+      
+      try {
+        await db.execute("ALTER TABLE donors ADD COLUMN imageUrl TEXT");
+      } catch (e) {}
       
       console.log("Database tables initialized successfully.");
     } catch (error) {

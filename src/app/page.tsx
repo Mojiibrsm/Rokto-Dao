@@ -195,36 +195,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Process Section */}
-      <section className="py-24 bg-accent/10">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-20 space-y-4">
-            <Badge className="bg-primary text-white border-none px-6 py-1.5 rounded-full text-sm font-black shadow-lg">রক্তদান প্রক্রিয়া</Badge>
-            <h2 className="text-4xl md:text-6xl font-black font-headline">মাত্র ৩টি সহজ ধাপে</h2>
-            <div className="h-2 w-24 bg-primary mx-auto rounded-full mt-6 shadow-sm"></div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto">
-            {[
-              { id: "1", title: "নিবন্ধন", desc: "আপনার সঠিক তথ্য দিয়ে আমাদের জীবন রক্ষাকারী দেশব্যাপী ডেটাবেজে যুক্ত হোন।", icon: UserPlus },
-              { id: "2", title: "অনুরোধ বা অনুসন্ধান", desc: "জরুরি প্রয়োজনে পোস্ট দিন অথবা সরাসরি দাতার সাথে যোগাযোগ করুন।", icon: Search },
-              { id: "3", title: "জীবন বাঁচান", desc: "হাসপাতালে গিয়ে নিরাপদ রক্তদানের মাধ্যমে একজন মুম্মুর্ষু রোগীর প্রাণ বাঁচান।", icon: HeartPulse }
-            ].map((step, i) => (
-              <Card key={i} className="relative p-10 rounded-[3rem] border-none shadow-2xl bg-white hover:-translate-y-3 transition-all duration-500 overflow-hidden group">
-                <div className="absolute -top-6 -right-6 text-[10rem] font-black text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">{step.id}</div>
-                <div className="relative z-10 space-y-6">
-                  <div className="h-20 w-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-8 shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                    <step.icon className="h-10 w-10" />
-                  </div>
-                  <h3 className="text-3xl font-black text-foreground">{step.title}</h3>
-                  <p className="text-muted-foreground text-xl leading-relaxed font-medium">{step.desc}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Active Donors Section */}
+      {/* 3. Active Donors Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
@@ -241,7 +212,9 @@ export default function Home() {
                   <CardHeader className="bg-primary/5 pb-6 pt-8 px-8">
                     <div className="flex justify-between items-start">
                       <NextLink href={`/donors/${donor.phone}`} className="flex items-center gap-5 group/link">
-                        <div className="h-16 w-16 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-primary/20 transition-transform group-hover:scale-110">{(donor.fullName || 'D').substring(0, 1)}</div>
+                        <div className="h-16 w-16 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-primary/20 transition-transform group-hover:scale-110 overflow-hidden relative shrink-0">
+                          {donor.imageUrl ? <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover" /> : (donor.fullName || 'D').substring(0, 1)}
+                        </div>
                         <div className="space-y-1">
                           <CardTitle className="text-2xl font-black text-foreground group-hover/link:text-primary transition-colors">{donor.fullName}</CardTitle>
                           <CardDescription className="flex items-center gap-2 text-base font-bold text-muted-foreground"><MapPin className="h-4 w-4 text-primary" /> {donor.area ? donor.area + ', ' : ''}{donor.district}</CardDescription>
@@ -287,7 +260,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Requests Section */}
+      {/* 4. Requests Section */}
       <section className="bg-primary/5 py-24 border-y-4 border-primary/10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-center md:text-left">
@@ -361,6 +334,35 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* 5. Process Section */}
+      <section className="py-24 bg-accent/10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-20 space-y-4">
+            <Badge className="bg-primary text-white border-none px-6 py-1.5 rounded-full text-sm font-black shadow-lg">রক্তদান প্রক্রিয়া</Badge>
+            <h2 className="text-4xl md:text-6xl font-black font-headline">মাত্র ৩টি সহজ ধাপে</h2>
+            <div className="h-2 w-24 bg-primary mx-auto rounded-full mt-6 shadow-sm"></div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto">
+            {[
+              { id: "1", title: "নিবন্ধন", desc: "আপনার সঠিক তথ্য দিয়ে আমাদের জীবন রক্ষাকারী দেশব্যাপী ডেটাবেজে যুক্ত হোন।", icon: UserPlus },
+              { id: "2", title: "অনুরোধ বা অনুসন্ধান", desc: "জরুরি প্রয়োজনে পোস্ট দিন অথবা সরাসরি দাতার সাথে যোগাযোগ করুন।", icon: Search },
+              { id: "3", title: "জীবন বাঁচান", desc: "হাসপাতালে গিয়ে নিরাপদ রক্তদানের মাধ্যমে একজন মুম্মুর্ষু রোগীর প্রাণ বাঁচান।", icon: HeartPulse }
+            ].map((step, i) => (
+              <Card key={i} className="relative p-10 rounded-[3rem] border-none shadow-2xl bg-white hover:-translate-y-3 transition-all duration-500 overflow-hidden group">
+                <div className="absolute -top-6 -right-6 text-[10rem] font-black text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">{step.id}</div>
+                <div className="relative z-10 space-y-6">
+                  <div className="h-20 w-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary mb-8 shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                    <step.icon className="h-10 w-10" />
+                  </div>
+                  <h3 className="text-3xl font-black text-foreground">{step.title}</h3>
+                  <p className="text-muted-foreground text-xl leading-relaxed font-medium">{step.desc}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -513,195 +515,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Founder's Message */}
-      <section className="py-24 bg-accent/30 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-primary/5 opacity-50"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
-            <div className="order-2 lg:order-1 space-y-10">
-              <div className="inline-flex h-20 w-20 bg-primary rounded-3xl items-center justify-center text-white mb-4 shadow-2xl shadow-primary/30 animate-pulse">
-                <Quote className="h-10 w-10 fill-white" />
-              </div>
-              <h2 className="text-5xl font-black font-headline tracking-tight leading-tight">পরিচালকের <span className="text-primary">বার্তা</span></h2>
-              <p className="text-3xl md:text-4xl font-bold text-foreground leading-snug italic border-l-8 border-primary pl-8 py-4">
-                "RoktoDao একটি অলাভজনক উদ্যোগ যা রক্তদাতা এবং গ্রহীতাদের মধ্যে একটি সেতুবন্ধন তৈরির লক্ষ্যে কাজ করে। প্রযুক্তি ব্যবহার করে জীবন বাঁচানোর এই যাত্রায় আমাদের সঙ্গী হওয়ার জন্য আপনাকে ধন্যবাদ।"
-              </p>
-              <div className="flex items-center gap-6 pt-8">
-                <div className="h-24 w-24 rounded-full border-4 border-primary shadow-2xl overflow-hidden relative">
-                  <Image src="https://rokto-dao.vercel.app/files/Mojib_Rsm.jpg" fill alt="Mujibur Rahman" className="object-cover" />
-                </div>
-                <div>
-                  <h4 className="text-3xl font-black text-primary">মুজিবুর রহমান</h4>
-                  <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-sm">প্রতিষ্ঠাতা ও পরিচালক, RoktoDao</p>
-                </div>
-              </div>
-            </div>
-            <div className="order-1 lg:order-2 relative flex justify-center">
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-[120px] opacity-40"></div>
-              <div className="relative h-[550px] w-full max-w-[450px] rounded-[4rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.3)] border-[15px] border-white group hover:scale-105 transition-all duration-700">
-                <Image src="https://rokto-dao.vercel.app/files/Mojib_Rsm.jpg" fill alt="Mujibur Rahman" className="object-cover" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 11. Testimonials */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-20 space-y-4">
-            <Badge className="bg-green-600 text-white border-none px-8 py-2 rounded-full text-sm font-black shadow-md">রক্তদাতাদের প্রেরণা</Badge>
-            <h2 className="text-4xl md:text-6xl font-black font-headline text-foreground">আমাদের রক্তদাতারা কি বলছেন?</h2>
-            <div className="h-2 w-24 bg-green-600 mx-auto rounded-full mt-6"></div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-12 max-w-7xl mx-auto">
-            {[
-              { name: "রাসেল আহমেদ", role: "১০ বার রক্তদাতা", text: "রক্তদান করলে মনের মধ্যে যে অদ্ভুত এক প্রশান্তি আসে, তা আর কিছুতে পাই না। RoktoDao এর মাধ্যমে যোগাযোগ করা এখন অনেক সহজ।", initial: "র" },
-              { name: "সুমাইয়া জান্নাত", role: "শিক্ষার্থী", text: "প্রথমবার রক্ত দেওয়ার সময় ভয় লেগেছিল, কিন্তু একজনের প্রাণ বাঁচাতে পেরেছি জেনে এখন নিয়মিত রক্ত দেই।", initial: "স" },
-              { name: "ডা. আরিফ হাসান", role: "সহযোগী অধ্যাপক", text: "একজন চিকিৎসক হিসেবে আমি জানি রক্ত কতটা মূল্যবান। RoktoDao এর এই উদ্যোগ সত্যিই প্রশংসনীয়।", initial: "ড" }
-            ].map((t, i) => (
-              <Card key={i} className="p-10 rounded-[3.5rem] border-none shadow-[0_30px_60px_rgba(0,0,0,0.05)] bg-accent/10 hover:bg-white hover:shadow-2xl transition-all duration-500 group text-center space-y-8 border-b-8 border-transparent hover:border-primary">
-                <div className="h-20 w-20 bg-white shadow-xl rounded-full flex items-center justify-center mx-auto text-3xl font-black text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">{t.initial}</div>
-                <p className="text-xl text-foreground/80 leading-relaxed font-bold italic">"{t.text}"</p>
-                <div>
-                  <h4 className="text-2xl font-black text-foreground">{t.name}</h4>
-                  <p className="text-sm text-primary font-black uppercase tracking-widest mt-1">{t.role}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 12. Mobile App Promo */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="bg-slate-900 rounded-[5rem] p-12 md:p-32 overflow-hidden relative text-white border-8 border-primary/10">
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[180px] opacity-60"></div>
-          <div className="grid lg:grid-cols-2 gap-24 items-center relative z-10">
-            <div className="space-y-12 text-center lg:text-left">
-              <Badge className="bg-primary hover:bg-primary border-none text-base px-8 py-2 rounded-full font-black shadow-lg shadow-primary/30 animate-pulse">শীঘ্রই আসছে</Badge>
-              <h2 className="text-5xl md:text-8xl font-black font-headline leading-tight">RoktoDao <br /><span className="text-primary">মোবাইল অ্যাপ</span></h2>
-              <p className="text-2xl md:text-3xl text-slate-400 max-w-2xl leading-relaxed font-bold">
-                এখন পকেটেই থাকবে আপনার এলাকার সব রক্তদাতার তথ্য। দ্রুত যোগাযোগের জন্য অ্যাপটি হবে আপনার সেরা সঙ্গী।
-              </p>
-              <div className="flex flex-wrap gap-8 justify-center lg:justify-start pt-6">
-                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2.5rem] flex items-center gap-6 border-2 border-white/10 hover:bg-primary/20 hover:border-primary/40 transition-all cursor-pointer group shadow-2xl">
-                  <div className="bg-primary p-4 rounded-2xl group-hover:scale-110 transition-transform"><Smartphone className="h-10 w-10 text-white" /></div>
-                  <div className="text-left">
-                    <p className="text-xs uppercase font-black text-slate-400 tracking-widest">Download on</p>
-                    <p className="text-2xl font-black">Google Play</p>
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-[2.5rem] flex items-center gap-6 border-2 border-white/10 hover:bg-slate-700/50 transition-all cursor-pointer opacity-60 shadow-2xl">
-                  <div className="bg-slate-700 p-4 rounded-2xl"><Smartphone className="h-10 w-10 text-white" /></div>
-                  <div className="text-left">
-                    <p className="text-xs uppercase font-black text-slate-400 tracking-widest">Coming to</p>
-                    <p className="text-2xl font-black">App Store</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative h-[500px] md:h-[750px] flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[380px] h-full shadow-[0_60px_120px_rgba(0,0,0,0.6)] border-[15px] border-slate-800 rounded-[4rem] overflow-hidden group hover:scale-105 transition-all duration-700">
-                <Image src="https://image.mojib.me/uploads/General/1771910851_ROktoDao%20app.png" fill alt="RoktoDao Mobile App Promo" className="object-cover" data-ai-hint="mobile app" />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-transparent"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 13. Partners */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <p className="text-primary font-black uppercase tracking-[0.4em] text-sm mb-12">আমাদের সহযোগী প্রতিষ্ঠানসমূহ</p>
-            <div className="flex flex-wrap justify-center items-center gap-16 md:gap-32 grayscale opacity-40 hover:grayscale-0 transition-all duration-700">
-              {['ঢাকা মেডিকেল', 'রেড ক্রিসেন্ট', 'বঙ্গবন্ধু মেডিকেল', 'ব্লাড ফাউন্ডেশন', 'বেসরকারি ক্লিনিক'].map((p, i) => (
-                <div key={i} className="text-3xl md:text-5xl font-black font-headline text-slate-400 hover:text-primary transition-all cursor-default transform hover:scale-110">{p}</div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 14. Why Choose Us */}
-      <section className="py-24 bg-accent/10 border-y-4 border-primary/5">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="text-center mb-20 space-y-4">
-            <h2 className="text-4xl md:text-7xl font-black font-headline">কেন RoktoDao বেছে নিবেন?</h2>
-            <div className="h-2 w-32 bg-primary mx-auto rounded-full mt-8"></div>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
-            {[
-              { title: "যাচাইকৃত রক্তদাতা", desc: "আমাদের সকল রক্তদাতা মোবাইল নম্বর ভেরিফাইড, তাই আপনি নির্ভয়ে যোগাযোগ করতে পারেন।", icon: CheckCircle2 },
-              { title: "দ্রুত যোগাযোগ", desc: "সরাসরি ফোন কল বা মেসেজের মাধ্যমে দ্রুত রক্তদাতার সাথে যোগাযোগ স্থাপন করা যায়।", icon: Zap },
-              { title: "দেশব্যাপী নেটওয়ার্ক", desc: "সারাদেশে প্রতিটি জেলা ও উপজেলায় আমাদের রক্তদাতাদের নেটওয়ার্ক বিস্তৃত।", icon: Globe },
-              { title: "সম্পূর্ণ সুরক্ষিত", desc: "আপনার ব্যক্তিগত তথ্য আমাদের কাছে নিরাপদ। আমরা কোনো তথ্য তৃতীয় পক্ষের কাছে শেয়ার করি না।", icon: ShieldCheck }
-            ].map((item, i) => (
-              <Card key={i} className="p-10 rounded-[3.5rem] border-none shadow-2xl bg-white text-center hover:-translate-y-4 transition-all duration-500 border-b-[10px] border-primary/10 hover:border-primary">
-                <div className="h-20 w-20 bg-primary/10 rounded-[2rem] flex items-center justify-center text-primary mx-auto mb-8 shadow-inner group-hover:bg-primary transition-all">
-                  <item.icon className="h-10 w-10" />
-                </div>
-                <h4 className="text-2xl font-black mb-4 text-foreground">{item.title}</h4>
-                <p className="text-muted-foreground leading-relaxed font-bold text-lg">{item.desc}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 15. FAQ */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="text-center mb-20 space-y-6">
-            <Badge className="bg-primary/10 text-primary border-none px-10 py-2 rounded-full text-base font-black">সহযোগিতা</Badge>
-            <h2 className="text-4xl md:text-6xl font-black font-headline">সাধারণ জিজ্ঞাসা (FAQ)</h2>
-            <div className="h-2 w-24 bg-primary mx-auto rounded-full mt-6"></div>
-          </div>
-          <Accordion type="single" collapsible className="space-y-6">
-            {[
-              { q: "রক্তদানের জন্য সর্বনিম্ন বয়স ও ওজন কত?", a: "রক্তদানের জন্য আপনার বয়স ১৮-৬০ বছর এবং ওজন কমপক্ষে ৫০ কেজি হতে হবে।" },
-              { q: "কারা রক্তদান করতে পারবেন না?", a: "গর্ভবতী মহিলা, সম্প্রতি বড় কোনো অস্ত্রোপচার হওয়া ব্যক্তি এবং কিছু ছোঁয়াচে রোগে আক্রান্ত ব্যক্তিরা রক্তদান করতে পারবেন না। বিস্তারিত জানতে যোগ্যতা যাচাই কুইজটি দিন।" },
-              { q: "কতদিন পর পর রক্তদান করা যায়?", a: "একজন সুস্থ পুরুষ প্রতি ৩ মাস অন্তর এবং একজন সুস্থ মহিলা প্রতি ৪ মাস অন্তর রক্তদান করতে পারেন।" },
-              { q: "রক্ত দিতে কি কোনো টাকা লাগে?", a: "না, রক্তদান একটি সম্পূর্ণ স্বেচ্ছাসেবী ও মানবিক কাজ। রক্ত দেওয়া বা নেওয়ার জন্য কোনো অর্থ লেনদেন আমাদের প্ল্যাটফর্মে নিষিদ্ধ।" },
-              { q: "রক্তদানের পর কি কোনো বিশ্রাম প্রয়োজন?", a: "হ্যাঁ, রক্তদানের পর অন্তত ১৫-২০ মিনিট বিশ্রাম নেওয়া এবং প্রচুর পানি পান করা প্রয়োজন।" }
-            ].map((item, i) => (
-              <AccordionItem key={i} value={`item-${i}`} className="border-none shadow-xl rounded-[2.5rem] bg-accent/20 px-10 overflow-hidden group hover:bg-white transition-all duration-500 border-l-8 border-primary/20 hover:border-primary">
-                <AccordionTrigger className="text-2xl font-black hover:no-underline py-8 text-foreground group-data-[state=open]:text-primary">{item.q}</AccordionTrigger>
-                <AccordionContent className="text-xl text-foreground/70 pb-10 leading-relaxed font-bold">
-                  {item.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </section>
-
-      {/* 16. Newsletter */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="bg-primary rounded-[4rem] p-12 md:p-24 text-center text-white space-y-12 relative overflow-hidden shadow-[0_40px_80px_rgba(211,29,42,0.4)]">
-          <div className="absolute top-0 left-0 w-full h-full bg-black/10"></div>
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-white/10 rounded-full blur-[100px]"></div>
-          <div className="relative z-10 max-w-4xl mx-auto space-y-10">
-            <h2 className="text-4xl md:text-7xl font-black font-headline tracking-tight drop-shadow-lg">আমাদের সাথে আপডেট থাকুন</h2>
-            <p className="text-2xl md:text-3xl opacity-90 leading-relaxed font-bold italic">
-              আমাদের আগামী রক্তদান ক্যাম্পেইন ও গুরুত্বপূর্ণ খবরাখবর ইমেইলে পেতে সাবস্ক্রাইব করুন।
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center pt-6 max-w-3xl mx-auto">
-              <input 
-                type="email" 
-                placeholder="আপনার ইমেইল ঠিকানা" 
-                className="flex-1 h-20 rounded-[2.5rem] px-10 bg-white/15 border-4 border-white/30 text-white placeholder:text-white/70 outline-none focus:bg-white/20 focus:border-white transition-all text-2xl font-bold shadow-inner"
-                suppressHydrationWarning
-              />
-              <Button className="h-20 rounded-[2.5rem] px-16 bg-white text-primary hover:bg-accent text-3xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95">সাবস্ক্রাইব</Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 17. Help Section */}
+      {/* 10. Help Section */}
       <section className="py-24 bg-slate-950 text-white text-center relative border-t-8 border-primary">
         <div className="container mx-auto px-4 space-y-12">
           <div className="h-24 w-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-xl border-4 border-primary/30 animate-pulse shadow-2xl">

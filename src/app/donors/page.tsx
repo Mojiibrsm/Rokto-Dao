@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getDonors, getGlobalStats, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -138,7 +139,9 @@ function DonorsContent() {
               <CardHeader className="bg-primary/5 pb-3">
                 <div className="flex justify-between items-start">
                   <Link href={`/donors/${donor.phone}`} className="flex items-center gap-3 group/link">
-                    <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl">{(donor.fullName || 'D').substring(0, 1)}</div>
+                    <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl overflow-hidden relative shrink-0">
+                      {donor.imageUrl ? <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover" /> : (donor.fullName || 'D').substring(0, 1)}
+                    </div>
                     <div className="space-y-1">
                       <CardTitle className="text-lg group-hover/link:text-primary transition-colors">{donor.fullName}</CardTitle>
                       <CardDescription className="flex items-center gap-1 text-xs"><MapPin className="h-3 w-3 text-primary" /> {donor.area}, {donor.district}</CardDescription>
