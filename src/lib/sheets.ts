@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db, initDb } from './turso';
@@ -129,7 +130,8 @@ export type ActivityLog = {
 
 // --- UTILS ---
 
-const SMS_API_KEY = process.env.SMS_API_KEY || '67c29759c2584'; // Defaulting based on provided context
+const SMS_API_KEY = process.env.SMS_API_KEY || '67c29759c2584'; 
+const ADMIN_PHONE = '01600151907'; // Admin recipient for emergency alerts
 
 async function sendSMS(recipient: string, message: string) {
   if (!SMS_API_KEY) return null;
@@ -309,12 +311,25 @@ export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status
   await initDb();
   const id = 'REQ' + Math.random().toString(36).substring(7).toUpperCase();
   const now = new Date().toISOString();
-  await db.execute({
-    sql: `INSERT INTO requests (id, patientName, bloodType, hospitalName, district, area, "union", phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [id, data.patientName || '', data.bloodType, data.hospitalName, data.district, data.area || '', data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', now, data.disease || '', data.diseaseInfo || '', data.createdBy || 'Public']
-  });
-  return { success: true, id };
+  
+  try {
+    await db.execute({
+      sql: `INSERT INTO requests (id, patientName, bloodType, hospitalName, district, area, "union", phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [id, data.patientName || '', data.bloodType, data.hospitalName, data.district, data.area || '', data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', now, data.disease || '', data.diseaseInfo || '', data.createdBy || 'Public']
+    });
+
+    // SMS Alert for Urgent Requests
+    if (data.isUrgent) {
+      const alertMsg = `Emergency! ${data.bloodType} blood needed at ${data.hospitalName}, ${data.district}. Call: ${data.phone}. Post ID: ${id}`;
+      await sendSMS(ADMIN_PHONE, alertMsg); // Notify admin/broadcast number
+    }
+
+    return { success: true, id };
+  } catch (e) {
+    console.error(e);
+    return { success: false, error: "Database error" };
+  }
 }
 
 // --- REPORTING ---

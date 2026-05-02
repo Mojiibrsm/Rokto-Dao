@@ -1,31 +1,36 @@
-const CACHE_NAME = 'roktodao-v1';
-const ASSETS_TO_CACHE = [
+
+/**
+ * RoktoDao - PWA Service Worker (Emergency Offline Mode)
+ * Version: 2.0.0
+ */
+
+const CACHE_NAME = 'roktodao-v2';
+const STATIC_ASSETS = [
   '/',
-  '/donors',
-  '/requests',
-  '/faq',
-  '/eligibility',
-  '/offline.html'
+  '/manifest.json',
+  '/files/icon-192x192.png',
+  '/files/icon-512x512.png',
+  'https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap'
 ];
 
-// Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      console.log('[SW] Caching static assets');
+      return cache.addAll(STATIC_ASSETS);
     })
   );
   self.skipWaiting();
 });
 
-// Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log('[SW] Removing old cache:', key);
+            return caches.delete(key);
           }
         })
       );
@@ -34,7 +39,6 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event
 self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
@@ -46,18 +50,22 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(event.request)
-        .then((networkResponse) => {
-          // Cache successful responses for future offline use
-          if (networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+        .then((response) => {
+          // Check if we received a valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
           }
-          return networkResponse;
+
+          // Clone the response to store it in cache
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+
+          return response;
         })
         .catch(() => {
-          // If both fail, show offline page or fallback
+          // If fetch fails (offline), return cached home page for navigation requests
           if (event.request.mode === 'navigate') {
             return caches.match('/');
           }
@@ -65,3 +73,5 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Background Sync for Offline Requests (Coming in v3)

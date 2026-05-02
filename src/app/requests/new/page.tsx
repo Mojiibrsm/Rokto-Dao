@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Droplet, ArrowLeft, ArrowRight, Loader2, Hospital, Activity } from 'lucide-react';
+import { Droplet, ArrowLeft, ArrowRight, Loader2, Hospital, WifiOff, CloudUpload, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +17,7 @@ import { createBloodRequest } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 import { getDistricts, getUpazillas, type LocationEntry } from '@/lib/bangladesh-api';
 import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
   patientName: z.string().optional().or(z.literal('')),
@@ -32,8 +34,12 @@ const formSchema = z.object({
   diseaseInfo: z.string().optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 export default function NewRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [hasOfflineData, setHasOfflineData] = useState(false);
   const [districts, setDistricts] = useState<LocationEntry[]>([]);
   const [upazilas, setUpazilas] = useState<LocationEntry[]>([]);
   const [loadingLocations, setLoadingLocations] = useState({ districts: false, upazilas: false });
@@ -41,7 +47,24 @@ export default function NewRequestPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Check for offline saved data
+    const saved = localStorage.getItem('roktodao_offline_request');
+    if (saved) setHasOfflineData(true);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       patientName: '',
@@ -86,7 +109,42 @@ export default function NewRequestPage() {
     loadUpazillas();
   }, [selectedDistrict, form]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const saveOffline = (values: FormValues) => {
+    localStorage.setItem('roktodao_offline_request', JSON.stringify(values));
+    setHasOfflineData(true);
+    toast({
+      title: "অফলাইনে সেভ হয়েছে",
+      description: "ইন্টারনেট না থাকায় আপনার তথ্যটি ফোনে সেভ করা হলো। অনলাইন হলে এটি অটো-সিঙ্ক হবে।",
+    });
+  };
+
+  const handleSync = async () => {
+    const saved = localStorage.getItem('roktodao_offline_request');
+    if (!saved) return;
+    
+    setIsSubmitting(true);
+    try {
+      const values = JSON.parse(saved);
+      const result = await createBloodRequest(values as any);
+      if (result && result.success) {
+        localStorage.removeItem('roktodao_offline_request');
+        setHasOfflineData(false);
+        toast({ title: "সিঙ্ক সফল!", description: "অফলাইনে সেভ করা অনুরোধটি লাইভ করা হয়েছে।" });
+        router.push('/requests');
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "সিঙ্ক ব্যর্থ", description: "আবার চেষ্টা করুন।" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  async function onSubmit(values: FormValues) {
+    if (!navigator.onLine) {
+      saveOffline(values);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await createBloodRequest(values as any);
@@ -96,13 +154,12 @@ export default function NewRequestPage() {
           description: "আপনার অনুরোধটি এখন লাইভ দেখা যাচ্ছে।",
         });
         router.push('/requests');
+      } else {
+        // Fallback to offline save if DB call fails due to weak network
+        saveOffline(values);
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "ব্যর্থ হয়েছে",
-        description: error.message || "কিছু ভুল হয়েছে। আবার চেষ্টা করুন।",
-      });
+      saveOffline(values);
     } finally {
       setIsSubmitting(false);
     }
@@ -110,10 +167,35 @@ export default function NewRequestPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 flex flex-col items-center">
-      <div className="w-full max-w-2xl mb-6">
-        <Button variant="ghost" asChild className="mb-4">
+      <div className="w-full max-w-2xl mb-6 flex flex-col gap-4">
+        <Button variant="ghost" asChild className="w-fit">
           <Link href="/requests"><ArrowLeft className="mr-2 h-4 w-4" /> ফিরে যান</Link>
         </Button>
+
+        {!isOnline && (
+          <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800 rounded-2xl">
+            <WifiOff className="h-5 w-5" />
+            <AlertTitle className="font-black">অফলাইন মোড অ্যাক্টিভ</AlertTitle>
+            <AlertDescription className="font-medium">
+              আপনার ইন্টারনেট সংযোগ নেই। তথ্য পূরণ করে সাবমিট করলে এটি ফোনে সেভ থাকবে এবং ইন্টারনেট আসলে সিঙ্ক হবে।
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {hasOfflineData && isOnline && (
+          <Alert className="bg-green-50 border-green-200 text-green-800 rounded-2xl flex items-center justify-between">
+            <div className="flex gap-3">
+              <CloudUpload className="h-5 w-5" />
+              <div>
+                <AlertTitle className="font-black">তথ্য সিঙ্ক করতে হবে</AlertTitle>
+                <AlertDescription className="font-medium">আপনার একটি অফলাইন অনুরোধ পেন্ডিং আছে।</AlertDescription>
+              </div>
+            </div>
+            <Button onClick={handleSync} disabled={isSubmitting} size="sm" className="bg-green-600 hover:bg-green-700">
+              {isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4 mr-1" />} সিঙ্ক করুন
+            </Button>
+          </Alert>
+        )}
       </div>
 
       <Card className="w-full max-w-2xl shadow-xl border-t-8 border-t-primary rounded-3xl">
@@ -287,7 +369,7 @@ export default function NewRequestPage() {
                     <div className="space-y-0.5">
                       <FormLabel className="text-base text-primary font-bold">জরুরী অনুরোধ</FormLabel>
                       <FormDescription>
-                        এটি একটি অতি জরুরি অনুরোধ হিসেবে চিহ্নিত করুন।
+                        এটি একটি অতি জরুরি অনুরোধ হিসেবে চিহ্নিত করুন (অটো-এসএমএস অ্যালার্ট যাবে)।
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -300,7 +382,7 @@ export default function NewRequestPage() {
                 )}
               />
 
-              <Button type="submit" className="w-full bg-primary h-14 text-xl font-bold rounded-2xl shadow-lg shadow-primary/20" disabled={isSubmitting}>
+              <Button type="submit" className="w-full bg-primary h-14 text-xl font-black rounded-2xl shadow-lg shadow-primary/20" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-6 w-6 animate-spin" />
@@ -316,9 +398,14 @@ export default function NewRequestPage() {
           </Form>
         </CardContent>
         <CardFooter className="justify-center border-t bg-muted/30 py-6 rounded-b-3xl">
-          <p className="text-sm text-muted-foreground text-center">
-            আপনার অনুরোধটি জমা দেওয়ার পর এডমিন দ্বারা যাচাইকৃত হতে পারে।
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-muted-foreground text-center">
+              অফলাইন মোড এনাবেল্ড: নেটওয়ার্ক না থাকলেও অনুরোধ সেভ থাকবে।
+            </p>
+            <div className="flex items-center gap-2 text-xs font-bold text-primary">
+              <AlertCircle className="h-3 w-3" /> জরুরি অনুরোধের জন্য অ্যাডমিন অ্যালার্ট পাঠানো হবে।
+            </div>
+          </div>
         </CardFooter>
       </Card>
     </div>
