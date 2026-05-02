@@ -17,7 +17,6 @@ import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { DISTRICT_COORDS } from '@/lib/coordinates';
 import { useToast } from '@/hooks/use-toast';
 import { normalizePhone } from '@/lib/utils';
-import { PresenceBadge } from '@/components/presence-badge';
 
 const DonorMap = dynamic(() => import('@/components/donor-map'), { 
   ssr: false,
@@ -224,7 +223,6 @@ function DonorsContent() {
                       </div>
                       <div className="space-y-0.5">
                         <CardTitle className="text-lg group-hover/link:text-primary transition-colors line-clamp-1">{donor.fullName}</CardTitle>
-                        <PresenceBadge phone={donor.phone} />
                         <CardDescription className="flex items-center gap-1 text-[11px] font-bold">
                           <MapPin className="h-3 w-3 text-primary" /> {donor.district}
                         </CardDescription>
