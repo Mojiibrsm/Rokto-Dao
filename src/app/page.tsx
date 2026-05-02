@@ -237,21 +237,21 @@ export default function Home() {
           ) : (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-16">
               {donors.map((donor, idx) => (
-                <Card key={idx} className="overflow-hidden border-2 border-primary/5 shadow-xl hover:shadow-primary/10 transition-all rounded-[2.5rem] group bg-accent/5">
+                <Card key={idx} className="overflow-hidden border-2 border-primary/5 shadow-xl hover:shadow-primary/10 transition-all rounded-[2.5rem] group bg-accent/5 flex flex-col">
                   <CardHeader className="bg-primary/5 pb-6 pt-8 px-8">
                     <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-5">
+                      <NextLink href={`/donors/${donor.phone}`} className="flex items-center gap-5 group/link">
                         <div className="h-16 w-16 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-primary/20 transition-transform group-hover:scale-110">{(donor.fullName || 'D').substring(0, 1)}</div>
                         <div className="space-y-1">
-                          <CardTitle className="text-2xl font-black text-foreground">{donor.fullName}</CardTitle>
+                          <CardTitle className="text-2xl font-black text-foreground group-hover/link:text-primary transition-colors">{donor.fullName}</CardTitle>
                           <CardDescription className="flex items-center gap-2 text-base font-bold text-muted-foreground"><MapPin className="h-4 w-4 text-primary" /> {donor.area ? donor.area + ', ' : ''}{donor.district}</CardDescription>
                           {donor.organization && <div className="flex items-center gap-2 text-primary font-black text-[11px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20 w-fit mt-2 uppercase tracking-tighter"><Users className="h-3 w-3" /> {donor.organization}</div>}
                         </div>
-                      </div>
+                      </NextLink>
                       <Badge className="bg-primary text-white text-2xl font-black h-14 w-14 flex items-center justify-center p-0 rounded-2xl shadow-xl border-4 border-white">{donor.bloodType}</Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-8 px-8 space-y-6">
+                  <CardContent className="pt-8 px-8 space-y-6 flex-grow">
                     {donor.totalDonations && donor.totalDonations > 0 ? (
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-5 bg-white rounded-3xl border-2 border-primary/5 shadow-sm text-center">
@@ -267,9 +267,12 @@ export default function Home() {
                       <div className="flex items-center gap-3 text-primary font-black text-base bg-white px-6 py-4 rounded-2xl border-2 border-primary/10 w-full shadow-sm"><ShieldCheck className="h-6 w-6 text-green-600" /> ভেরিফাইড রক্তদাতা</div>
                     )}
                   </CardContent>
-                  <CardFooter className="p-0 mt-4">
-                    <Button className="w-full h-16 rounded-none bg-primary hover:bg-secondary text-xl font-black gap-4 transition-all" asChild>
-                      <a href={`tel:${donor.phone}`}><Phone className="h-6 w-6" /> যোগাযোগ করুন</a>
+                  <CardFooter className="p-0 mt-4 flex">
+                    <Button className="flex-1 h-16 rounded-none bg-primary hover:bg-secondary text-xl font-black gap-4 transition-all" asChild>
+                      <a href={`tel:${donor.phone}`}><Phone className="h-6 w-6" /> কল করুন</a>
+                    </Button>
+                    <Button variant="ghost" className="flex-1 h-16 rounded-none text-primary font-black text-xl" asChild>
+                      <NextLink href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-5 w-5 ml-2" /></NextLink>
                     </Button>
                   </CardFooter>
                 </Card>

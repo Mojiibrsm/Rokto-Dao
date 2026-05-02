@@ -133,6 +133,32 @@ export async function getDonors(): Promise<Donor[]> {
   }));
 }
 
+export async function getDonorByPhone(phone: string): Promise<Donor | null> {
+  await initDb();
+  const res = await db.execute({
+    sql: "SELECT * FROM donors WHERE phone = ?",
+    args: [phone]
+  });
+  if (res.rows.length === 0) return null;
+  const row = res.rows[0];
+  return {
+    email: String(row.email || ''),
+    fullName: String(row.fullName || ''),
+    phone: String(row.phone || ''),
+    bloodType: String(row.bloodType || ''),
+    registrationDate: String(row.registrationDate || ''),
+    district: String(row.district || ''),
+    area: String(row.area || ''),
+    union: String(row.union || ''),
+    organization: String(row.organization || ''),
+    status: String(row.status || ''),
+    totalDonations: Number(row.totalDonations || 0),
+    lastDonationDate: String(row.lastDonationDate || ''),
+    password: String(row.password || ''),
+    role: (row.role || 'user') as any
+  };
+}
+
 export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
   await initDb();
   const date = new Date().toISOString();

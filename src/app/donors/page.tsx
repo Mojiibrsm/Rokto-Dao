@@ -2,11 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { getDonors, getGlobalStats, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 
@@ -133,27 +134,27 @@ function DonorsContent() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {donors.map((donor, idx) => (
-            <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20">
+            <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20 flex flex-col">
               <CardHeader className="bg-primary/5 pb-3">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
+                  <Link href={`/donors/${donor.phone}`} className="flex items-center gap-3 group/link">
                     <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl">{(donor.fullName || 'D').substring(0, 1)}</div>
                     <div className="space-y-1">
-                      <CardTitle className="text-lg">{donor.fullName}</CardTitle>
+                      <CardTitle className="text-lg group-hover/link:text-primary transition-colors">{donor.fullName}</CardTitle>
                       <CardDescription className="flex items-center gap-1 text-xs"><MapPin className="h-3 w-3 text-primary" /> {donor.area}, {donor.district}</CardDescription>
                     </div>
-                  </div>
+                  </Link>
                   <Badge className="bg-primary text-white text-lg font-black h-10 w-10 flex items-center justify-center p-0 rounded-xl shadow-md">{donor.bloodType}</Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pt-4 space-y-4">
+              <CardContent className="pt-4 space-y-4 flex-grow">
                 {donor.totalDonations && donor.totalDonations > 0 ? (
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 bg-muted/30 rounded-xl border">
+                    <div className="p-3 bg-muted/30 rounded-xl border text-center">
                       <p className="text-muted-foreground uppercase text-[10px] font-bold mb-1">শেষ রক্তদান</p>
                       <p className="font-bold text-foreground">{donor.lastDonationDate || 'N/A'}</p>
                     </div>
-                    <div className="p-3 bg-muted/30 rounded-xl border">
+                    <div className="p-3 bg-muted/30 rounded-xl border text-center">
                       <p className="text-muted-foreground uppercase text-[10px] font-bold mb-1">মোট রক্তদান</p>
                       <p className="font-bold text-foreground">{donor.totalDonations} বার</p>
                     </div>
@@ -164,9 +165,12 @@ function DonorsContent() {
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="p-0 border-t">
-                <Button className="w-full h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
-                  <a href={`tel:${donor.phone}`}><Phone className="h-5 w-5" /> যোগাযোগ করুন</a>
+              <CardFooter className="p-0 border-t flex">
+                <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
+                  <a href={`tel:${donor.phone}`}><Phone className="h-5 w-5" /> কল করুন</a>
+                </Button>
+                <Button variant="ghost" className="flex-1 h-14 rounded-none text-primary font-bold gap-2" asChild>
+                  <Link href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-4 w-4" /></Link>
                 </Button>
               </CardFooter>
             </Card>

@@ -1,12 +1,12 @@
 import { MetadataRoute } from 'next';
-import { getBlogs } from '@/lib/sheets';
+import { getBlogs, getDonors } from '@/lib/sheets';
 
 /**
- * @fileOverview SEO ফ্রেন্ডলি ডাইনামিক সাইটম্যাপ জেনারেটর।
+ * @fileOverview SEO friendly dynamic sitemap generator.
+ * Automatically indexes all pages, blog posts, and donor profiles.
  */
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // আপনার ডোমেইন অনুযায়ী আপডেট করা হয়েছে
   const baseUrl = 'https://roktodao.pro.bd';
 
   const staticRoutes = [
@@ -35,12 +35,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     blogEntries = blogs.map((blog) => ({
       url: `${baseUrl}/blog/${blog.slug}`,
       lastModified: new Date(blog.createdat || new Date()),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
     }));
   } catch (error) {
     console.error('Sitemap blog error:', error);
   }
 
-  return [...staticRoutes, ...blogEntries];
+  let donorEntries: MetadataRoute.Sitemap = [];
+  try {
+    const donors = await getDonors();
+    donorEntries = donors.map((donor) => ({
+      url: `${baseUrl}/donors/${donor.phone}`,
+      lastModified: new Date(),
+      changeFrequency: 'hourly' as const, // Fast update for new donors
+      priority: 0.6,
+    }));
+  } catch (error) {
+    console.error('Sitemap donor error:', error);
+  }
+
+  return [...staticRoutes, ...blogEntries, ...donorEntries];
 }
