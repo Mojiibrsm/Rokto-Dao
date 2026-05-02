@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed, MessageSquare } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed, MessageSquare, Lock, LogIn } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { DISTRICT_COORDS } from '@/lib/coordinates';
@@ -28,7 +28,7 @@ const CACHE_TIME_KEY = 'roktodao_donors_last_sync';
 // WhatsApp Icon SVG
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.353-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.506-.173-.005-.371-.007-.57-.007-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.216 1.36.186 1.871.11.57-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.87 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.87 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.353-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.506-.173-.005-.371-.007-.57-.007-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.216 1.36.186 1.871.11.57-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.87 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
 );
 
@@ -52,6 +52,7 @@ function DonorsContent() {
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [upazilas, setUpazilas] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
@@ -61,6 +62,11 @@ function DonorsContent() {
     area: 'যেকোনো উপজেলা',
     radius: 0 // 0 means no radius filter
   });
+
+  useEffect(() => {
+    const user = localStorage.getItem('roktodao_user');
+    setIsLoggedIn(!!user);
+  }, []);
 
   useEffect(() => {
     const bloodType = searchParams.get('bloodType');
@@ -152,6 +158,9 @@ function DonorsContent() {
 
   useEffect(() => { loadDonorsData(); }, []);
   useEffect(() => { if (allDonors.length > 0) applyFilters(allDonors); }, [filters, allDonors, userLocation]);
+
+  // Data protection: Limit visible donors for non-logged-in users
+  const visibleDonors = isLoggedIn ? donors : donors.slice(0, 3);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -253,7 +262,7 @@ function DonorsContent() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-in slide-in-from-bottom-4 duration-500">
-          {donors.map((donor, idx) => {
+          {visibleDonors.map((donor, idx) => {
             const cleanPhone = normalizePhone(donor.phone);
             const waLink = `https://wa.me/880${cleanPhone}?text=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
             const smsLink = `sms:+880${cleanPhone}?body=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
@@ -329,6 +338,27 @@ function DonorsContent() {
               </Card>
             );
           })}
+
+          {!isLoggedIn && donors.length > 3 && (
+            <Card className="overflow-hidden border-2 border-dashed border-primary/30 rounded-[2rem] bg-accent/20 flex flex-col items-center justify-center p-10 text-center space-y-6 relative min-h-[300px]">
+               <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] z-0"></div>
+               <div className="relative z-10 space-y-4">
+                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
+                    <Lock className="h-10 w-10 text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-black font-headline">আরও {donors.length - 3} জন দাতা আছেন!</h3>
+                  <p className="text-muted-foreground font-bold leading-relaxed max-w-xs mx-auto">
+                    সব রক্তদাতার তথ্য এবং সরাসরি যোগাযোগের সুবিধা পেতে আপনাকে লগইন করতে হবে।
+                  </p>
+                  <div className="flex flex-col gap-3 pt-2">
+                    <Button asChild className="rounded-full h-12 px-10 bg-primary font-black shadow-xl shadow-primary/20">
+                       <Link href="/login"><LogIn className="mr-2 h-5 w-5" /> লগইন করুন</Link>
+                    </Button>
+                    <Link href="/register" className="text-sm font-black text-primary hover:underline">এখনও একাউন্ট নেই? নিবন্ধন করুন</Link>
+                  </div>
+               </div>
+            </Card>
+          )}
         </div>
       )}
     </div>

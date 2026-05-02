@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { 
   Phone, MapPin, Droplet, ShieldCheck, 
-  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, Loader2, ShieldAlert, AlertTriangle
+  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, Loader2, ShieldAlert, AlertTriangle, Lock, LogIn, UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -37,6 +37,7 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
   const [donor, setDonor] = useState<Donor | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMessaging, setIsMessaging] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
   const [reportReason, setReportReason] = useState('Fake Profile');
@@ -45,6 +46,9 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
   const router = useRouter();
 
   useEffect(() => {
+    const user = localStorage.getItem('roktodao_user');
+    setIsLoggedIn(!!user);
+    
     async function loadDonor() {
       try {
         const data = await getDonorByPhone(phone);
@@ -59,13 +63,13 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
   }, [phone]);
 
   const handleStartChat = async () => {
-    const savedUser = localStorage.getItem('roktodao_user');
-    if (!savedUser) {
+    if (!isLoggedIn) {
       toast({ title: "লগইন প্রয়োজন", description: "মেসেজ দিতে হলে আগে লগইন করুন।" });
       router.push('/login');
       return;
     }
-    const user = JSON.parse(savedUser);
+    const savedUser = localStorage.getItem('roktodao_user');
+    const user = JSON.parse(savedUser!);
     if (user.phone === phone) {
       toast({ variant: "destructive", title: "ত্রুটি", description: "আপনি নিজেকে মেসেজ দিতে পারবেন না।" });
       return;
@@ -86,13 +90,13 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
 
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const savedUser = localStorage.getItem('roktodao_user');
-    if (!savedUser) {
+    if (!isLoggedIn) {
       toast({ title: "লগইন প্রয়োজন", description: "রিপোর্ট করতে আগে লগইন করুন।" });
       router.push('/login');
       return;
     }
-    const user = JSON.parse(savedUser);
+    const savedUser = localStorage.getItem('roktodao_user');
+    const user = JSON.parse(savedUser!);
     
     setIsReporting(true);
     try {
@@ -118,7 +122,7 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
 
   const handleShare = async () => {
     if (!donor) return;
-    const shareText = `🩸 রক্তদাতা প্রোফাইল 🩸\n\n👤 নাম: ${donor.fullName}\n💉 রক্তের গ্রুপ: *${donor.bloodType}*\n📍 এলাকা: ${donor.area ? donor.area + ', ' : ''}${donor.district}\n📞 ফোন: ${donor.phone}\n\n🙏 জরুরি প্রয়োজনে যোগাযোগ করুন।\n🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।\nhttps://roktodao.pro.bd/donors/${donor.phone}`;
+    const shareText = `🩸 রক্তদাতা প্রোফাইল 🩸\n\n👤 নাম: ${donor.fullName}\n💉 রক্তের গ্রুপ: *${donor.bloodType}*\n📍 এলাকা: ${donor.area ? donor.area + ', ' : ''}${donor.district}\n📞 ফোন: ${isLoggedIn ? donor.phone : 'লগইন করে দেখুন'}\n\n🙏 জরুরি প্রয়োজনে যোগাযোগ করুন।\n🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।\nhttps://roktodao.pro.bd/donors/${donor.phone}`;
 
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -183,7 +187,10 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
               </div>
               <div>
                 <h1 className="text-2xl font-black font-headline leading-tight">{donor.fullName}</h1>
-                <p className="text-muted-foreground font-bold mt-1">{donor.phone}</p>
+                <div className={`mt-2 font-bold ${!isLoggedIn ? 'blur-sm select-none opacity-50' : 'text-muted-foreground'}`}>
+                  {isLoggedIn ? donor.phone : '01XXXXXXXXX'}
+                </div>
+                {!isLoggedIn && <p className="text-[10px] font-black text-primary uppercase mt-1">ফোন নম্বর দেখতে লগইন করুন</p>}
               </div>
               <Badge className="bg-primary text-white text-3xl font-black h-20 w-20 flex items-center justify-center rounded-2xl shadow-xl border-4 border-white">
                 {donor.bloodType}
@@ -202,28 +209,46 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
             </CardContent>
           </Card>
 
-          <Card className="rounded-3xl border-none shadow-lg bg-slate-900 text-white p-6 space-y-4">
-            <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
-              <Info className="h-5 w-5 text-primary" /> সরাসরি যোগাযোগ
-            </h3>
-            
-            <Button size="lg" className="w-full bg-primary hover:bg-primary/90 h-14 rounded-2xl text-xl font-black gap-3 shadow-xl shadow-primary/20" asChild>
-              <a href={`tel:${donor.phone}`}><Phone className="h-6 w-6" /> কল করুন</a>
-            </Button>
+          {isLoggedIn ? (
+            <Card className="rounded-3xl border-none shadow-lg bg-slate-900 text-white p-6 space-y-4">
+              <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                <Info className="h-5 w-5 text-primary" /> সরাসরি যোগাযোগ
+              </h3>
+              
+              <Button size="lg" className="w-full bg-primary hover:bg-primary/90 h-14 rounded-2xl text-xl font-black gap-3 shadow-xl shadow-primary/20" asChild>
+                <a href={`tel:${donor.phone}`}><Phone className="h-6 w-6" /> কল করুন</a>
+              </Button>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="h-14 rounded-2xl border-green-500/50 bg-green-500/5 text-green-500 hover:bg-green-500 hover:text-white transition-all font-bold gap-2" asChild>
-                <a href={waLink} target="_blank" rel="noopener noreferrer">
-                  <WhatsAppIcon className="h-6 w-6" /> WhatsApp
-                </a>
-              </Button>
-              <Button variant="outline" className="h-14 rounded-2xl border-blue-500/50 bg-blue-500/5 text-blue-500 hover:bg-blue-500 hover:text-white transition-all font-bold gap-2" asChild>
-                <a href={smsLink}>
-                  <MessageSquare className="h-6 w-6" /> SMS
-                </a>
-              </Button>
-            </div>
-          </Card>
+              <div className="grid grid-cols-2 gap-4">
+                <Button variant="outline" className="h-14 rounded-2xl border-green-500/50 bg-green-500/5 text-green-500 hover:bg-green-500 hover:text-white transition-all font-bold gap-2" asChild>
+                  <a href={waLink} target="_blank" rel="noopener noreferrer">
+                    <WhatsAppIcon className="h-6 w-6" /> WhatsApp
+                  </a>
+                </Button>
+                <Button variant="outline" className="h-14 rounded-2xl border-blue-500/50 bg-blue-500/5 text-blue-500 hover:bg-blue-500 hover:text-white transition-all font-bold gap-2" asChild>
+                  <a href={smsLink}>
+                    <MessageSquare className="h-6 w-6" /> SMS
+                  </a>
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Card className="rounded-3xl border-none shadow-lg bg-slate-900 text-white p-8 text-center space-y-6">
+               <div className="h-14 w-14 rounded-full bg-white/10 flex items-center justify-center mx-auto border border-white/20">
+                 <Lock className="h-7 w-7 text-primary" />
+               </div>
+               <div className="space-y-2">
+                 <h3 className="text-xl font-black">যোগাযোগের তথ্য সংরক্ষিত</h3>
+                 <p className="text-sm text-slate-400 font-bold leading-relaxed">রক্তদাতার ফোন নম্বর এবং কল করার সুবিধা পেতে লগইন করুন।</p>
+               </div>
+               <div className="flex flex-col gap-3 pt-2">
+                  <Button asChild className="w-full h-12 rounded-xl bg-primary font-black">
+                    <Link href="/login"><LogIn className="mr-2 h-4 w-4" /> লগইন করুন</Link>
+                  </Button>
+                  <Link href="/register" className="text-xs font-bold text-slate-400 hover:text-white transition-colors">রেজিস্ট্রেশন নেই? নিবন্ধন করুন</Link>
+               </div>
+            </Card>
+          )}
         </div>
 
         <div className="md:col-span-2 space-y-6">
@@ -236,7 +261,7 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <p className="text-xs font-black text-primary uppercase tracking-widest">বর্তমান অবস্থান</p>
-                  <div className="flex items-center gap-3 text-lg font-bold">
+                  <div className={`flex items-center gap-3 text-lg font-bold ${!isLoggedIn ? 'blur-sm select-none opacity-50' : ''}`}>
                     <MapPin className="h-5 w-5 text-primary" />
                     <span>{donor.area ? donor.area + ', ' : ''}{donor.district}</span>
                   </div>
@@ -265,8 +290,17 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
                 <h4 className="font-bold text-lg flex items-center gap-2">
                    <MapPin className="h-5 w-5 text-primary" /> এলাকা মানচিত্র
                 </h4>
-                <div className="h-[300px] w-full rounded-3xl overflow-hidden border-2 shadow-inner">
+                <div className={`h-[300px] w-full rounded-3xl overflow-hidden border-2 shadow-inner relative ${!isLoggedIn ? 'grayscale opacity-60' : ''}`}>
                   <DonorMap donors={[donor]} />
+                  {!isLoggedIn && (
+                    <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[4px] z-10 flex flex-col items-center justify-center p-6 text-center">
+                       <Lock className="h-10 w-10 text-slate-800 mb-3" />
+                       <p className="font-black text-slate-900 text-lg">মানচিত্র দেখতে লগইন করুন</p>
+                       <Button size="sm" asChild className="mt-4 rounded-full bg-primary h-10 px-6 font-bold">
+                          <Link href="/login">লগইন <ArrowLeft className="ml-2 h-4 w-4 rotate-180" /></Link>
+                       </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
