@@ -5,11 +5,14 @@ import { Toaster } from '@/components/ui/toaster';
 import { Droplet } from 'lucide-react';
 import Link from 'next/link';
 import { FooterYear } from '@/components/footer-year';
+import Script from 'next/script';
 
 export const viewport: Viewport = {
   themeColor: '#d31d2a',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 // আপনার ডোমেইন অনুযায়ী এটি আপডেট করা হয়েছে
@@ -24,6 +27,15 @@ export const metadata: Metadata = {
   description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি সারা বাংলাদেশের যেকোনো প্রান্ত থেকে জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন।',
   keywords: ['রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান'],
   authors: [{ name: 'RoktoDao Team' }],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'RoktoDao',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     title: 'রক্তদাও - RoktoDao | মানবতার সেবায় নিয়োজিত',
     description: 'সারাদেশে জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে আমাদের সাথে যুক্ত হোন।',
@@ -48,6 +60,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
+        <link rel="apple-touch-icon" href="https://roktodao.pro.bd/files/icon-192x192.png" />
       </head>
       <body className="font-body antialiased min-h-screen bg-background flex flex-col" suppressHydrationWarning>
         <Navigation />
@@ -103,6 +116,21 @@ export default function RootLayout({
         </footer>
 
         <Toaster />
+
+        {/* Service Worker Registration */}
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                  console.log('ServiceWorker registration failed: ', err);
+                });
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
