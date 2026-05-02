@@ -7,14 +7,18 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { 
   Phone, MapPin, Droplet, ShieldCheck, 
-  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, Loader2
+  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, Loader2, ShieldAlert, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getDonorByPhone, sendMessage, type Donor } from '@/lib/sheets';
+import { getDonorByPhone, sendMessage, submitReport, type Donor } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 import { normalizePhone } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const DonorMap = dynamic(() => import('@/components/donor-map'), { 
   ssr: false,
@@ -24,7 +28,7 @@ const DonorMap = dynamic(() => import('@/components/donor-map'), {
 // WhatsApp Icon SVG
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.353-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.506-.173-.005-.371-.007-.57-.007-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.216 1.36.186 1.871.11.57-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.87 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.87 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.353-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.506-.173-.005-.371-.007-.57-.007-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.216 1.36.186 1.871.11.57-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.87 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
 );
 
@@ -33,6 +37,10 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
   const [donor, setDonor] = useState<Donor | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMessaging, setIsMessaging] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportReason, setReportReason] = useState('Fake Profile');
+  const [reportDetails, setReportDetails] = useState('');
   const { toast } = useToast();
   const router = useRouter();
 
@@ -76,6 +84,38 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
     }
   };
 
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const savedUser = localStorage.getItem('roktodao_user');
+    if (!savedUser) {
+      toast({ title: "লগইন প্রয়োজন", description: "রিপোর্ট করতে আগে লগইন করুন।" });
+      router.push('/login');
+      return;
+    }
+    const user = JSON.parse(savedUser);
+    
+    setIsReporting(true);
+    try {
+      const res = await submitReport({
+        type: 'Donor',
+        targetId: phone,
+        targetName: donor?.fullName || 'Unknown Donor',
+        reporterPhone: user.phone,
+        reason: reportReason,
+        details: reportDetails
+      });
+      if (res.success) {
+        toast({ title: "রিপোর্ট জমা হয়েছে", description: "আমরা আপনার রিপোর্টটি পর্যালোচনা করে ব্যবস্থা নেব।" });
+        setReportDialogOpen(false);
+        setReportDetails('');
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
   const handleShare = async () => {
     if (!donor) return;
     const shareText = `🩸 রক্তদাতা প্রোফাইল 🩸\n\n👤 নাম: ${donor.fullName}\n💉 রক্তের গ্রুপ: *${donor.bloodType}*\n📍 এলাকা: ${donor.area ? donor.area + ', ' : ''}${donor.district}\n📞 ফোন: ${donor.phone}\n\n🙏 জরুরি প্রয়োজনে যোগাযোগ করুন।\n🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।\nhttps://roktodao.pro.bd/donors/${donor.phone}`;
@@ -116,15 +156,25 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Button variant="ghost" asChild className="mb-8">
-        <Link href="/donors"><ArrowLeft className="mr-2 h-4 w-4" /> সব রক্তদাতা</Link>
-      </Button>
+      <div className="mb-8 flex items-center justify-between">
+        <Button variant="ghost" asChild>
+          <Link href="/donors"><ArrowLeft className="mr-2 h-4 w-4" /> সব রক্তদাতা</Link>
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-red-500 border-red-200 hover:bg-red-50 font-bold rounded-xl gap-2"
+          onClick={() => setReportDialogOpen(true)}
+        >
+          <AlertTriangle className="h-4 w-4" /> রিপোর্ট করুন
+        </Button>
+      </div>
 
       <div className="grid gap-8 md:grid-cols-3">
         <div className="md:col-span-1 space-y-6">
           <Card className="border-t-8 border-t-primary shadow-2xl rounded-[2.5rem] overflow-hidden">
             <div className="bg-primary/5 p-10 flex flex-col items-center text-center gap-6">
-              <div className="h-32 w-32 rounded-3xl bg-primary flex items-center justify-center text-white text-5xl font-black shadow-xl shadow-primary/20 rotate-3 overflow-hidden relative">
+              <div className="h-32 w-32 rounded-3xl bg-primary text-white flex items-center justify-center text-5xl font-black shadow-xl shadow-primary/20 rotate-3 overflow-hidden relative">
                 {donor.imageUrl ? (
                   <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover -rotate-3 scale-110" />
                 ) : (
@@ -223,6 +273,54 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
           </Card>
         </div>
       </div>
+
+      {/* Report Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="max-w-md rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black flex items-center gap-2">
+              <ShieldAlert className="h-6 w-6 text-red-600" /> রিপোর্ট করুন
+            </DialogTitle>
+            <DialogDescription className="font-bold">
+              কেন এই ডোনার প্রোফাইলটি রিপোর্ট করছেন? আমাদের বিস্তারিত জানান।
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleReportSubmit} className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label className="font-bold">রিপোর্টের ধরণ</Label>
+              <Select value={reportReason} onValueChange={setReportReason}>
+                <SelectTrigger className="rounded-xl h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Fake Profile">ফেক প্রোফাইল (ভুয়া তথ্য)</SelectItem>
+                  <SelectItem value="Inappropriate Content">অশোভন ছবি বা লেখা</SelectItem>
+                  <SelectItem value="Spam/Harassment">হ্যারাসমেন্ট বা বিরক্ত করা</SelectItem>
+                  <SelectItem value="Asking for Money">টাকা দাবি করা (রক্তের বিনিময়ে)</SelectItem>
+                  <SelectItem value="Other">অন্যান্য</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">বিস্তারিত বর্ণনা</Label>
+              <Textarea 
+                value={reportDetails} 
+                onChange={e => setReportDetails(e.target.value)}
+                placeholder="এখানে বিস্তারিত লিখুন..." 
+                className="rounded-xl min-h-[100px]"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setReportDialogOpen(false)}>বাতিল</Button>
+              <Button type="submit" disabled={isReporting} className="bg-red-600 hover:bg-red-700 font-bold rounded-xl h-12 px-8">
+                {isReporting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <ShieldAlert className="h-4 w-4 mr-2" />}
+                রিপোর্ট পাঠান
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

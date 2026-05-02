@@ -58,12 +58,12 @@ export default function AdminDashboard() {
   const tools = [
     { title: "Manage Donors", description: "Edit or remove existing donors from the system.", icon: UserCheck, href: "/admin/manage-donors", color: "text-red-600", bgColor: "bg-red-50" },
     { title: "Manage Blogs", description: "Write and manage blog posts for awareness.", icon: FileText, href: "/admin/manage-blogs", color: "text-blue-600", bgColor: "bg-blue-50" },
+    { title: "User Reports", description: "Manage spam requests or fake donor profiles.", icon: ShieldAlert, href: "/admin/reports", color: "text-rose-600", bgColor: "bg-rose-50" },
     { title: "Manage Gallery", description: "Add or remove images from the activities gallery.", icon: ImageIcon, href: "/admin/manage-gallery", color: "text-green-600", bgColor: "bg-green-50" },
     { title: "Manage Team", description: "Add, edit or remove team members info.", icon: Users2, href: "/admin/manage-team", color: "text-cyan-600", bgColor: "bg-cyan-50" },
     { title: "User Activity Logs", description: "Track who updated what and when.", icon: History, href: "/admin/logs", color: "text-emerald-600", bgColor: "bg-emerald-50" },
     { title: "Bulk Donor Import", description: "Smart AI import from raw text records.", icon: FileUp, href: "/admin/bulk-donors", color: "text-purple-600", bgColor: "bg-purple-100" },
-    { title: "Urgent Notification", description: "Generate personalized Bengali SMS messages.", icon: BellRing, href: "/admin/send-notification", color: "text-primary", bgColor: "bg-primary/10" },
-    { title: "Fake Detector", description: "Check if a profile looks suspicious using AI.", icon: ShieldAlert, href: "/admin/fake-profile-detector", color: "text-amber-600", bgColor: "bg-amber-50" }
+    { title: "Urgent Notification", description: "Generate personalized Bengali SMS messages.", icon: BellRing, href: "/admin/send-notification", color: "text-primary", bgColor: "bg-primary/10" }
   ];
 
   return (
@@ -76,9 +76,14 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-muted-foreground mt-2 font-bold uppercase tracking-widest text-xs">RoktoDao Central Management System</p>
         </div>
-        <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 h-12 rounded-2xl px-6 font-bold" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-2" /> লগআউট করুন
-        </Button>
+        <div className="flex gap-3">
+           <Button variant="outline" className="text-primary border-primary/20 hover:bg-primary/5 h-12 rounded-2xl px-6 font-bold" asChild>
+             <Link href="/"><Activity className="h-4 w-4 mr-2" /> ভিউ সাইট</Link>
+           </Button>
+           <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 h-12 rounded-2xl px-6 font-bold" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" /> লগআউট
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 mb-10">

@@ -3,16 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getBloodRequests, getDonors, sendMessage, type BloodRequest, type Donor } from '@/lib/sheets';
+import { getBloodRequests, getDonors, sendMessage, submitReport, type BloodRequest, type Donor } from '@/lib/sheets';
 import { findMatchingDonors, type MatchResult } from '@/lib/blood-matching';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, MessageSquare, HeartPulse, Search, Sparkles } from 'lucide-react';
+import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, MessageSquare, HeartPulse, Search, Sparkles, ShieldAlert } from 'lucide-center';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { normalizePhone } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // WhatsApp Icon SVG
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -27,6 +30,11 @@ export default function RequestsPage() {
   const [loading, setLoading] = useState(true);
   const [isMessaging, setIsMessaging] = useState<string | null>(null);
   const [selectedRequestMatches, setSelectedRequestMatches] = useState<{req: BloodRequest, matches: MatchResult[]} | null>(null);
+  const [reportRequest, setReportRequest] = useState<BloodRequest | null>(null);
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportReason, setReportReason] = useState('Spam Request');
+  const [reportDetails, setReportDetails] = useState('');
+  
   const { toast } = useToast();
   const router = useRouter();
 
@@ -49,6 +57,40 @@ export default function RequestsPage() {
   const handleShowMatches = (req: BloodRequest) => {
     const matches = findMatchingDonors(req, allDonors);
     setSelectedRequestMatches({ req, matches });
+  };
+
+  const handleReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportRequest) return;
+    
+    const savedUser = localStorage.getItem('roktodao_user');
+    if (!savedUser) {
+      toast({ title: "লগইন প্রয়োজন", description: "রিপোর্ট করতে আগে লগইন করুন।" });
+      router.push('/login');
+      return;
+    }
+    const user = JSON.parse(savedUser);
+    
+    setIsReporting(true);
+    try {
+      const res = await submitReport({
+        type: 'Request',
+        targetId: reportRequest.id,
+        targetName: reportRequest.patientName || 'Anonymous Patient',
+        reporterPhone: user.phone,
+        reason: reportReason,
+        details: reportDetails
+      });
+      if (res.success) {
+        toast({ title: "রিপোর্ট জমা হয়েছে", description: "আমরা আপনার রিপোর্টটি পর্যালোচনা করে ব্যবস্থা নেব।" });
+        setReportRequest(null);
+        setReportDetails('');
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
+    } finally {
+      setIsReporting(false);
+    }
   };
 
   const handleStartChat = async (phone: string, text: string) => {
@@ -121,13 +163,23 @@ export default function RequestsPage() {
       ) : (
         <div className="grid gap-8 md:grid-cols-2">
           {requests.map(req => (
-            <Card key={req.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all rounded-[2rem] group flex flex-col bg-white">
+            <Card key={req.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all rounded-[2rem] group flex flex-col bg-white relative">
               <CardHeader className={`${req.isUrgent ? 'bg-primary' : 'bg-slate-800'} text-white p-6`}>
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-xl font-bold">{req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}</CardTitle>
-                  <Badge className="bg-white text-primary border-none font-black px-3 py-0.5 text-[10px]">
-                    {req.isUrgent ? 'জরুরি' : 'Approved'}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setReportRequest(req)}
+                      className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/10 rounded-full"
+                    >
+                      <ShieldAlert className="h-4 w-4" />
+                    </Button>
+                    <Badge className="bg-white text-primary border-none font-black px-3 py-0.5 text-[10px]">
+                      {req.isUrgent ? 'জরুরি' : 'Approved'}
+                    </Badge>
+                  </div>
                 </div>
                 <CardDescription className="text-white/90 mt-2 flex items-center gap-2 text-base font-medium">
                   <MapPin className="h-4 w-4" /> {req.hospitalName}
@@ -238,6 +290,54 @@ export default function RequestsPage() {
               ))
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Request Dialog */}
+      <Dialog open={!!reportRequest} onOpenChange={() => setReportRequest(null)}>
+        <DialogContent className="max-w-md rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black flex items-center gap-2">
+              <ShieldAlert className="h-6 w-6 text-red-600" /> অনুরোধটি রিপোর্ট করুন
+            </DialogTitle>
+            <DialogDescription className="font-bold">
+              এই রক্তের অনুরোধটি কেন স্প্যাম বা ভুয়া মনে হচ্ছে? আমাদের জানান।
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleReportSubmit} className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label className="font-bold">রিপোর্টের ধরণ</Label>
+              <Select value={reportReason} onValueChange={setReportReason}>
+                <SelectTrigger className="rounded-xl h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Spam Request">স্প্যাম অনুরোধ (একই পোস্ট বারবার)</SelectItem>
+                  <SelectItem value="Fake/Inaccurate Info">ভুয়া তথ্য বা ভুয়া হাসপাতাল</SelectItem>
+                  <SelectItem value="Already Managed">রক্ত ম্যানেজ হয়ে গেছে তবুও পোস্ট আছে</SelectItem>
+                  <SelectItem value="Commercial/Scam">আর্থিক লেনদেন বা প্রতারণা</SelectItem>
+                  <SelectItem value="Other">অন্যান্য</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">বিস্তারিত বর্ণনা</Label>
+              <Textarea 
+                value={reportDetails} 
+                onChange={e => setReportDetails(e.target.value)}
+                placeholder="এখানে বিস্তারিত লিখুন..." 
+                className="rounded-xl min-h-[100px]"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setReportRequest(null)}>বাতিল</Button>
+              <Button type="submit" disabled={isReporting} className="bg-red-600 hover:bg-red-700 font-bold rounded-xl h-12 px-8">
+                {isReporting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <ShieldAlert className="h-4 w-4 mr-2" />}
+                রিপোর্ট পাঠান
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

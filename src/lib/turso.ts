@@ -140,6 +140,18 @@ export async function initDb() {
           date TEXT,
           time TEXT,
           status TEXT
+        )`,
+        // 11. Reports Table
+        `CREATE TABLE IF NOT EXISTS reports (
+          id TEXT PRIMARY KEY,
+          type TEXT, -- 'Donor' or 'Request'
+          targetId TEXT,
+          targetName TEXT,
+          reporterPhone TEXT,
+          reason TEXT,
+          details TEXT,
+          timestamp TEXT,
+          status TEXT DEFAULT 'Pending'
         )`
       ], "write");
       

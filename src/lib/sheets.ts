@@ -48,6 +48,18 @@ export type BloodRequest = {
   createdBy?: string;
 };
 
+export type Report = {
+  id: string;
+  type: 'Donor' | 'Request';
+  targetId: string;
+  targetName: string;
+  reporterPhone: string;
+  reason: string;
+  details: string;
+  timestamp: string;
+  status: 'Pending' | 'Reviewed' | 'Dismissed';
+};
+
 export type GalleryItem = {
   id: string;
   imageurl: string;
@@ -295,6 +307,50 @@ export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status
     args: [id, data.patientName || '', data.bloodType, data.hospitalName, data.district, data.area || '', data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', now, data.disease || '', data.diseaseInfo || '', data.createdBy || 'Public']
   });
   return { success: true, id };
+}
+
+// --- REPORTING ---
+
+export async function submitReport(data: Omit<Report, 'id' | 'timestamp' | 'status'>) {
+  await initDb();
+  const id = 'REP' + Math.random().toString(36).substring(7).toUpperCase();
+  const now = new Date().toISOString();
+  try {
+    await db.execute({
+      sql: `INSERT INTO reports (id, type, targetId, targetName, reporterPhone, reason, details, timestamp, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [id, data.type, data.targetId, data.targetName, data.reporterPhone, data.reason, data.details, now, 'Pending']
+    });
+    return { success: true };
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+}
+
+export async function getReports(): Promise<Report[]> {
+  await initDb();
+  const res = await db.execute("SELECT * FROM reports ORDER BY timestamp DESC");
+  return res.rows.map(row => ({
+    id: String(row.id),
+    type: row.type as any,
+    targetId: String(row.targetId),
+    targetName: String(row.targetName),
+    reporterPhone: String(row.reporterPhone),
+    reason: String(row.reason),
+    details: String(row.details || ''),
+    timestamp: String(row.timestamp),
+    status: row.status as any
+  }));
+}
+
+export async function updateReportStatus(id: string, status: string) {
+  await initDb();
+  await db.execute({
+    sql: "UPDATE reports SET status = ? WHERE id = ?",
+    args: [status, id]
+  });
+  return { success: true };
 }
 
 // --- GALLERY ---
