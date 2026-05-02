@@ -4,7 +4,10 @@ import { db, initDb } from './turso';
 
 /**
  * @fileOverview Service layer using Turso Database as primary source.
+ * Provides all data fetching and mutation functions for the application.
  */
+
+// --- TYPES ---
 
 export type Donor = {
   email: string;
@@ -43,13 +46,12 @@ export type BloodRequest = {
   createdBy?: string;
 };
 
-export type BloodDrive = {
+export type GalleryItem = {
   id: string;
-  name: string;
-  location: string;
-  date: string;
-  time: string;
-  distance?: string;
+  imageurl: string;
+  title: string;
+  category: string;
+  createdat: string;
 };
 
 export type TeamMember = {
@@ -61,22 +63,6 @@ export type TeamMember = {
   twitter?: string;
   linkedin?: string;
   email?: string;
-};
-
-export type GalleryItem = {
-  id: string;
-  imageurl: string;
-  title: string;
-  category: string;
-  createdat: string;
-};
-
-export type ActivityLog = {
-  timestamp: string;
-  username: string;
-  phone: string;
-  action: string;
-  details: string;
 };
 
 export type BlogPost = {
@@ -91,9 +77,45 @@ export type BlogPost = {
   createdat: string;
 };
 
+export type BloodDrive = {
+  id: string;
+  name: string;
+  location: string;
+  date: string;
+  time: string;
+  distance: string;
+};
+
+export type Message = {
+  id: string;
+  convoId: string;
+  sender: string;
+  receiver: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+};
+
+export type Conversation = {
+  id: string;
+  p1: string; // phone
+  p2: string; // phone
+  lastMessage: string;
+  updatedAt: string;
+  otherUser?: Donor; // Populated for UI
+};
+
+export type ActivityLog = {
+  timestamp: string;
+  username: string;
+  phone: string;
+  action: string;
+  details: string;
+};
+
+// --- UTILS ---
+
 const SMS_API_KEY = process.env.SMS_API_KEY;
-const SHEETS_URL = process.env.NEXT_PUBLIC_SHEETS_URL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 async function sendSMS(recipient: string, message: string) {
   if (!SMS_API_KEY) return null;
@@ -111,11 +133,11 @@ async function sendSMS(recipient: string, message: string) {
   }
 }
 
-// --- DATABASE OPERATIONS ---
+// --- DONOR OPERATIONS ---
 
 export async function getDonors(): Promise<Donor[]> {
   await initDb();
-  const res = await db.execute("SELECT * FROM donors");
+  const res = await db.execute("SELECT * FROM donors ORDER BY registrationDate DESC");
   return res.rows.map(row => ({
     email: String(row.email || ''),
     fullName: String(row.fullName || ''),
@@ -173,7 +195,7 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
     await db.execute({
       sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role, imageUrl) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.union || '', data.organization || '', data.totalDonations || 0, 'N/A', '', role, data.imageUrl || '']
+      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.union || '', data.organization || '', data.totalDonations || 0, 'N/A', data.password || '', role, data.imageUrl || '']
     });
     
     const smsMessage = `স্বাগতম ${data.fullName}! RoktoDao-তে নিবন্ধিত হওয়ার জন্য ধন্যবাদ। আপনার রক্তের গ্রুপ: ${data.bloodType}। মানবতার সেবায় পাশে থাকুন।`;
@@ -188,27 +210,13 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
 
 export async function bulkRegisterDonors(donors: any[]) {
   await initDb();
+  const date = new Date().toISOString();
   try {
     for (const d of donors) {
       await db.execute({
-        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role, imageUrl) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          d.email || `bulk-${Date.now()}-${Math.random()}@roktodao.com`, 
-          d.fullName, 
-          d.phone, 
-          d.bloodType, 
-          d.registrationDate || new Date().toISOString(), 
-          d.district || '', 
-          d.area || '', 
-          d.union || '',
-          d.organization || '', 
-          d.totalDonations || 0, 
-          d.lastDonationDate || 'N/A', 
-          d.password || '',
-          'user',
-          d.imageUrl || ''
-        ]
+        sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password, role) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user')`,
+        args: [d.email || '', d.fullName, d.phone, d.bloodType, d.registrationDate || date, d.district || '', d.area || '', d.organization || '', d.totalDonations || 0, d.lastDonationDate || 'N/A', d.password || '']
       });
     }
     return { success: true, count: donors.length };
@@ -220,42 +228,33 @@ export async function bulkRegisterDonors(donors: any[]) {
 
 export async function updateDonorProfile(originalKey: string, data: Partial<Donor>) {
   await initDb();
-  await db.execute({
-    sql: `UPDATE donors SET fullName = ?, email = ?, district = ?, area = ?, "union" = ?, organization = ?, totalDonations = ?, imageUrl = ? WHERE phone = ? OR email = ?`,
-    args: [data.fullName, data.email, data.district, data.area, data.union, data.organization, data.totalDonations, data.imageUrl || '', originalKey, originalKey]
-  });
-  return { success: true };
+  try {
+    await db.execute({
+      sql: `UPDATE donors SET fullName = ?, email = ?, phone = ?, district = ?, area = ?, organization = ?, totalDonations = ?, imageUrl = ? WHERE email = ? OR phone = ?`,
+      args: [data.fullName, data.email, data.phone, data.district, data.area, data.organization, data.totalDonations, data.imageUrl, originalKey, originalKey]
+    });
+    return { success: true };
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
 }
 
 export async function setDonorPassword(email: string, phone: string, password: string) {
   await initDb();
-  await db.execute({
-    sql: `UPDATE donors SET password = ? WHERE phone = ? OR email = ?`,
-    args: [password, phone, email]
-  });
-  return { success: true };
+  try {
+    await db.execute({
+      sql: `UPDATE donors SET password = ? WHERE email = ? OR phone = ?`,
+      args: [password, email, phone]
+    });
+    return { success: true };
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
 }
 
-export async function logActivity(userName: string, phone: string, action: string, details: string) {
-  await initDb();
-  await db.execute({
-    sql: `INSERT INTO logs (timestamp, username, phone, action, details) VALUES (?, ?, ?, ?, ?)`,
-    args: [new Date().toISOString(), userName, phone, action, details]
-  });
-  return { success: true };
-}
-
-export async function getLogs(): Promise<ActivityLog[]> {
-  await initDb();
-  const res = await db.execute("SELECT * FROM logs ORDER BY timestamp DESC LIMIT 200");
-  return res.rows.map(row => ({
-    timestamp: String(row.timestamp),
-    username: String(row.username),
-    phone: String(row.phone),
-    action: String(row.action),
-    details: String(row.details)
-  }));
-}
+// --- BLOOD REQUESTS ---
 
 export async function getBloodRequests(): Promise<BloodRequest[]> {
   await initDb();
@@ -289,52 +288,34 @@ export async function createBloodRequest(data: Omit<BloodRequest, 'id' | 'status
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [id, data.patientName || '', data.bloodType, data.hospitalName, data.district, data.area || '', data.union || '', data.phone, data.neededWhen, data.bagsNeeded, data.isUrgent ? 'Yes' : 'No', 'Approved', now, data.disease || '', data.diseaseInfo || '', data.createdBy || 'Public']
   });
-
-  const adminNumber = '01601519007';
-  const adminMessage = `নতুন রক্তের অনুরোধ! গ্রুপ: ${data.bloodType}, হাসপাতাল: ${data.hospitalName}, ফোন: ${data.phone}. RoktoDao.`;
-  await sendSMS(adminNumber, adminMessage);
-
   return { success: true, id };
 }
 
-export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
+// --- GALLERY ---
+
+export async function getGallery(): Promise<GalleryItem[]> {
   await initDb();
-  let sql = "SELECT * FROM drives";
-  let args: any[] = [];
-  if (query) {
-    sql += " WHERE name LIKE ? OR location LIKE ?";
-    args = [`%${query}%`, `%${query}%`];
-  }
-  const res = await db.execute({ sql, args });
+  const res = await db.execute("SELECT * FROM gallery ORDER BY createdat DESC");
   return res.rows.map(row => ({
     id: String(row.id),
-    name: String(row.name),
-    location: String(row.location),
-    date: String(row.date),
-    time: String(row.time),
-    distance: String(row.distance || '0 km')
+    imageurl: String(row.imageurl),
+    title: String(row.title || ''),
+    category: String(row.category || ''),
+    createdat: String(row.createdat || '')
   }));
 }
 
-export async function createBloodDrive(data: Omit<BloodDrive, 'id'>) {
+export async function addGalleryItem(data: { title: string; imageurl: string; category: string }) {
   await initDb();
-  const id = 'D' + Math.random().toString(36).substring(7).toUpperCase();
+  const id = 'G' + Math.random().toString(36).substring(7).toUpperCase();
   await db.execute({
-    sql: `INSERT INTO drives (id, name, location, date, time, distance) VALUES (?, ?, ?, ?, ?, ?)`,
-    args: [id, data.name, data.location, data.date, data.time, data.distance || '0 km']
+    sql: "INSERT INTO gallery (id, title, imageurl, category, createdat) VALUES (?, ?, ?, ?, ?)",
+    args: [id, data.title, data.imageurl, data.category, new Date().toISOString()]
   });
-  return { success: true, id };
+  return { success: true };
 }
 
-export async function scheduleAppointment(data: any) {
-  await initDb();
-  const id = 'APT' + Math.random().toString(36).substring(7).toUpperCase();
-  await db.execute({
-    sql: `INSERT INTO appointments (id, driveId, driveName, userEmail, userName, date, time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [id, data.driveId, data.driveName, data.userEmail, data.userName, data.date, data.time, 'Scheduled']
-  });
-  return { success: true, id };
-}
+// --- TEAM ---
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
   await initDb();
@@ -343,8 +324,8 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
     id: String(row.id),
     name: String(row.name),
     role: String(row.role),
-    bio: String(row.bio),
-    imageurl: String(row.imageurl),
+    bio: String(row.bio || ''),
+    imageurl: String(row.imageurl || ''),
     twitter: String(row.twitter || ''),
     linkedin: String(row.linkedin || ''),
     email: String(row.email || '')
@@ -355,42 +336,22 @@ export async function addTeamMember(data: Omit<TeamMember, 'id'>) {
   await initDb();
   const id = Math.random().toString(36).substring(7);
   await db.execute({
-    sql: `INSERT INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [id, data.name, data.role, data.bio, data.imageurl, data.twitter || '', data.linkedin || '', data.email || '']
+    sql: "INSERT INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    args: [id, data.name, data.role, data.bio, data.imageurl, data.twitter, data.linkedin, data.email]
   });
-  return { success: true, id };
+  return { success: true };
 }
 
 export async function updateTeamMember(id: string, data: Partial<TeamMember>) {
   await initDb();
   await db.execute({
-    sql: `UPDATE team SET name = ?, role = ?, bio = ?, imageurl = ? WHERE id = ?`,
-    args: [data.name, data.role, data.bio, data.imageurl, id]
+    sql: "UPDATE team SET name = ?, role = ?, bio = ?, imageurl = ?, twitter = ?, linkedin = ?, email = ? WHERE id = ?",
+    args: [data.name, data.role, data.bio, data.imageurl, data.twitter, data.linkedin, data.email, id]
   });
   return { success: true };
 }
 
-export async function getGallery(): Promise<GalleryItem[]> {
-  await initDb();
-  const res = await db.execute("SELECT * FROM gallery ORDER BY createdat DESC");
-  return res.rows.map(row => ({
-    id: String(row.id),
-    imageurl: String(row.imageurl),
-    title: String(row.title),
-    category: String(row.category),
-    createdat: String(row.createdat)
-  }));
-}
-
-export async function addGalleryItem(data: { imageurl: string; title: string; category: string }) {
-  await initDb();
-  const id = 'G' + Math.random().toString(36).substring(7).toUpperCase();
-  await db.execute({
-    sql: `INSERT INTO gallery (id, imageurl, title, category, createdat) VALUES (?, ?, ?, ?, ?)`,
-    args: [id, data.imageurl, data.title, data.category, new Date().toISOString()]
-  });
-  return { success: true, id };
-}
+// --- BLOGS ---
 
 export async function getBlogs(): Promise<BlogPost[]> {
   await initDb();
@@ -399,12 +360,12 @@ export async function getBlogs(): Promise<BlogPost[]> {
     id: String(row.id),
     title: String(row.title),
     slug: String(row.slug),
-    excerpt: String(row.excerpt),
-    content: String(row.content),
-    category: String(row.category),
-    author: String(row.author),
-    imageurl: String(row.imageurl),
-    createdat: String(row.createdat)
+    excerpt: String(row.excerpt || ''),
+    content: String(row.content || ''),
+    category: String(row.category || ''),
+    author: String(row.author || ''),
+    imageurl: String(row.imageurl || ''),
+    createdat: String(row.createdat || '')
   }));
 }
 
@@ -412,24 +373,161 @@ export async function addBlog(data: Omit<BlogPost, 'id' | 'createdat'>) {
   await initDb();
   const id = 'B' + Math.random().toString(36).substring(7).toUpperCase();
   await db.execute({
-    sql: `INSERT INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: "INSERT INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     args: [id, data.title, data.slug, data.excerpt, data.content, data.category, data.author, data.imageurl, new Date().toISOString()]
   });
-  return { success: true, id };
+  return { success: true };
 }
 
 export async function updateBlog(id: string, data: Partial<BlogPost>) {
   await initDb();
   await db.execute({
-    sql: `UPDATE blogs SET title = ?, content = ? WHERE id = ?`,
-    args: [data.title, data.content, id]
+    sql: "UPDATE blogs SET title = ?, slug = ?, excerpt = ?, content = ?, category = ?, author = ?, imageurl = ? WHERE id = ?",
+    args: [data.title, data.slug, data.excerpt, data.content, data.category, data.author, data.imageurl, id]
   });
   return { success: true };
 }
 
+// --- BLOOD DRIVES ---
+
+export async function getBloodDrives(query?: string): Promise<BloodDrive[]> {
+  await initDb();
+  const res = await db.execute("SELECT * FROM drives ORDER BY date DESC");
+  const drives = res.rows.map(row => ({
+    id: String(row.id),
+    name: String(row.name),
+    location: String(row.location),
+    date: String(row.date),
+    time: String(row.time),
+    distance: String(row.distance || '0 km')
+  }));
+  
+  if (query) {
+    return drives.filter(d => 
+      d.name.toLowerCase().includes(query.toLowerCase()) || 
+      d.location.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+  return drives;
+}
+
+export async function createBloodDrive(data: Omit<BloodDrive, 'id'>) {
+  await initDb();
+  const id = 'D' + Math.random().toString(36).substring(7).toUpperCase();
+  await db.execute({
+    sql: "INSERT INTO drives (id, name, location, date, time, distance) VALUES (?, ?, ?, ?, ?, ?)",
+    args: [id, data.name, data.location, data.date, data.time, data.distance || '0 km']
+  });
+  return { success: true };
+}
+
+export async function scheduleAppointment(data: any) {
+  await initDb();
+  const id = 'APT' + Math.random().toString(36).substring(7).toUpperCase();
+  await db.execute({
+    sql: "INSERT INTO appointments (id, driveId, driveName, userEmail, userName, date, time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    args: [id, data.driveId, data.driveName, data.userEmail, data.userName, data.date, data.time, 'Confirmed']
+  });
+  return { success: true };
+}
+
+// --- MESSAGING ---
+
+export async function getConversations(userPhone: string): Promise<Conversation[]> {
+  await initDb();
+  const res = await db.execute({
+    sql: "SELECT * FROM conversations WHERE p1 = ? OR p2 = ? ORDER BY updatedAt DESC",
+    args: [userPhone, userPhone]
+  });
+
+  const convos = res.rows.map(row => ({
+    id: String(row.id),
+    p1: String(row.p1),
+    p2: String(row.p2),
+    lastMessage: String(row.lastMessage),
+    updatedAt: String(row.updatedAt)
+  }));
+
+  const populated = [];
+  for (const convo of convos) {
+    const otherPhone = convo.p1 === userPhone ? convo.p2 : convo.p1;
+    const otherUser = await getDonorByPhone(otherPhone);
+    populated.push({ ...convo, otherUser: otherUser || undefined });
+  }
+
+  return populated as Conversation[];
+}
+
+export async function getMessages(convoId: string): Promise<Message[]> {
+  await initDb();
+  const res = await db.execute({
+    sql: "SELECT * FROM messages WHERE convoId = ? ORDER BY timestamp ASC",
+    args: [convoId]
+  });
+  return res.rows.map(row => ({
+    id: String(row.id),
+    convoId: String(row.convoId),
+    sender: String(row.sender),
+    receiver: String(row.receiver),
+    content: String(row.content),
+    timestamp: String(row.timestamp),
+    isRead: Number(row.isRead) === 1
+  }));
+}
+
+export async function sendMessage(sender: string, receiver: string, content: string) {
+  await initDb();
+  if (sender === receiver) return { success: false, error: "Cannot message self" };
+
+  const sortedPhones = [sender, receiver].sort();
+  const convoId = `CHAT_${sortedPhones[0]}_${sortedPhones[1]}`;
+  
+  await db.execute({
+    sql: `INSERT OR REPLACE INTO conversations (id, p1, p2, lastMessage, updatedAt) 
+          VALUES (?, ?, ?, ?, ?)`,
+    args: [convoId, sortedPhones[0], sortedPhones[1], content, new Date().toISOString()]
+  });
+
+  const msgId = 'MSG' + Math.random().toString(36).substring(7).toUpperCase();
+  await db.execute({
+    sql: `INSERT INTO messages (id, convoId, sender, receiver, content, timestamp) 
+          VALUES (?, ?, ?, ?, ?, ?)`,
+    args: [msgId, convoId, sender, receiver, content, new Date().toISOString()]
+  });
+
+  return { success: true, convoId };
+}
+
+// --- ADMIN & LOGS ---
+
+export async function logActivity(username: string, phone: string, action: string, details: string) {
+  await initDb();
+  try {
+    await db.execute({
+      sql: "INSERT INTO logs (timestamp, username, phone, action, details) VALUES (?, ?, ?, ?, ?)",
+      args: [new Date().toISOString(), username, phone, action, details]
+    });
+    return { success: true };
+  } catch (e) {
+    return { success: false };
+  }
+}
+
+export async function getLogs(): Promise<ActivityLog[]> {
+  await initDb();
+  const res = await db.execute("SELECT * FROM logs ORDER BY timestamp DESC LIMIT 200");
+  return res.rows.map(row => ({
+    timestamp: String(row.timestamp),
+    username: String(row.username),
+    phone: String(row.phone),
+    action: String(row.action),
+    details: String(row.details)
+  }));
+}
+
 export async function deleteEntry(sheetName: string, keyValue: string) {
   await initDb();
-  const table = sheetName.toLowerCase();
+  const table = sheetName.toLowerCase() === 'team' ? 'team' : sheetName.toLowerCase() === 'gallery' ? 'gallery' : sheetName.toLowerCase() === 'blogs' ? 'blogs' : sheetName.toLowerCase() === 'donors' ? 'donors' : sheetName.toLowerCase();
   const pk = (table === 'donors') ? 'phone' : 'id';
   await db.execute({
     sql: `DELETE FROM ${table} WHERE ${pk} = ?`,
@@ -438,8 +536,8 @@ export async function deleteEntry(sheetName: string, keyValue: string) {
   return { success: true };
 }
 
-export async function getAdminPassword(): Promise<string> {
-  return ADMIN_PASSWORD;
+export async function getAdminPassword() {
+  return process.env.ADMIN_PASSWORD || 'admin123';
 }
 
 export async function getGlobalStats() {
@@ -457,130 +555,58 @@ export async function getGlobalStats() {
   }
 }
 
-// --- MIGRATION LOGIC ---
-
 export async function migrateAllDataFromSheets() {
-  if (!SHEETS_URL) throw new Error("Sheets URL not configured.");
-  await initDb();
+  const url = process.env.NEXT_PUBLIC_SHEETS_URL;
+  if (!url) return { error: 'Sheets URL not configured' };
 
-  const actions = ['getDonors', 'getRequests', 'getTeam', 'getGallery', 'getBlogs', 'getLogs', 'getDrives'];
-  const results: any = {};
-
-  for (const action of actions) {
+  const tables = ['Donors', 'Requests', 'Gallery', 'Team', 'Blogs', 'BloodDrives'];
+  
+  for (const table of tables) {
     try {
-      const url = `${SHEETS_URL}?action=${action}`;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) {
-        results[action] = await res.json();
+      const response = await fetch(`${url}?action=get${table === 'Donors' ? 'Donors' : table === 'Requests' ? 'Requests' : table === 'BloodDrives' ? 'Drives' : table}`);
+      const data = await response.json();
+      
+      if (Array.isArray(data)) {
+        if (table === 'Donors') {
+          for (const d of data) {
+            await db.execute({
+              sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, organization, totalDonations, lastDonationDate, password, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [d.email, d.fullname, d.phone, d.bloodtype, d.registrationdate, d.district, d.area, d.organization, d.totaldonations, d.lastdonationdate, d.password, 'user']
+            });
+          }
+        } else if (table === 'Requests') {
+          for (const r of data) {
+            await db.execute({
+              sql: `INSERT OR REPLACE INTO requests (id, patientName, bloodType, hospitalName, district, area, phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [r.id, r.patientname, r.bloodtype, r.hospitalname, r.district, r.area, r.phone, r.neededwhen, r.bagsneeded, r.isurgent, r.status, r.createdat, r.disease, r.diseaseinfo, r.createdby]
+            });
+          }
+        } else if (table === 'Gallery') {
+          for (const g of data) {
+            await db.execute({
+              sql: `INSERT OR REPLACE INTO gallery (id, title, imageurl, category, createdat) VALUES (?, ?, ?, ?, ?)`,
+              args: [g.id, g.title, g.imageurl, g.category, g.createdat]
+            });
+          }
+        } else if (table === 'Team') {
+          for (const t of data) {
+            await db.execute({
+              sql: `INSERT OR REPLACE INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [t.id, t.name, t.role, t.bio, t.imageurl, t.twitter, t.linkedin, t.email]
+            });
+          }
+        } else if (table === 'Blogs') {
+          for (const b of data) {
+            await db.execute({
+              sql: `INSERT OR REPLACE INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [b.id, b.title, b.slug, b.excerpt, b.content, b.category, b.author, b.imageurl, b.createdat]
+            });
+          }
+        }
       }
     } catch (e) {
-      console.error(`Migration error for ${action}:`, e);
+      console.error(`Migration failed for ${table}:`, e);
     }
   }
-
-  // Migrate Donors
-  if (results.getDonors && Array.isArray(results.getDonors)) {
-    for (const d of results.getDonors) {
-      try {
-        await db.execute({
-          sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role, imageUrl) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-          args: [
-            d.email || '', 
-            d.fullname || d.fullName || '', 
-            String(d.phone || ''), 
-            d.bloodtype || d.bloodType || '', 
-            d.registrationdate || d.registrationDate || new Date().toISOString(), 
-            d.district || '', 
-            d.area || '', 
-            d.union || '', 
-            d.organization || '', 
-            Number(d.totaldonations || d.totalDonations || 0), 
-            d.lastdonationdate || d.lastDonationDate || 'N/A', 
-            d.password || '', 
-            'user',
-            d.imageurl || ''
-          ]
-        });
-      } catch (e) { console.error('Donor insert error:', e); }
-    }
-  }
-
-  // Migrate Requests
-  if (results.getRequests && Array.isArray(results.getRequests)) {
-    for (const r of results.getRequests) {
-      try {
-        await db.execute({
-          sql: `INSERT OR REPLACE INTO requests (id, patientName, bloodType, hospitalName, district, area, "union", phone, neededWhen, bagsNeeded, isUrgent, status, createdAt, disease, diseaseInfo, createdBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-          args: [
-            r.id, 
-            r.patientname || r.patientName || '', 
-            r.bloodtype || r.bloodType || '', 
-            r.hospitalname || r.hospitalName || '', 
-            r.district || '', 
-            r.area || '', 
-            r.union || '', 
-            String(r.phone || ''), 
-            r.neededwhen || r.neededWhen || '', 
-            String(r.bagsneeded || r.bagsNeeded || '1'), 
-            String(r.isurgent || r.isUrgent || 'No') === 'Yes' ? 'Yes' : 'No', 
-            r.status || 'Approved', 
-            r.createdat || r.createdAt || new Date().toISOString(), 
-            r.disease || '', 
-            r.diseaseinfo || r.diseaseInfo || '', 
-            r.createdby || r.createdBy || 'Public'
-          ]
-        });
-      } catch (e) { console.error('Request insert error:', e); }
-    }
-  }
-
-  // Migrate Blogs
-  if (results.getBlogs && Array.isArray(results.getBlogs)) {
-    for (const b of results.getBlogs) {
-      try {
-        await db.execute({
-          sql: `INSERT OR REPLACE INTO blogs (id, title, slug, excerpt, content, category, author, imageurl, createdat) VALUES (?,?,?,?,?,?,?,?,?)`,
-          args: [b.id, b.title, b.slug, b.excerpt, b.content, b.category, b.author, b.imageurl, b.createdat || new Date().toISOString()]
-        });
-      } catch (e) { console.error('Blog insert error:', e); }
-    }
-  }
-
-  // Migrate Team
-  if (results.getTeam && Array.isArray(results.getTeam)) {
-    for (const t of results.getTeam) {
-      try {
-        await db.execute({
-          sql: `INSERT OR REPLACE INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?,?,?,?,?,?,?,?)`,
-          args: [t.id, t.name, t.role, t.bio, t.imageurl, t.twitter || '', t.linkedin || '', t.email || '']
-        });
-      } catch (e) { console.error('Team insert error:', e); }
-    }
-  }
-
-  // Migrate Gallery
-  if (results.getGallery && Array.isArray(results.getGallery)) {
-    for (const g of results.getGallery) {
-      try {
-        await db.execute({
-          sql: `INSERT OR REPLACE INTO gallery (id, imageurl, title, category, createdat) VALUES (?,?,?,?,?)`,
-          args: [g.id, g.imageurl, g.title, g.category, g.createdat || new Date().toISOString()]
-        });
-      } catch (e) { console.error('Gallery insert error:', e); }
-    }
-  }
-
-  // Migrate Drives
-  if (results.getDrives && Array.isArray(results.getDrives)) {
-    for (const dr of results.getDrives) {
-      try {
-        await db.execute({
-          sql: `INSERT OR REPLACE INTO drives (id, name, location, date, time, distance) VALUES (?,?,?,?,?,?)`,
-          args: [dr.id, dr.name, dr.location, dr.date, dr.time, dr.distance || '0 km']
-        });
-      } catch (e) { console.error('Drive insert error:', e); }
-    }
-  }
-
   return { success: true };
 }

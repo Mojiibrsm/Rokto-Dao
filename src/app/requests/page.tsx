@@ -1,18 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getBloodRequests, type BloodRequest } from '@/lib/sheets';
+import { useRouter } from 'next/navigation';
+import { getBloodRequests, sendMessage, type BloodRequest } from '@/lib/sheets';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, Check, Activity } from 'lucide-react';
+import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, MessageSquare, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMessaging, setIsMessaging] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadRequests() {
@@ -24,43 +27,42 @@ export default function RequestsPage() {
     loadRequests();
   }, []);
 
+  const handleStartChat = async (req: BloodRequest) => {
+    const savedUser = localStorage.getItem('roktodao_user');
+    if (!savedUser) {
+      toast({ title: "লগইন প্রয়োজন", description: "মেসেজ দিতে হলে আগে লগইন করুন।" });
+      router.push('/login');
+      return;
+    }
+    const user = JSON.parse(savedUser);
+    if (user.phone === req.phone) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "আপনি নিজেকে মেসেজ দিতে পারবেন না।" });
+      return;
+    }
+
+    setIsMessaging(req.id);
+    try {
+      const res = await sendMessage(user.phone, req.phone, `আসসালামু আলাইকুম, আমি আপনার "${req.bloodType}" রক্তের অনুরোধের প্রেক্ষিতে যোগাযোগ করছি।`);
+      if (res.success) {
+        router.push(`/messages/${res.convoId}`);
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
+    } finally {
+      setIsMessaging(null);
+    }
+  };
+
   const handleShare = async (req: BloodRequest) => {
-    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨
-
-🩸 রক্তের গ্রুপ: *${req.bloodType}*
-👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}
-🩺 রোগ: ${req.disease || 'উল্লেখ নেই'}${req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}
-🏥 হাসপাতাল: ${req.hospitalName}
-📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}
-🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ
-⏰ কখন প্রয়োজন: ${req.neededWhen}
-📞 যোগাযোগ করুন: ${req.phone}
-
-🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।
-🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
+    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨\n\n🩸 রক্তের গ্রুপ: *${req.bloodType}*\n👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}\n🏥 হাসপাতাল: ${req.hospitalName}\n📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}\n🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ\n⏰ কখন প্রয়োজন: ${req.neededWhen}\n📞 যোগাযোগ করুন: ${req.phone}\n\n🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।\n🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
 
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(shareText);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = shareText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
       }
-      
-      toast({
-        title: "কপি হয়েছে!",
-        description: "রক্তের অনুরোধটি শেয়ার করার জন্য ক্লিপবোর্ডে কপি করা হয়েছে।",
-      });
+      toast({ title: "কপি হয়েছে!", description: "রক্তের অনুরোধটি শেয়ার করার জন্য কপি করা হয়েছে।" });
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "ব্যর্থ হয়েছে",
-        description: "দুঃখিত, লেখাটি কপি করা সম্ভব হয়নি।",
-      });
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
     }
   };
 
@@ -87,7 +89,6 @@ export default function RequestsPage() {
           <CardContent className="space-y-4">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
             <p className="text-xl font-bold text-muted-foreground">কোনো বর্তমান অনুরোধ পাওয়া যায়নি।</p>
-            <p className="text-muted-foreground text-sm">আপনি চাইলে একটি নতুন অনুরোধ পোস্ট করতে পারেন।</p>
             <Button variant="outline" asChild className="mt-4 border-primary text-primary">
               <Link href="/requests/new">অনুরোধ করুন</Link>
             </Button>
@@ -120,17 +121,6 @@ export default function RequestsPage() {
                   </div>
                 </div>
                 <div className="mt-6 space-y-3">
-                   {req.disease && (
-                     <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                        <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
-                          <Activity className="h-4 w-4 text-secondary" />
-                        </div>
-                        <div>
-                          <span className="font-bold text-foreground">রোগ:</span> 
-                          <p className="text-foreground">{req.disease}{req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}</p>
-                        </div>
-                     </div>
-                   )}
                    <div className="flex items-center gap-3 text-muted-foreground text-sm">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <Clock className="h-4 w-4 text-primary" />
@@ -140,25 +130,23 @@ export default function RequestsPage() {
                         <p className="text-foreground">{req.neededWhen}</p>
                       </div>
                    </div>
-                   <div className="flex items-center gap-3 text-muted-foreground text-sm">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <MapPin className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <span className="font-bold text-foreground">স্থান:</span> 
-                        <p className="text-foreground">{req.area ? req.area + ', ' : ''}{req.district}</p>
-                      </div>
-                   </div>
                 </div>
               </CardContent>
               <CardFooter className="p-0 border-t flex bg-muted/20">
+                <Button 
+                  onClick={() => handleStartChat(req)} 
+                  disabled={isMessaging === req.id}
+                  className="flex-1 h-14 rounded-none bg-slate-900 hover:bg-slate-800 text-lg font-bold gap-3"
+                >
+                  {isMessaging === req.id ? <Loader2 className="animate-spin" /> : <><MessageSquare className="h-5 w-5" /> চ্যাট করুন</>}
+                </Button>
                 <Button className="flex-1 h-14 rounded-none bg-primary hover:bg-primary/90 text-lg font-bold gap-3" asChild>
                   <a href={`tel:${req.phone}`}>
-                    <Phone className="h-5 w-5" /> যোগাযোগ
+                    <Phone className="h-5 w-5" /> কল করুন
                   </a>
                 </Button>
-                <Button onClick={() => handleShare(req)} variant="ghost" className="flex-1 h-14 rounded-none text-lg font-bold gap-3 hover:bg-primary/5 transition-colors">
-                  <Share2 className="h-5 w-5" /> শেয়ার
+                <Button onClick={() => handleShare(req)} variant="ghost" className="w-16 h-14 rounded-none border-l hover:bg-primary/5">
+                  <Share2 className="h-5 w-5 text-primary" />
                 </Button>
               </CardFooter>
             </Card>

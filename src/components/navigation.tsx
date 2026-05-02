@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Droplet, User, Menu, LayoutDashboard, LogOut, Users, Heart, ClipboardCheck, HelpCircle, Shield } from 'lucide-react';
+import { Droplet, User, Menu, LayoutDashboard, LogOut, Users, Heart, ClipboardCheck, HelpCircle, Shield, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
@@ -80,6 +80,10 @@ export function Navigation() {
               <div className="h-10 w-24 bg-muted animate-pulse rounded-full" />
             ) : user ? (
               <div className="flex items-center gap-2 sm:gap-4">
+                <Link href="/messages" className="h-10 w-10 flex items-center justify-center rounded-full bg-primary/5 text-primary border border-primary/10 hover:bg-primary/10 transition-colors relative">
+                  <MessageSquare className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></span>
+                </Link>
                 {user.role === 'admin' && (
                   <Link href="/admin" className="hidden xl:flex items-center gap-2 text-slate-900 bg-slate-100 px-3 py-2 rounded-full border hover:bg-slate-200 transition-colors font-bold text-[13px]">
                     <Shield className="h-4 w-4" /> অ্যাডমিন
@@ -137,6 +141,9 @@ export function Navigation() {
                       <div className="h-10 w-full bg-muted animate-pulse rounded-lg" />
                     ) : user ? (
                       <>
+                        <Link href="/messages" onClick={() => setIsOpen(false)} className="text-xl font-black text-foreground flex items-center gap-3">
+                          <MessageSquare className="h-6 w-6 text-primary" /> ইনবক্স
+                        </Link>
                         <Link href="/dashboard" onClick={() => setIsOpen(false)} className="text-xl font-black text-primary flex items-center gap-3">
                           <LayoutDashboard className="h-6 w-6" /> ড্যাশবোর্ড
                         </Link>

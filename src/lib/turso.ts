@@ -25,7 +25,7 @@ export async function initDb() {
   initPromise = (async () => {
     try {
       await db.batch([
-        // 1. Donors Table - Added role and imageUrl columns
+        // 1. Donors Table
         `CREATE TABLE IF NOT EXISTS donors (
           email TEXT,
           fullName TEXT,
@@ -101,16 +101,34 @@ export async function initDb() {
           action TEXT,
           details TEXT
         )`,
-        // 7. Blood Drives Table
+        // 7. Conversations Table
+        `CREATE TABLE IF NOT EXISTS conversations (
+          id TEXT PRIMARY KEY,
+          p1 TEXT,
+          p2 TEXT,
+          lastMessage TEXT,
+          updatedAt TEXT
+        )`,
+        // 8. Messages Table
+        `CREATE TABLE IF NOT EXISTS messages (
+          id TEXT PRIMARY KEY,
+          convoId TEXT,
+          sender TEXT,
+          receiver TEXT,
+          content TEXT,
+          timestamp TEXT,
+          isRead INTEGER DEFAULT 0
+        )`,
+        // 9. Blood Drives Table
         `CREATE TABLE IF NOT EXISTS drives (
           id TEXT PRIMARY KEY,
           name TEXT,
           location TEXT,
           date TEXT,
           time TEXT,
-          distance TEXT DEFAULT '0 km'
+          distance TEXT
         )`,
-        // 8. Appointments Table
+        // 10. Appointments Table
         `CREATE TABLE IF NOT EXISTS appointments (
           id TEXT PRIMARY KEY,
           driveId TEXT,
@@ -119,18 +137,9 @@ export async function initDb() {
           userName TEXT,
           date TEXT,
           time TEXT,
-          status TEXT DEFAULT 'Scheduled'
+          status TEXT
         )`
       ], "write");
-      
-      // Migration: Add role and imageUrl columns to existing databases if they don't exist
-      try {
-        await db.execute("ALTER TABLE donors ADD COLUMN role TEXT DEFAULT 'user'");
-      } catch (e) {}
-      
-      try {
-        await db.execute("ALTER TABLE donors ADD COLUMN imageUrl TEXT");
-      } catch (e) {}
       
       console.log("Database tables initialized successfully.");
     } catch (error) {

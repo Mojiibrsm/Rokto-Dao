@@ -4,32 +4,29 @@ import { useState, useEffect, use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { 
   Phone, MapPin, Droplet, ShieldCheck, 
-  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare
+  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getDonorByPhone, type Donor } from '@/lib/sheets';
+import { getDonorByPhone, sendMessage, type Donor } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
 
 const DonorMap = dynamic(() => import('@/components/donor-map'), { 
   ssr: false,
   loading: () => <div className="h-[300px] w-full bg-muted animate-pulse rounded-2xl" />
 });
 
-/**
- * @fileOverview Individual public donor profile page.
- * Displays profile image and stats with a focused map.
- */
-
 export default function DonorProfilePage({ params }: { params: Promise<{ phone: string }> }) {
   const { phone } = use(params);
   const [donor, setDonor] = useState<Donor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMessaging, setIsMessaging] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadDonor() {
@@ -44,6 +41,32 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
     }
     loadDonor();
   }, [phone]);
+
+  const handleStartChat = async () => {
+    const savedUser = localStorage.getItem('roktodao_user');
+    if (!savedUser) {
+      toast({ title: "লগইন প্রয়োজন", description: "মেসেজ দিতে হলে আগে লগইন করুন।" });
+      router.push('/login');
+      return;
+    }
+    const user = JSON.parse(savedUser);
+    if (user.phone === phone) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "আপনি নিজেকে মেসেজ দিতে পারবেন না।" });
+      return;
+    }
+
+    setIsMessaging(true);
+    try {
+      const res = await sendMessage(user.phone, phone, "আসসালামু আলাইকুম, আমি আপনার সাথে যোগাযোগ করতে চাই।");
+      if (res.success) {
+        router.push(`/messages/${res.convoId}`);
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
+    } finally {
+      setIsMessaging(false);
+    }
+  };
 
   const handleShare = async () => {
     if (!donor) return;
@@ -86,7 +109,6 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
       </Button>
 
       <div className="grid gap-8 md:grid-cols-3">
-        {/* Left Column: Basic Info */}
         <div className="md:col-span-1 space-y-6">
           <Card className="border-t-8 border-t-primary shadow-2xl rounded-[2.5rem] overflow-hidden">
             <div className="bg-primary/5 p-10 flex flex-col items-center text-center gap-6">
@@ -109,6 +131,9 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
               <div className="flex items-center gap-3 text-green-600 font-black text-sm bg-green-50 p-4 rounded-2xl border border-green-100">
                 <ShieldCheck className="h-6 w-6" /> ভেরিফাইড রক্তদাতা
               </div>
+              <Button onClick={handleStartChat} disabled={isMessaging} className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-lg font-bold gap-3">
+                {isMessaging ? <Loader2 className="animate-spin" /> : <><MessageSquare className="h-5 w-5" /> সরাসরি মেসেজ দিন</>}
+              </Button>
               <Button onClick={handleShare} variant="outline" className="w-full h-12 rounded-xl font-bold border-2 gap-2">
                 <Share2 className="h-4 w-4" /> প্রোফাইল শেয়ার করুন
               </Button>
@@ -125,7 +150,6 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
           </Card>
         </div>
 
-        {/* Right Column: Details */}
         <div className="md:col-span-2 space-y-6">
           <Card className="shadow-xl rounded-[2.5rem] border-none overflow-hidden bg-white">
             <CardHeader className="bg-primary/5 pb-6 pt-8 px-10">
@@ -169,25 +193,8 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
                   <DonorMap donors={[donor]} />
                 </div>
               </div>
-
-              <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed">
-                <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" /> রক্তদান কেন জরুরি?
-                </h4>
-                <p className="text-muted-foreground leading-relaxed">
-                  রক্তদান করলে শরীরে নতুন রক্তকণিকা তৈরি হয় এবং হৃদরোগের ঝুঁকি কমে। আপনার ১ ব্যাগ রক্ত ৩ জন মুমূর্ষু রোগীর প্রাণ বাঁচাতে পারে। আজই রক্তদান করে মানবতার পাশে দাঁড়ান।
-                </p>
-              </div>
             </CardContent>
           </Card>
-
-          <div className="flex gap-4">
-             <Button className="flex-1 h-16 rounded-2xl bg-slate-900 hover:bg-slate-800 text-xl font-bold" asChild>
-                <a href={`sms:${donor.phone}?body=আসসালামু আলাইকুম, RoktoDao থেকে আপনার নম্বরটি পেয়েছি। আমার জরুরি রক্ত প্রয়োজন। আপনি কি রক্ত দিতে পারবেন?`}>
-                  <MessageSquare className="mr-3 h-6 w-6" /> এসএমএস দিন
-                </a>
-             </Button>
-          </div>
         </div>
       </div>
     </div>
