@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getDonors, updateDonorProfile, setDonorPassword, logActivity } from '@/lib/sheets';
+import { getDonors, getBloodRequests, updateDonorProfile, setDonorPassword, logActivity, sendMessage } from '@/lib/sheets';
+import { findMatchingRequests } from '@/lib/blood-matching';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield, Camera, Link as LinkIcon, Navigation, CheckCircle2 } from 'lucide-react';
+import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield, Camera, Link as LinkIcon, Navigation, CheckCircle2, Sparkles, MessageSquare, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,7 @@ import { normalizePhone } from '@/lib/utils';
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [donorDetails, setDonorDetails] = useState<any>(null);
+  const [matchingRequests, setMatchingRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingPass, setIsUpdatingPass] = useState(false);
@@ -60,7 +62,7 @@ export default function DashboardPage() {
       if (!user) return;
       setLoading(true);
       try {
-        const allDonors = await getDonors();
+        const [allDonors, allRequests] = await Promise.all([getDonors(), getBloodRequests()]);
         const userPhone = normalizePhone(user.phone);
         
         const currentDonor = allDonors.find(d => {
@@ -85,6 +87,10 @@ export default function DashboardPage() {
             lng: currentDonor.lng
           });
           setPasswordData(currentDonor.password || '');
+
+          // Find matches for this donor
+          const matches = findMatchingRequests(currentDonor, allRequests);
+          setMatchingRequests(matches);
         }
       } catch (error) {
         console.error('Dashboard error:', error);
@@ -133,6 +139,17 @@ export default function DashboardPage() {
       toast({ variant: "destructive", title: "ব্যর্থ!", description: "পাসওয়ার্ড আপডেট করা যায়নি।" });
     } finally {
       setIsUpdatingPass(false);
+    }
+  };
+
+  const handleStartChat = async (phone: string, text: string) => {
+    try {
+      const res = await sendMessage(user.phone, phone, text);
+      if (res.success) {
+        router.push(`/messages/${res.convoId}`);
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
     }
   };
 
@@ -219,16 +236,52 @@ export default function DashboardPage() {
                   <p className="text-3xl font-black">{donorDetails?.totalDonations || 0}</p>
                 </div>
               </div>
-              
-              <div className="p-5 rounded-3xl bg-green-50 border-2 border-green-100 flex items-center gap-4">
-                <div className="h-10 w-10 rounded-2xl bg-green-100 flex items-center justify-center text-green-600">
-                  <ShieldCheck className="h-6 w-6" />
+            </CardContent>
+          </Card>
+
+          {/* Smart Matches For Donor */}
+          <Card className="rounded-[2.5rem] border-none shadow-xl bg-slate-950 text-white overflow-hidden">
+            <CardHeader className="bg-primary pb-6">
+               <CardTitle className="text-xl font-black flex items-center gap-2">
+                 <Sparkles className="h-5 w-5 text-white" /> Matches For You
+               </CardTitle>
+               <CardDescription className="text-white/70 font-bold">
+                 Urgent requests near your location.
+               </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              {matchingRequests.length === 0 ? (
+                <div className="text-center py-6 opacity-40 italic text-sm">
+                  No compatible requests nearby right now.
                 </div>
-                <div>
-                  <p className="text-xs font-black text-green-700 uppercase">অ্যাকাউন্ট স্ট্যাটাস</p>
-                  <p className="text-sm font-bold text-green-800">ভেরিফাইড রক্তদাতা</p>
-                </div>
-              </div>
+              ) : (
+                matchingRequests.map((req, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] font-black text-primary uppercase tracking-widest">Blood Needed</p>
+                        <h4 className="font-black text-lg">{req.bloodType}</h4>
+                      </div>
+                      <Badge className="bg-primary text-[10px] uppercase">{req.distance} KM Away</Badge>
+                    </div>
+                    <p className="text-xs text-slate-400 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {req.hospitalName}, {req.district}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-white text-slate-900 hover:bg-slate-100 font-black h-8 text-[10px]"
+                        onClick={() => handleStartChat(req.phone, `আসসালামু আলাইকুম, আমি আপনার "${req.bloodType}" রক্তের অনুরোধের প্রেক্ষিতে যোগাযোগ করছি।`)}
+                      >
+                        Message
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-8 w-8 rounded-lg border-white/20" asChild>
+                        <a href={`tel:${req.phone}`}><Phone className="h-3 w-3" /></a>
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -279,11 +332,6 @@ export default function DashboardPage() {
                              <p className="font-mono font-bold">{formData.lng || 'সংগ্রহ করা হয়নি'}</p>
                           </div>
                        </div>
-                       {formData.lat && (
-                         <div className="flex items-center gap-2 text-green-600 justify-center font-bold text-sm">
-                           <CheckCircle2 className="h-4 w-4" /> আপনার লোকেশন এখন ম্যাপে দেখা যাবে।
-                         </div>
-                       )}
                     </div>
 
                     <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
@@ -303,7 +351,6 @@ export default function DashboardPage() {
                                 placeholder="https://example.com/your-photo.jpg" 
                                 className="h-12 rounded-xl border-2 focus:border-primary"
                              />
-                             <p className="text-[10px] text-muted-foreground">পরামর্শ: গুগল ড্রাইভ বা ফেসবুকের ছবির লিঙ্ক ব্যবহার করতে পারেন।</p>
                           </div>
                        </div>
                     </div>
@@ -399,12 +446,6 @@ export default function DashboardPage() {
                         {isUpdatingPass ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <ShieldCheck className="h-6 w-6 mr-2" />}
                         {passwordData ? "পাসওয়ার্ড সেভ করুন" : "পাসওয়ার্ড মুছে ফেলুন"}
                       </Button>
-                      
-                      {donorDetails?.password && (
-                        <p className="text-center text-sm font-bold text-green-600 flex items-center justify-center gap-2">
-                          <ShieldCheck className="h-4 w-4" /> আপনার অ্যাকাউন্ট এখন সুরক্ষিত।
-                        </p>
-                      )}
                     </div>
                   </div>
                 </CardContent>
