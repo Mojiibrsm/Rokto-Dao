@@ -73,6 +73,7 @@ export default function RootLayout({
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><Link href="/donors" className="hover:text-primary transition-colors">দাতা খুঁজুন</Link></li>
                 <li><Link href="/requests" className="hover:text-primary transition-colors">রক্তের অনুরোধ</Link></li>
+                <li><Link href="/faq" className="hover:text-primary transition-colors">সাধারণ জিজ্ঞাসা (FAQ)</Link></li>
                 <li><Link href="/register" className="hover:text-primary transition-colors">নিবন্ধন করুন</Link></li>
                 <li><Link href="/blog" className="hover:text-primary transition-colors">ব্লগ</Link></li>
               </ul>
@@ -82,6 +83,7 @@ export default function RootLayout({
               <h3 className="text-lg font-bold border-b border-slate-700 pb-2">সম্পর্কে</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><Link href="/about" className="hover:text-primary transition-colors">আমাদের সম্পর্কে</Link></li>
+                <li><Link href="/team" className="hover:text-primary transition-colors">আমাদের টিম</Link></li>
                 <li><Link href="/contact" className="hover:text-primary transition-colors">যোগাযোগ</Link></li>
               </ul>
             </div>
