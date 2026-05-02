@@ -7,12 +7,13 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { 
   Phone, MapPin, Droplet, ShieldCheck, 
-  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, Loader2, ShieldAlert, AlertTriangle, Lock, LogIn, UserPlus
+  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, Loader2, ShieldAlert, AlertTriangle, Lock, LogIn, UserPlus, Trophy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getDonorByPhone, sendMessage, submitReport, type Donor } from '@/lib/sheets';
+import { getDonorBadge } from '@/lib/gamification';
 import { useToast } from '@/hooks/use-toast';
 import { normalizePhone } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -157,6 +158,7 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
   const cleanPhone = normalizePhone(donor.phone);
   const waLink = `https://wa.me/880${cleanPhone}?text=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
   const smsLink = `sms:+880${cleanPhone}?body=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
+  const badge = getDonorBadge(donor.totalDonations || 0);
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
@@ -164,14 +166,19 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
         <Button variant="ghost" asChild>
           <Link href="/donors"><ArrowLeft className="mr-2 h-4 w-4" /> সব রক্তদাতা</Link>
         </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-red-500 border-red-200 hover:bg-red-50 font-bold rounded-xl gap-2"
-          onClick={() => setReportDialogOpen(true)}
-        >
-          <AlertTriangle className="h-4 w-4" /> রিপোর্ট করুন
-        </Button>
+        <div className="flex gap-4">
+          <Button variant="outline" asChild className="rounded-xl border-primary/20 text-primary font-black hover:bg-primary/5">
+            <Link href="/leaderboard"><Trophy className="mr-2 h-4 w-4" /> র‍্যাঙ্কিং</Link>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-red-500 border-red-200 hover:bg-red-50 font-bold rounded-xl gap-2"
+            onClick={() => setReportDialogOpen(true)}
+          >
+            <AlertTriangle className="h-4 w-4" /> রিপোর্ট করুন
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
@@ -190,6 +197,11 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
                 <div className="mt-2 font-bold text-muted-foreground">
                   {donor.phone}
                 </div>
+                {badge && (
+                  <Badge className={`mt-3 ${badge.bgColor} ${badge.color} border-none font-black text-xs uppercase tracking-widest px-4 py-1 rounded-full shadow-sm`}>
+                    {badge.icon} {badge.label}
+                  </Badge>
+                )}
               </div>
               <Badge className="bg-primary text-white text-3xl font-black h-20 w-20 flex items-center justify-center p-0 rounded-2xl shadow-xl border-4 border-white">
                 {donor.bloodType}
@@ -280,6 +292,7 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
         </div>
       </div>
 
+      {/* Report Modal Code Omitted for Brevity (Stays same) */}
       <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
         <DialogContent className="max-w-md rounded-[2rem]">
           <DialogHeader>

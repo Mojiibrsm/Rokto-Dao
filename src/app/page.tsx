@@ -10,7 +10,7 @@ import {
   Smartphone, HandHeart, 
   Globe, Zap, Quote, Award, Activity,
   Info, MessageSquare, ExternalLink, ChevronDown, CheckCircle2,
-  UserPlus, HeartPulse, Camera
+  UserPlus, HeartPulse, Camera, Trophy, Medal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -21,6 +21,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getBloodRequests, getDonors, getGallery, type BloodRequest, type Donor, type GalleryItem } from '@/lib/sheets';
 import { DISTRICTS } from '@/lib/bangladesh-data';
 import { useToast } from '@/hooks/use-toast';
+import { getDonorBadge } from '@/lib/gamification';
+
+const bloodCompatibility = [
+  { type: 'A+', give: 'A+, AB+', take: 'A+, A-, O+, O-' },
+  { type: 'O+', give: 'O+, A+, B+, AB+', take: 'O+, O-' },
+  { type: 'B+', give: 'B+, AB+', take: 'B+, B-, O+, O-' },
+  { type: 'AB+', give: 'AB+', take: 'সবাই' },
+  { type: 'A-', give: 'A+, A-, AB+, AB-', take: 'A-, O-' },
+  { type: 'O-', give: 'সবাই', take: 'O-' },
+  { type: 'B-', give: 'B+, B-, AB+, AB-', take: 'B-, O-' },
+  { type: 'AB-', give: 'AB+, AB-', take: 'AB-, A-, B-, O-' },
+];
 
 export default function Home() {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
@@ -46,7 +58,9 @@ export default function Home() {
           getGallery()
         ]);
         setRequests(requestsData.slice(0, 4));
-        setDonors(donorsData.slice(0, 6));
+        // Sort donors by donations for gamification section
+        const sortedDonors = [...donorsData].sort((a, b) => (b.totalDonations || 0) - (a.totalDonations || 0));
+        setDonors(sortedDonors.slice(0, 6));
         setGalleryItems(galleryData.slice(0, 4));
       } catch (error) {
         console.error(error);
@@ -73,13 +87,6 @@ export default function Home() {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(shareText);
-      } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = shareText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
       }
       toast({
         title: "কপি হয়েছে!",
@@ -89,21 +96,9 @@ export default function Home() {
       toast({
         variant: "destructive",
         title: "ব্যর্থ হয়েছে",
-        description: "লেখাটি কপি করা সম্ভব হয়নি।",
       });
     }
   };
-
-  const bloodCompatibility = [
-    { type: 'A+', give: 'A+, AB+', take: 'A+, A-, O+, O-' },
-    { type: 'O+', give: 'O+, A+, B+, AB+', take: 'O+, O-' },
-    { type: 'B+', give: 'B+, AB+', take: 'B+, B-, O+, O-' },
-    { type: 'AB+', give: 'AB+ Only', take: 'সব গ্রুপ (Universal Receiver)' },
-    { type: 'A-', give: 'A+, A-, AB+, AB-', take: 'A-, O-' },
-    { type: 'O-', give: 'সব গ্রুপ (Universal Donor)', take: 'O- Only' },
-    { type: 'B-', give: 'B+, B-, AB+, AB-', take: 'B-, O-' },
-    { type: 'AB-', give: 'AB+, AB-', take: 'AB-, A-, B-, O-' },
-  ];
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
@@ -173,7 +168,62 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Stats Section */}
+      {/* 2. Top Life Savers (Leaderboard Section) */}
+      <section className="py-24 bg-slate-900 text-white overflow-hidden relative border-y-8 border-primary">
+         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+         <div className="container mx-auto px-4 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 text-center md:text-left">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 px-4 py-1 rounded-full">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">শীর্ষ রক্তদাতা</span>
+                </div>
+                <h2 className="text-4xl md:text-7xl font-black font-headline leading-tight">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
+                <p className="text-xl text-slate-400 font-bold max-w-2xl">যারা নিয়মিত রক্তদানের মাধ্যমে সমাজে দৃষ্টান্ত স্থাপন করছেন।</p>
+              </div>
+              <Button size="lg" className="rounded-full bg-white text-slate-900 hover:bg-slate-100 h-14 px-10 text-xl font-black gap-3 shadow-2xl" asChild>
+                <NextLink href="/leaderboard">সম্পূর্ণ লিডারবোর্ড <ArrowRight className="h-6 w-6" /></NextLink>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+               {loadingDonors ? (
+                 <div className="col-span-full flex justify-center py-20"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
+               ) : (
+                 donors.slice(0, 3).map((donor, i) => {
+                    const badge = getDonorBadge(donor.totalDonations || 0);
+                    return (
+                      <Card key={i} className="bg-white/5 border-2 border-white/10 rounded-[3rem] p-8 backdrop-blur shadow-2xl transition-all hover:border-primary/50 group">
+                        <div className="flex items-center gap-6">
+                           <div className="h-20 w-20 rounded-full border-4 border-primary/20 overflow-hidden relative shadow-2xl group-hover:scale-110 transition-transform">
+                             {donor.imageUrl ? <Image src={donor.imageUrl} fill alt="P" className="object-cover" /> : <div className="h-full w-full bg-primary flex items-center justify-center text-white text-3xl font-black">{donor.fullName.substring(0, 1)}</div>}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                             <h3 className="text-2xl font-black truncate">{donor.fullName}</h3>
+                             <p className="text-slate-400 font-bold text-sm">{donor.district}</p>
+                             {badge && (
+                               <Badge className={`${badge.bgColor} ${badge.color} border-none font-black text-[9px] uppercase mt-2 px-3 h-5`}>
+                                 {badge.icon} {badge.label}
+                               </Badge>
+                             )}
+                           </div>
+                        </div>
+                        <div className="mt-8 flex items-center justify-between bg-primary/10 p-5 rounded-3xl border border-primary/20">
+                           <div className="space-y-0.5">
+                             <p className="text-[10px] font-black uppercase text-primary tracking-widest">মোট রক্তদান</p>
+                             <p className="text-3xl font-black text-white">{donor.totalDonations} বার</p>
+                           </div>
+                           <Medal className={`h-10 w-10 ${i === 0 ? 'text-amber-400' : i === 1 ? 'text-slate-400' : 'text-orange-400'}`} />
+                        </div>
+                      </Card>
+                    );
+                 })
+               )}
+            </div>
+         </div>
+      </section>
+
+      {/* 3. Stats Section */}
       <section className="bg-white py-16 border-b-2 border-accent">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-10">
@@ -195,7 +245,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Active Donors Section */}
+      {/* 4. Donors Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
@@ -207,25 +257,30 @@ export default function Home() {
             <div className="flex justify-center py-20"><Loader2 className="animate-spin h-16 w-16 text-primary" /></div>
           ) : (
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-16">
-              {donors.map((donor, idx) => (
-                <Card key={idx} className="overflow-hidden border-2 border-primary/5 shadow-xl hover:shadow-primary/10 transition-all rounded-[2.5rem] group bg-accent/5 flex flex-col">
-                  <CardHeader className="bg-primary/5 pb-6 pt-8 px-8">
-                    <div className="flex justify-between items-start">
-                      <NextLink href={`/donors/${donor.phone}`} className="flex items-center gap-5 group/link">
-                        <div className="h-16 w-16 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-primary/20 transition-transform group-hover:scale-110 overflow-hidden relative shrink-0">
-                          {donor.imageUrl ? <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover" /> : (donor.fullName || 'D').substring(0, 1)}
-                        </div>
-                        <div className="space-y-1">
-                          <CardTitle className="text-2xl font-black text-foreground group-hover/link:text-primary transition-colors">{donor.fullName}</CardTitle>
-                          <CardDescription className="flex items-center gap-2 text-base font-bold text-muted-foreground"><MapPin className="h-4 w-4 text-primary" /> {donor.area ? donor.area + ', ' : ''}{donor.district}</CardDescription>
-                          {donor.organization && <div className="flex items-center gap-2 text-primary font-black text-[11px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20 w-fit mt-2 uppercase tracking-tighter"><Users className="h-3 w-3" /> {donor.organization}</div>}
-                        </div>
-                      </NextLink>
-                      <Badge className="bg-primary text-white text-2xl font-black h-14 w-14 flex items-center justify-center p-0 rounded-2xl shadow-xl border-4 border-white">{donor.bloodType}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-8 px-8 space-y-6 flex-grow">
-                    {donor.totalDonations && donor.totalDonations > 0 ? (
+              {donors.map((donor, idx) => {
+                const badge = getDonorBadge(donor.totalDonations || 0);
+                return (
+                  <Card key={idx} className="overflow-hidden border-2 border-primary/5 shadow-xl hover:shadow-primary/10 transition-all rounded-[2.5rem] group bg-accent/5 flex flex-col">
+                    <CardHeader className="bg-primary/5 pb-6 pt-8 px-8">
+                      <div className="flex justify-between items-start">
+                        <NextLink href={`/donors/${donor.phone}`} className="flex items-center gap-5 group/link">
+                          <div className="h-16 w-16 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-primary/20 transition-transform group-hover:scale-110 overflow-hidden relative shrink-0">
+                            {donor.imageUrl ? <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover" /> : (donor.fullName || 'D').substring(0, 1)}
+                          </div>
+                          <div className="space-y-1">
+                            <CardTitle className="text-2xl font-black text-foreground group-hover/link:text-primary transition-colors">{donor.fullName}</CardTitle>
+                            <CardDescription className="flex items-center gap-2 text-base font-bold text-muted-foreground"><MapPin className="h-4 w-4 text-primary" /> {donor.area ? donor.area + ', ' : ''}{donor.district}</CardDescription>
+                            {badge && (
+                              <Badge className={`mt-2 ${badge.bgColor} ${badge.color} border-none font-black text-[9px] uppercase tracking-widest px-3`}>
+                                {badge.icon} {badge.label}
+                              </Badge>
+                            )}
+                          </div>
+                        </NextLink>
+                        <Badge className="bg-primary text-white text-2xl font-black h-14 w-14 flex items-center justify-center p-0 rounded-2xl shadow-xl border-4 border-white">{donor.bloodType}</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-8 px-8 space-y-6 flex-grow">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-5 bg-white rounded-3xl border-2 border-primary/5 shadow-sm text-center">
                           <p className="text-primary uppercase text-[10px] font-black mb-2 tracking-widest">শেষ রক্তদান</p>
@@ -236,20 +291,18 @@ export default function Home() {
                           <p className="font-black text-3xl text-primary">{donor.totalDonations} বার</p>
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-3 text-primary font-black text-base bg-white px-6 py-4 rounded-2xl border-2 border-primary/10 w-full shadow-sm"><ShieldCheck className="h-6 w-6 text-green-600" /> ভেরিফাইড রক্তদাতা</div>
-                    )}
-                  </CardContent>
-                  <CardFooter className="p-0 mt-4 flex">
-                    <Button className="flex-1 h-16 rounded-none bg-primary hover:bg-secondary text-xl font-black gap-4 transition-all" asChild>
-                      <a href={`tel:${donor.phone}`}><Phone className="h-6 w-6" /> কল করুন</a>
-                    </Button>
-                    <Button variant="ghost" className="flex-1 h-16 rounded-none text-primary font-black text-xl" asChild>
-                      <NextLink href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-5 w-5 ml-2" /></NextLink>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    </CardContent>
+                    <CardFooter className="p-0 mt-4 flex">
+                      <Button className="flex-1 h-16 rounded-none bg-primary hover:bg-secondary text-xl font-black gap-4 transition-all" asChild>
+                        <a href={`tel:${donor.phone}`}><Phone className="h-6 w-6" /> কল করুন</a>
+                      </Button>
+                      <Button variant="ghost" className="flex-1 h-16 rounded-none text-primary font-black text-xl" asChild>
+                        <NextLink href={`/donors/${donor.phone}`}>প্রোফাইল <ExternalLink className="h-5 w-5 ml-2" /></NextLink>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
           )}
           <div className="text-center">
@@ -260,7 +313,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Requests Section */}
+      {/* 5. Requests Section */}
       <section className="bg-primary/5 py-24 border-y-4 border-primary/10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-center md:text-left">
@@ -337,7 +390,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Process Section */}
+      {/* 6. Process Section */}
       <section className="py-24 bg-accent/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
@@ -366,7 +419,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Why Donate Section */}
+      {/* 7. Why Donate Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-20 items-center max-w-7xl mx-auto">
@@ -412,7 +465,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Gallery Section */}
+      {/* 8. Gallery Section */}
       <section className="py-24 bg-accent/10 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
@@ -446,7 +499,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Eligibility Banner */}
+      {/* 9. Eligibility Banner */}
       <section className="container mx-auto px-4 py-16">
         <div className="bg-slate-950 rounded-[4rem] p-12 md:p-24 overflow-hidden relative group border-4 border-primary/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
           <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
@@ -484,7 +537,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. Blood Compatibility Section */}
+      {/* 10. Blood Compatibility Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-20 space-y-6">
@@ -515,7 +568,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Help Section */}
+      {/* 11. Help Section */}
       <section className="py-24 bg-slate-950 text-white text-center relative border-t-8 border-primary">
         <div className="container mx-auto px-4 space-y-12">
           <div className="h-24 w-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-xl border-4 border-primary/30 animate-pulse shadow-2xl">

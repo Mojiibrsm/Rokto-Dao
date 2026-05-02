@@ -6,11 +6,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { getDonors, getGlobalStats, type Donor } from '@/lib/sheets';
+import { getDonorBadge } from '@/lib/gamification';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed, MessageSquare, Lock, LogIn } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed, MessageSquare, Lock, LogIn, Trophy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
 import { DISTRICT_COORDS } from '@/lib/coordinates';
@@ -158,7 +159,6 @@ function DonorsContent() {
   useEffect(() => { loadDonorsData(); }, []);
   useEffect(() => { if (allDonors.length > 0) applyFilters(allDonors); }, [filters, allDonors, userLocation]);
 
-  // Data protection logic for non-logged-in users
   const isSearching = filters.bloodType !== 'যেকোনো গ্রুপ' || 
                       filters.district !== 'যেকোনো জেলা' || 
                       filters.area !== 'যেকোনো উপজেলা' || 
@@ -174,23 +174,28 @@ function DonorsContent() {
           <h1 className="text-3xl md:text-5xl font-black font-headline text-foreground">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h1>
           <p className="text-base text-muted-foreground">জরুরি প্রয়োজনে আপনার এলাকার রক্তদাতা খুঁজে নিন।</p>
         </div>
-        <div className="flex bg-muted p-1 rounded-xl shrink-0">
-          <Button 
-            variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-            size="sm" 
-            onClick={() => setViewMode('grid')}
-            className="rounded-lg font-bold gap-2"
-          >
-            <Grid className="h-4 w-4" /> লিস্ট
-          </Button>
-          <Button 
-            variant={viewMode === 'map' ? 'secondary' : 'ghost'} 
-            size="sm" 
-            onClick={() => setViewMode('map')}
-            className="rounded-lg font-bold gap-2"
-          >
-            <MapIcon className="h-4 w-4" /> ম্যাপ
-          </Button>
+        <div className="flex gap-4">
+           <Button variant="outline" asChild className="rounded-xl border-primary/20 text-primary font-black hover:bg-primary/5">
+             <Link href="/leaderboard"><Trophy className="mr-2 h-4 w-4" /> লিডারবোর্ড</Link>
+           </Button>
+           <div className="flex bg-muted p-1 rounded-xl shrink-0">
+            <Button 
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
+              size="sm" 
+              onClick={() => setViewMode('grid')}
+              className="rounded-lg font-bold gap-2"
+            >
+              <Grid className="h-4 w-4" /> লিস্ট
+            </Button>
+            <Button 
+              variant={viewMode === 'map' ? 'secondary' : 'ghost'} 
+              size="sm" 
+              onClick={() => setViewMode('map')}
+              className="rounded-lg font-bold gap-2"
+            >
+              <MapIcon className="h-4 w-4" /> ম্যাপ
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -270,6 +275,7 @@ function DonorsContent() {
             const cleanPhone = normalizePhone(donor.phone);
             const waLink = `https://wa.me/880${cleanPhone}?text=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
             const smsLink = `sms:+880${cleanPhone}?body=আসসালামু আলাইকুম, আমি RoktoDao থেকে আপনার সাথে রক্তদানের বিষয়ে যোগাযোগ করছি।`;
+            const badge = getDonorBadge(donor.totalDonations || 0);
 
             return (
               <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20 flex flex-col bg-white">
@@ -284,15 +290,10 @@ function DonorsContent() {
                         <CardDescription className="flex items-center gap-1 text-[11px] font-bold">
                           <MapPin className="h-3 w-3 text-primary" /> {donor.area || 'N/A'}, {donor.district}
                         </CardDescription>
-                        {userLocation && (donor.lat || DISTRICT_COORDS[donor.district || '']) && (
-                          <p className="text-[10px] font-black text-primary flex items-center gap-1">
-                            <LocateFixed className="h-2.5 w-2.5" /> 
-                            {Math.round(calculateDistance(
-                              userLocation.lat, userLocation.lng, 
-                              donor.lat || DISTRICT_COORDS[donor.district || '']?.[0], 
-                              donor.lng || DISTRICT_COORDS[donor.district || '']?.[1]
-                            ))} KM দূরে
-                          </p>
+                        {badge && (
+                          <Badge className={`${badge.bgColor} ${badge.color} border-none font-black text-[8px] uppercase tracking-tighter h-4 px-2`}>
+                            {badge.icon} {badge.label}
+                          </Badge>
                         )}
                       </div>
                     </Link>
@@ -300,22 +301,16 @@ function DonorsContent() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-4 space-y-4 flex-grow px-6">
-                  {donor.totalDonations && donor.totalDonations > 0 ? (
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
-                        <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">শেষ রক্তদান</p>
-                        <p className="font-bold text-foreground truncate">{donor.lastDonationDate || 'N/A'}</p>
-                      </div>
-                      <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
-                        <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">মোট রক্তদান</p>
-                        <p className="font-black text-foreground">{donor.totalDonations} বার</p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
+                      <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">শেষ রক্তদান</p>
+                      <p className="font-bold text-foreground truncate">{donor.lastDonationDate || 'N/A'}</p>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-green-600 font-bold text-xs bg-green-50 p-3 rounded-xl border border-green-100">
-                      <ShieldCheck className="h-4 w-4" /> ভেরিফাইড রক্তদাতা
+                    <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
+                      <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">মোট রক্তদান</p>
+                      <p className="font-black text-foreground">{donor.totalDonations || 0} বার</p>
                     </div>
-                  )}
+                  </div>
                   
                   <div className="flex justify-center gap-4 pt-2">
                     <Button size="icon" variant="outline" className="h-10 w-10 rounded-full bg-green-50 border-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm" asChild>
