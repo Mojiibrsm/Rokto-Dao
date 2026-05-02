@@ -8,7 +8,7 @@ import { findMatchingDonors, type MatchResult } from '@/lib/blood-matching';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, MessageSquare, HeartPulse, Search, Sparkles, ShieldAlert } from 'lucide-center';
+import { Droplet, MapPin, Calendar, Phone, Share2, Loader2, PlusCircle, Clock, AlertCircle, MessageSquare, HeartPulse, Search, Sparkles, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { normalizePhone } from '@/lib/utils';
