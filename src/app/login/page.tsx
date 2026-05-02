@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplet, Loader2, ArrowRight, Phone, Mail, KeyRound, AlertCircle, ShieldCheck, HelpCircle, User, MapPin, MessageSquare, Facebook, Globe, CheckCircle2 } from 'lucide-react';
+import { Droplet, Loader2, ArrowRight, Phone, Mail, KeyRound, AlertCircle, ShieldCheck, HelpCircle, User, MapPin, MessageSquare, Facebook, Globe, CheckCircle2, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { getDonors, logActivity, setDonorPassword } from '@/lib/sheets';
+import { getDonors, logActivity, setDonorPassword, sendPasswordResetOtp } from '@/lib/sheets';
 import { normalizePhone } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DISTRICTS } from '@/lib/bangladesh-data';
@@ -18,9 +18,13 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState(''); 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loginStep, setStep] = useState(1); // 1: Identifier, 2: Password, 3: Reset Selection, 4: Security Questions, 5: New Pass
+  const [loginStep, setStep] = useState(1); // 1: Identifier, 2: Password, 3: Reset Selection, 4: Security Questions, 5: New Pass, 6: OTP Verify
   const [foundUser, setFoundUser] = useState<any>(null);
   
+  // OTP States
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [userOtpInput, setUserOtpInput] = useState('');
+
   // Security Question States
   const [resetData, setResetData] = useState({
     fullName: '',
@@ -82,6 +86,37 @@ export default function LoginPage() {
     }
   };
 
+  const handleSendOtp = async () => {
+    if (!foundUser) return;
+    setLoading(true);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otp);
+    
+    try {
+      const res = await sendPasswordResetOtp(foundUser.phone, otp);
+      if (res && res.status === 'success') {
+        toast({ title: "OTP পাঠানো হয়েছে!", description: "আপনার ফোনে আসা ৬ সংখ্যার কোডটি এখানে দিন।" });
+        setStep(6);
+      } else {
+        toast({ variant: "destructive", title: "OTP পাঠানো যায়নি", description: "SMS সার্ভারে সমস্যা হচ্ছে। বিকল্প পদ্ধতি চেষ্টা করুন।" });
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "SMS পাঠাতে সমস্যা হয়েছে।" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userOtpInput === generatedOtp) {
+      setStep(5); // Go to set new password
+      toast({ title: "যাচাই সফল!", description: "এখন আপনার নতুন পাসওয়ার্ড সেট করুন।" });
+    } else {
+      toast({ variant: "destructive", title: "ভুল কোড", description: "সঠিক OTP কোড দিন।" });
+    }
+  };
+
   const handleSecurityCheck = (e: React.FormEvent) => {
     e.preventDefault();
     let correctCount = 0;
@@ -103,6 +138,10 @@ export default function LoginPage() {
 
   const handleNewPassSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (resetData.newPass.length < 6) {
+      toast({ variant: "destructive", title: "দুর্বল পাসওয়ার্ড", description: "কমপক্ষে ৬ সংখ্যার পাসওয়ার্ড দিন।" });
+      return;
+    }
     setLoading(true);
     try {
       const res = await setDonorPassword(foundUser.email, foundUser.phone, resetData.newPass);
@@ -111,6 +150,8 @@ export default function LoginPage() {
         setStep(1);
         setIdentifier(foundUser.phone);
         setPassword('');
+        setUserOtpInput('');
+        setGeneratedOtp('');
       }
     } catch (e) {
       toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
@@ -230,12 +271,19 @@ export default function LoginPage() {
 
           {/* STEP 3: RESET OPTIONS */}
           {loginStep === 3 && (
-            <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-4 animate-in fade-in duration-300">
               <p className="text-center font-bold text-muted-foreground mb-4">পাসওয়ার্ড রিসেট করার উপায় বেছে নিন:</p>
+              
+              <Button onClick={handleSendOtp} disabled={loading} variant="outline" className="w-full h-16 rounded-2xl border-2 border-primary/20 hover:bg-primary/5 text-lg font-bold gap-3">
+                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6 text-primary" />}
+                OTP এর মাধ্যমে (SMS)
+              </Button>
+
               <Button onClick={() => setStep(4)} variant="outline" className="w-full h-16 rounded-2xl border-2 hover:bg-primary/5 text-lg font-bold gap-3">
                 <HelpCircle className="h-6 w-6 text-primary" /> সিকিউরিটি প্রশ্নের মাধ্যমে
               </Button>
-              <div className="p-6 rounded-3xl bg-muted/30 border-2 border-dashed space-y-4">
+
+              <div className="p-6 rounded-3xl bg-muted/30 border-2 border-dashed space-y-4 mt-4">
                 <p className="text-sm font-bold text-center">অথবা অ্যাডমিনের সাথে যোগাযোগ করুন:</p>
                 <div className="grid grid-cols-2 gap-3">
                    <Button variant="outline" className="rounded-xl h-12 bg-white border-green-200 text-green-600 font-bold gap-2" asChild>
@@ -245,9 +293,6 @@ export default function LoginPage() {
                      <a href="https://www.facebook.com/MoJiiB.RsM" target="_blank" rel="noopener noreferrer"><Facebook className="h-4 w-4" /> Facebook</a>
                    </Button>
                 </div>
-                <Button variant="ghost" className="w-full font-bold text-muted-foreground" asChild>
-                  <a href="https://mojib.me/" target="_blank" rel="noopener noreferrer"><Globe className="h-4 w-4 mr-2" /> mojib.me</a>
-                </Button>
               </div>
               <Button variant="ghost" onClick={() => setStep(2)} className="w-full">ফিরে যান</Button>
             </div>
@@ -283,6 +328,36 @@ export default function LoginPage() {
 
               <Button type="submit" className="w-full h-14 bg-primary text-xl font-bold rounded-2xl shadow-xl">তথ্য যাচাই করুন</Button>
               <Button variant="ghost" onClick={() => setStep(3)} className="w-full">বিকল্প পদ্ধতি</Button>
+            </form>
+          )}
+
+          {/* STEP 6: OTP VERIFY */}
+          {loginStep === 6 && (
+            <form onSubmit={handleVerifyOtp} className="space-y-6 animate-in zoom-in-95 duration-300">
+               <div className="text-center py-4">
+                  <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Send className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-xl font-bold">OTP যাচাই করুন</h3>
+                  <p className="text-sm text-muted-foreground">আপনার <strong>{foundUser?.phone}</strong> নম্বরে পাঠানো কোডটি লিখুন।</p>
+               </div>
+
+               <div className="space-y-3">
+                 <Label className="font-bold text-center block">৬ সংখ্যার কোড</Label>
+                 <Input 
+                   placeholder="XXXXXX" 
+                   className="h-16 rounded-xl border-2 focus:border-primary text-center text-3xl font-black tracking-[0.5em]"
+                   value={userOtpInput}
+                   onChange={e => setUserOtpInput(e.target.value.replace(/\D/g, '').substring(0, 6))}
+                   required
+                   autoFocus
+                 />
+               </div>
+               
+               <div className="flex flex-col gap-3">
+                  <Button type="submit" className="w-full h-14 bg-primary text-xl font-bold rounded-2xl shadow-xl">কোড যাচাই করুন</Button>
+                  <Button variant="ghost" type="button" onClick={() => setStep(3)} className="text-muted-foreground">আবার চেষ্টা করুন</Button>
+               </div>
             </form>
           )}
 

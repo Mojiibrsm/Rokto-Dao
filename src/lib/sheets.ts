@@ -129,7 +129,7 @@ export type ActivityLog = {
 
 // --- UTILS ---
 
-const SMS_API_KEY = process.env.SMS_API_KEY;
+const SMS_API_KEY = process.env.SMS_API_KEY || '67c29759c2584'; // Defaulting based on provided context
 
 async function sendSMS(recipient: string, message: string) {
   if (!SMS_API_KEY) return null;
@@ -145,6 +145,14 @@ async function sendSMS(recipient: string, message: string) {
   } catch (error) {
     return null;
   }
+}
+
+/**
+ * Specifically for Password Reset OTP
+ */
+export async function sendPasswordResetOtp(phone: string, otp: string) {
+  const message = `রক্তদাও (RoktoDao): আপনার পাসওয়ার্ড রিসেট কোড হলো ${otp}। এটি কারো সাথে শেয়ার করবেন না।`;
+  return await sendSMS(phone, message);
 }
 
 // --- DONOR OPERATIONS ---
