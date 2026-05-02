@@ -4,13 +4,19 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { getDonors, getGlobalStats, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, User, ShieldCheck, Heart, Users, ExternalLink } from 'lucide-react';
+import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
+
+const DonorMap = dynamic(() => import('@/components/donor-map'), { 
+  ssr: false,
+  loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-2xl flex items-center justify-center">লোড হচ্ছে...</div>
+});
 
 const CACHE_KEY = 'roktodao_donors_cache';
 const CACHE_TIME_KEY = 'roktodao_donors_last_sync';
@@ -20,6 +26,7 @@ function DonorsContent() {
   const [allDonors, setAllDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
   const [upazilas, setUpazilas] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const searchParams = useSearchParams();
 
   const [filters, setFilters] = useState({
@@ -87,9 +94,29 @@ function DonorsContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="text-center mb-8 space-y-2">
-        <h1 className="text-3xl md:text-5xl font-black font-headline text-foreground">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h1>
-        <p className="text-base text-muted-foreground max-w-2xl mx-auto">আপনার এলাকায় জরুরি প্রয়োজনে রক্তদাতা খুঁজে নিন।</p>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div className="text-center md:text-left space-y-1">
+          <h1 className="text-3xl md:text-5xl font-black font-headline text-foreground">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h1>
+          <p className="text-base text-muted-foreground">জরুরি প্রয়োজনে আপনার এলাকার রক্তদাতা খুঁজে নিন।</p>
+        </div>
+        <div className="flex bg-muted p-1 rounded-xl shrink-0">
+          <Button 
+            variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            onClick={() => setViewMode('grid')}
+            className="rounded-lg font-bold gap-2"
+          >
+            <Grid className="h-4 w-4" /> লিস্ট
+          </Button>
+          <Button 
+            variant={viewMode === 'map' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            onClick={() => setViewMode('map')}
+            className="rounded-lg font-bold gap-2"
+          >
+            <MapIcon className="h-4 w-4" /> ম্যাপ
+          </Button>
+        </div>
       </div>
 
       <Card className="mb-8 shadow-lg border-t-4 border-t-primary rounded-2xl p-6 bg-white">
@@ -132,8 +159,12 @@ function DonorsContent() {
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
+      ) : viewMode === 'map' ? (
+        <div className="animate-in fade-in duration-500">
+           <DonorMap donors={donors} />
+        </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-in slide-in-from-bottom-4 duration-500">
           {donors.map((donor, idx) => (
             <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20 flex flex-col">
               <CardHeader className="bg-primary/5 pb-3">

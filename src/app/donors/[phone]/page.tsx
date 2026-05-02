@@ -3,9 +3,10 @@
 import { useState, useEffect, use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { 
-  Phone, MapPin, Droplet, ShieldCheck, Calendar, HeartPulse, 
-  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare, User
+  Phone, MapPin, Droplet, ShieldCheck, 
+  ArrowLeft, Share2, Users, CheckCircle2, Info, MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,9 +15,14 @@ import { getDonorByPhone, type Donor } from '@/lib/sheets';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
+const DonorMap = dynamic(() => import('@/components/donor-map'), { 
+  ssr: false,
+  loading: () => <div className="h-[300px] w-full bg-muted animate-pulse rounded-2xl" />
+});
+
 /**
  * @fileOverview Individual public donor profile page.
- * Displays profile image and stats.
+ * Displays profile image and stats with a focused map.
  */
 
 export default function DonorProfilePage({ params }: { params: Promise<{ phone: string }> }) {
@@ -74,7 +80,7 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
+    <div className="container mx-auto px-4 py-12 max-w-5xl">
       <Button variant="ghost" asChild className="mb-8">
         <Link href="/donors"><ArrowLeft className="mr-2 h-4 w-4" /> সব রক্তদাতা</Link>
       </Button>
@@ -116,9 +122,6 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
             <Button size="lg" className="w-full bg-primary hover:bg-primary/90 h-14 rounded-2xl text-xl font-black gap-3" asChild>
               <a href={`tel:${donor.phone}`}><Phone className="h-6 w-6" /> {donor.phone}</a>
             </Button>
-            <p className="text-[10px] text-slate-400 mt-4 text-center italic">
-              * রক্তদান একটি মানবিক কাজ। কোনো প্রকার আর্থিক লেনদেন করবেন না।
-            </p>
           </Card>
         </div>
 
@@ -155,6 +158,15 @@ export default function DonorProfilePage({ params }: { params: Promise<{ phone: 
                 <div className="p-6 rounded-3xl bg-accent/30 text-center space-y-1">
                   <p className="text-[11px] font-black text-muted-foreground uppercase">শেষ রক্তদান</p>
                   <p className="text-lg font-black">{donor.lastDonationDate || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-bold text-lg flex items-center gap-2">
+                   <MapPin className="h-5 w-5 text-primary" /> এলাকা মানচিত্র
+                </h4>
+                <div className="h-[300px] w-full rounded-3xl overflow-hidden border-2 shadow-inner">
+                  <DonorMap donors={[donor]} />
                 </div>
               </div>
 
