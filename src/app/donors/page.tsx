@@ -9,9 +9,12 @@ import { getDonors, getGlobalStats, type Donor } from '@/lib/sheets';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Droplet, MapPin, Phone, Search, Loader2, ShieldCheck, ExternalLink, Map as MapIcon, Grid, Navigation, LocateFixed } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DISTRICTS, BANGLADESH_DATA } from '@/lib/bangladesh-data';
+import { DISTRICT_COORDS } from '@/lib/coordinates';
+import { useToast } from '@/hooks/use-toast';
 
 const DonorMap = dynamic(() => import('@/components/donor-map'), { 
   ssr: false,
@@ -21,18 +24,34 @@ const DonorMap = dynamic(() => import('@/components/donor-map'), {
 const CACHE_KEY = 'roktodao_donors_cache';
 const CACHE_TIME_KEY = 'roktodao_donors_last_sync';
 
+// Haversine distance formula
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 function DonorsContent() {
   const [donors, setDonors] = useState<Donor[]>([]);
   const [allDonors, setAllDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [upazilas, setUpazilas] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const searchParams = useSearchParams();
+  const { toast } = useToast();
 
   const [filters, setFilters] = useState({
     bloodType: 'যেকোনো গ্রুপ',
     district: 'যেকোনো জেলা',
-    area: 'যেকোনো উপজেলা'
+    area: 'যেকোনো উপজেলা',
+    radius: 0 // 0 means no radius filter
   });
 
   useEffect(() => {
@@ -86,11 +105,45 @@ function DonorsContent() {
     if (filters.bloodType !== 'যেকোনো গ্রুপ') filtered = filtered.filter(d => d.bloodType === filters.bloodType);
     if (filters.district !== 'যেকোনো জেলা') filtered = filtered.filter(d => d.district?.toLowerCase() === filters.district?.toLowerCase());
     if (filters.area !== 'যেকোনো উপজেলা') filtered = filtered.filter(d => d.area?.toLowerCase() === filters.area?.toLowerCase());
+    
+    // Radius Filter
+    if (filters.radius > 0 && userLocation) {
+      filtered = filtered.filter(d => {
+        const dLat = d.lat || DISTRICT_COORDS[d.district || '']?.[0];
+        const dLng = d.lng || DISTRICT_COORDS[d.district || '']?.[1];
+        if (!dLat || !dLng) return false;
+        const dist = calculateDistance(userLocation.lat, userLocation.lng, dLat, dLng);
+        return dist <= filters.radius;
+      });
+    }
+
     setDonors(filtered);
   };
 
+  const handleDetectLocation = () => {
+    setDetectingLocation(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          setDetectingLocation(false);
+          toast({ title: "লোকেশন শনাক্ত হয়েছে!", description: "এখন আপনার আশেপাশে রক্তদাতা খুঁজতে পারবেন।" });
+          if (filters.radius === 0) setFilters(f => ({ ...f, radius: 10 })); // Default 10km radius
+        },
+        (error) => {
+          setDetectingLocation(false);
+          toast({ variant: "destructive", title: "ব্যর্থ হয়েছে", description: "অনুগ্রহ করে লোকেশন পারমিশন দিন।" });
+        }
+      );
+    } else {
+      setDetectingLocation(false);
+      toast({ variant: "destructive", title: "সাপোর্ট নেই", description: "আপনার ব্রাউজারে লোকেশন সার্ভিস কাজ করছে না।" });
+    }
+  };
+
   useEffect(() => { loadDonorsData(); }, []);
-  useEffect(() => { if (allDonors.length > 0) applyFilters(allDonors); }, [filters, allDonors]);
+  useEffect(() => { if (allDonors.length > 0) applyFilters(allDonors); }, [filters, allDonors, userLocation]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -119,10 +172,10 @@ function DonorsContent() {
         </div>
       </div>
 
-      <Card className="mb-8 shadow-lg border-t-4 border-t-primary rounded-2xl p-6 bg-white">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+      <Card className="mb-8 shadow-lg border-t-4 border-t-primary rounded-2xl p-6 bg-white overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground">রক্তের গ্রুপ</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">রক্তের গ্রুপ</label>
             <Select value={filters.bloodType} onValueChange={(val) => setFilters(f => ({ ...f, bloodType: val }))}>
               <SelectTrigger className="h-11"><SelectValue placeholder="যেকোনো গ্রুপ" /></SelectTrigger>
               <SelectContent>
@@ -132,7 +185,7 @@ function DonorsContent() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground">জেলা</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">জেলা</label>
             <Select value={filters.district} onValueChange={(val) => setFilters(f => ({ ...f, district: val, area: 'যেকোনো উপজেলা' }))}>
               <SelectTrigger className="h-11"><SelectValue placeholder="যেকোনো জেলা" /></SelectTrigger>
               <SelectContent>
@@ -141,19 +194,46 @@ function DonorsContent() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-muted-foreground">উপজেলা</label>
-            <Select value={filters.area} onValueChange={(val) => setFilters(f => ({ ...f, area: val }))} disabled={filters.district === 'যেকোনো জেলা'}>
-              <SelectTrigger className="h-11"><SelectValue placeholder="উপজেলা" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="যেকোনো উপজেলা">যেকোনো উপজেলা</SelectItem>
-                {upazilas.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          
+          {/* Near Me / Radius UI */}
+          <div className="md:col-span-2 space-y-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+            <div className="flex items-center justify-between">
+               <label className="text-xs font-black text-primary uppercase tracking-widest">আশেপাশে খুঁজুন (Radius)</label>
+               <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleDetectLocation} 
+                disabled={detectingLocation}
+                className={`h-8 px-3 rounded-full text-[10px] font-black uppercase ${userLocation ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'}`}
+               >
+                 {detectingLocation ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
+                 {userLocation ? 'Detected' : 'Detect My Location'}
+               </Button>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <Slider 
+                value={[filters.radius]} 
+                onValueChange={(val) => setFilters(f => ({ ...f, radius: val[0] }))}
+                max={50}
+                step={5}
+                disabled={!userLocation}
+                className="flex-1"
+              />
+              <div className="w-16 text-center font-black text-primary">
+                {filters.radius === 0 ? 'Off' : `${filters.radius} KM`}
+              </div>
+            </div>
           </div>
-          <Button onClick={loadDonorsData} className="h-11 bg-primary hover:bg-primary/90 text-lg font-bold gap-2 rounded-xl w-full">
-            <Search className="h-4 w-4" /> অনুসন্ধান
-          </Button>
+        </div>
+
+        <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-t pt-6">
+           <p className="text-sm font-bold text-muted-foreground italic">
+             {donors.length} জন রক্তদাতা পাওয়া গেছে।
+           </p>
+           <Button onClick={loadDonorsData} className="h-12 bg-primary hover:bg-primary/90 text-lg font-bold gap-3 rounded-xl px-10">
+             <Search className="h-5 w-5" /> অনুসন্ধান রিফ্রেশ
+           </Button>
         </div>
       </Card>
 
@@ -166,31 +246,43 @@ function DonorsContent() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-in slide-in-from-bottom-4 duration-500">
           {donors.map((donor, idx) => (
-            <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20 flex flex-col">
+            <Card key={idx} className="overflow-hidden border-none shadow-lg hover:shadow-xl transition-all rounded-2xl group border-t-4 border-primary/20 flex flex-col bg-white">
               <CardHeader className="bg-primary/5 pb-3">
                 <div className="flex justify-between items-start">
                   <Link href={`/donors/${donor.phone}`} className="flex items-center gap-3 group/link">
-                    <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl overflow-hidden relative shrink-0">
+                    <div className="h-12 w-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-xl overflow-hidden relative shrink-0 shadow-md">
                       {donor.imageUrl ? <Image src={donor.imageUrl} fill alt={donor.fullName} className="object-cover" /> : (donor.fullName || 'D').substring(0, 1)}
                     </div>
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg group-hover/link:text-primary transition-colors">{donor.fullName}</CardTitle>
-                      <CardDescription className="flex items-center gap-1 text-xs"><MapPin className="h-3 w-3 text-primary" /> {donor.area}, {donor.district}</CardDescription>
+                    <div className="space-y-0.5">
+                      <CardTitle className="text-lg group-hover/link:text-primary transition-colors line-clamp-1">{donor.fullName}</CardTitle>
+                      <CardDescription className="flex items-center gap-1 text-[11px] font-bold">
+                        <MapPin className="h-3 w-3 text-primary" /> {donor.area || 'N/A'}, {donor.district}
+                      </CardDescription>
+                      {userLocation && (donor.lat || DISTRICT_COORDS[donor.district || '']) && (
+                        <p className="text-[10px] font-black text-primary flex items-center gap-1">
+                          <LocateFixed className="h-2.5 w-2.5" /> 
+                          {Math.round(calculateDistance(
+                            userLocation.lat, userLocation.lng, 
+                            donor.lat || DISTRICT_COORDS[donor.district || '']?.[0], 
+                            donor.lng || DISTRICT_COORDS[donor.district || '']?.[1]
+                          ))} KM দূরে
+                        </p>
+                      )}
                     </div>
                   </Link>
-                  <Badge className="bg-primary text-white text-lg font-black h-10 w-10 flex items-center justify-center p-0 rounded-xl shadow-md">{donor.bloodType}</Badge>
+                  <Badge className="bg-primary text-white text-lg font-black h-10 w-10 flex items-center justify-center p-0 rounded-xl shadow-md border-2 border-white">{donor.bloodType}</Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pt-4 space-y-4 flex-grow">
+              <CardContent className="pt-4 space-y-4 flex-grow px-6">
                 {donor.totalDonations && donor.totalDonations > 0 ? (
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 bg-muted/30 rounded-xl border text-center">
-                      <p className="text-muted-foreground uppercase text-[10px] font-bold mb-1">শেষ রক্তদান</p>
-                      <p className="font-bold text-foreground">{donor.lastDonationDate || 'N/A'}</p>
+                    <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
+                      <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">শেষ রক্তদান</p>
+                      <p className="font-bold text-foreground truncate">{donor.lastDonationDate || 'N/A'}</p>
                     </div>
-                    <div className="p-3 bg-muted/30 rounded-xl border text-center">
-                      <p className="text-muted-foreground uppercase text-[10px] font-bold mb-1">মোট রক্তদান</p>
-                      <p className="font-bold text-foreground">{donor.totalDonations} বার</p>
+                    <div className="p-2.5 bg-muted/30 rounded-xl border text-center">
+                      <p className="text-muted-foreground uppercase text-[9px] font-black mb-1">মোট রক্তদান</p>
+                      <p className="font-black text-foreground">{donor.totalDonations} বার</p>
                     </div>
                   </div>
                 ) : (

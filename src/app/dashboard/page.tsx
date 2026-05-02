@@ -8,7 +8,7 @@ import { getDonors, updateDonorProfile, setDonorPassword, logActivity } from '@/
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield, Camera, Link as LinkIcon } from 'lucide-react';
+import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield, Camera, Link as LinkIcon, Navigation, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUpdatingPass, setIsUpdatingPass] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const [showPass, setShowPass] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -35,7 +36,9 @@ export default function DashboardPage() {
     organization: '',
     totalDonations: 0,
     lastDonationDate: '',
-    imageUrl: ''
+    imageUrl: '',
+    lat: undefined as number | undefined,
+    lng: undefined as number | undefined
   });
 
   const [passwordData, setPasswordData] = useState('');
@@ -77,7 +80,9 @@ export default function DashboardPage() {
             organization: currentDonor.organization || '',
             totalDonations: currentDonor.totalDonations || 0,
             lastDonationDate: currentDonor.lastDonationDate === 'N/A' ? '' : currentDonor.lastDonationDate || '',
-            imageUrl: currentDonor.imageUrl || ''
+            imageUrl: currentDonor.imageUrl || '',
+            lat: currentDonor.lat,
+            lng: currentDonor.lng
           });
           setPasswordData(currentDonor.password || '');
         }
@@ -128,6 +133,27 @@ export default function DashboardPage() {
       toast({ variant: "destructive", title: "ব্যর্থ!", description: "পাসওয়ার্ড আপডেট করা যায়নি।" });
     } finally {
       setIsUpdatingPass(false);
+    }
+  };
+
+  const handleDetectLocation = () => {
+    setDetectingLocation(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setFormData(prev => ({ ...prev, lat: latitude, lng: longitude }));
+          setDetectingLocation(false);
+          toast({ title: "লোকেশন শনাক্ত হয়েছে!", description: "এখন 'তথ্য সেভ করুন' বাটনে ক্লিক করে সেভ করুন।" });
+        },
+        (error) => {
+          setDetectingLocation(false);
+          toast({ variant: "destructive", title: "ব্যর্থ হয়েছে", description: "অনুগ্রহ করে ব্রাউজারে লোকেশন পারমিশন দিন।" });
+        }
+      );
+    } else {
+      setDetectingLocation(false);
+      toast({ variant: "destructive", title: "সাপোর্ট নেই", description: "আপনার ব্রাউজারে জিপিএস সাপোর্ট নেই।" });
     }
   };
 
@@ -226,6 +252,40 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="p-10 pt-8">
                   <form onSubmit={handleUpdateProfile} className="space-y-8">
+                    {/* Location Detection Block */}
+                    <div className="p-8 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
+                       <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <Navigation className="h-7 w-7 text-primary" />
+                            <h4 className="font-black text-xl">আমার সঠিক অবস্থান</h4>
+                          </div>
+                          <Button 
+                            type="button" 
+                            onClick={handleDetectLocation} 
+                            disabled={detectingLocation}
+                            className="bg-primary hover:bg-primary/90 text-white rounded-full font-black px-6 shadow-lg shadow-primary/10"
+                          >
+                            {detectingLocation ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Navigation className="h-4 w-4 mr-2" />}
+                            Detect Location
+                          </Button>
+                       </div>
+                       <div className="flex flex-col md:flex-row gap-4 items-center">
+                          <div className={`p-4 rounded-2xl border-2 flex-1 w-full text-center ${formData.lat ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200'}`}>
+                             <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">অক্ষাংশ (Latitude)</p>
+                             <p className="font-mono font-bold">{formData.lat || 'সংগ্রহ করা হয়নি'}</p>
+                          </div>
+                          <div className={`p-4 rounded-2xl border-2 flex-1 w-full text-center ${formData.lng ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200'}`}>
+                             <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">দ্রাঘিমাংশ (Longitude)</p>
+                             <p className="font-mono font-bold">{formData.lng || 'সংগ্রহ করা হয়নি'}</p>
+                          </div>
+                       </div>
+                       {formData.lat && (
+                         <div className="flex items-center gap-2 text-green-600 justify-center font-bold text-sm">
+                           <CheckCircle2 className="h-4 w-4" /> আপনার লোকেশন এখন ম্যাপে দেখা যাবে।
+                         </div>
+                       )}
+                    </div>
+
                     <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
                        <div className="flex items-center gap-4 mb-2">
                           <Camera className="h-6 w-6 text-primary" />

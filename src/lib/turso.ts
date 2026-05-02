@@ -25,7 +25,7 @@ export async function initDb() {
   initPromise = (async () => {
     try {
       await db.batch([
-        // 1. Donors Table
+        // 1. Donors Table (Updated with lat, lng)
         `CREATE TABLE IF NOT EXISTS donors (
           email TEXT,
           fullName TEXT,
@@ -41,7 +41,9 @@ export async function initDb() {
           lastDonationDate TEXT,
           password TEXT,
           role TEXT DEFAULT 'user',
-          imageUrl TEXT
+          imageUrl TEXT,
+          lat REAL,
+          lng REAL
         )`,
         // 2. Blood Requests Table
         `CREATE TABLE IF NOT EXISTS requests (

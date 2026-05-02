@@ -25,6 +25,8 @@ export type Donor = {
   password?: string;
   role?: 'user' | 'admin';
   imageUrl?: string;
+  lat?: number;
+  lng?: number;
 };
 
 export type BloodRequest = {
@@ -153,7 +155,9 @@ export async function getDonors(): Promise<Donor[]> {
     lastDonationDate: String(row.lastDonationDate || ''),
     password: String(row.password || ''),
     role: (row.role || 'user') as any,
-    imageUrl: String(row.imageUrl || '')
+    imageUrl: String(row.imageUrl || ''),
+    lat: row.lat ? Number(row.lat) : undefined,
+    lng: row.lng ? Number(row.lng) : undefined
   }));
 }
 
@@ -180,7 +184,9 @@ export async function getDonorByPhone(phone: string): Promise<Donor | null> {
     lastDonationDate: String(row.lastDonationDate || ''),
     password: String(row.password || ''),
     role: (row.role || 'user') as any,
-    imageUrl: String(row.imageUrl || '')
+    imageUrl: String(row.imageUrl || ''),
+    lat: row.lat ? Number(row.lat) : undefined,
+    lng: row.lng ? Number(row.lng) : undefined
   };
 }
 
@@ -193,9 +199,9 @@ export async function registerDonor(data: Omit<Donor, 'registrationDate'>) {
     const role = count === 0 ? 'admin' : 'user';
 
     await db.execute({
-      sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role, imageUrl) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.union || '', data.organization || '', data.totalDonations || 0, 'N/A', data.password || '', role, data.imageUrl || '']
+      sql: `INSERT OR REPLACE INTO donors (email, fullName, phone, bloodType, registrationDate, district, area, "union", organization, totalDonations, lastDonationDate, password, role, imageUrl, lat, lng) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [data.email, data.fullName, data.phone, data.bloodType, date, data.district || '', data.area || '', data.union || '', data.organization || '', data.totalDonations || 0, 'N/A', data.password || '', role, data.imageUrl || '', data.lat || null, data.lng || null]
     });
     
     const smsMessage = `স্বাগতম ${data.fullName}! RoktoDao-তে নিবন্ধিত হওয়ার জন্য ধন্যবাদ। আপনার রক্তের গ্রুপ: ${data.bloodType}। মানবতার সেবায় পাশে থাকুন।`;
@@ -230,8 +236,8 @@ export async function updateDonorProfile(originalKey: string, data: Partial<Dono
   await initDb();
   try {
     await db.execute({
-      sql: `UPDATE donors SET fullName = ?, email = ?, phone = ?, district = ?, area = ?, organization = ?, totalDonations = ?, imageUrl = ? WHERE email = ? OR phone = ?`,
-      args: [data.fullName, data.email, data.phone, data.district, data.area, data.organization, data.totalDonations, data.imageUrl, originalKey, originalKey]
+      sql: `UPDATE donors SET fullName = ?, email = ?, phone = ?, district = ?, area = ?, organization = ?, totalDonations = ?, imageUrl = ?, lat = ?, lng = ? WHERE email = ? OR phone = ?`,
+      args: [data.fullName, data.email, data.phone, data.district, data.area, data.organization, data.totalDonations, data.imageUrl, data.lat || null, data.lng || null, originalKey, originalKey]
     });
     return { success: true };
   } catch (e) {
