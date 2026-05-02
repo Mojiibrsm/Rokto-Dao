@@ -60,7 +60,7 @@ function DonorsContent() {
     bloodType: 'যেকোনো গ্রুপ',
     district: 'যেকোনো জেলা',
     area: 'যেকোনো উপজেলা',
-    radius: 0 // 0 means no radius filter
+    radius: 0 
   });
 
   useEffect(() => {
@@ -120,7 +120,6 @@ function DonorsContent() {
     if (filters.district !== 'যেকোনো জেলা') filtered = filtered.filter(d => d.district?.toLowerCase() === filters.district?.toLowerCase());
     if (filters.area !== 'যেকোনো উপজেলা') filtered = filtered.filter(d => d.area?.toLowerCase() === filters.area?.toLowerCase());
     
-    // Radius Filter
     if (filters.radius > 0 && userLocation) {
       filtered = filtered.filter(d => {
         const dLat = d.lat || DISTRICT_COORDS[d.district || '']?.[0];
@@ -143,7 +142,7 @@ function DonorsContent() {
           setUserLocation({ lat: latitude, lng: longitude });
           setDetectingLocation(false);
           toast({ title: "লোকেশন শনাক্ত হয়েছে!", description: "এখন আপনার আশেপাশে রক্তদাতা খুঁজতে পারবেন।" });
-          if (filters.radius === 0) setFilters(f => ({ ...f, radius: 10 })); // Default 10km radius
+          if (filters.radius === 0) setFilters(f => ({ ...f, radius: 10 }));
         },
         (error) => {
           setDetectingLocation(false);
@@ -159,8 +158,14 @@ function DonorsContent() {
   useEffect(() => { loadDonorsData(); }, []);
   useEffect(() => { if (allDonors.length > 0) applyFilters(allDonors); }, [filters, allDonors, userLocation]);
 
-  // Data protection: Limit visible donors for non-logged-in users
-  const visibleDonors = isLoggedIn ? donors : donors.slice(0, 3);
+  // Data protection logic for non-logged-in users
+  const isSearching = filters.bloodType !== 'যেকোনো গ্রুপ' || 
+                      filters.district !== 'যেকোনো জেলা' || 
+                      filters.area !== 'যেকোনো উপজেলা' || 
+                      filters.radius > 0;
+  
+  const visibleLimit = isSearching ? 5 : 10;
+  const visibleDonors = isLoggedIn ? donors : donors.slice(0, visibleLimit);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -212,7 +217,6 @@ function DonorsContent() {
             </Select>
           </div>
           
-          {/* Near Me / Radius UI */}
           <div className="md:col-span-2 space-y-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
             <div className="flex items-center justify-between">
                <label className="text-xs font-black text-primary uppercase tracking-widest">আশেপাশে খুঁজুন (Radius)</label>
@@ -313,7 +317,6 @@ function DonorsContent() {
                     </div>
                   )}
                   
-                  {/* Quick Contact Icons */}
                   <div className="flex justify-center gap-4 pt-2">
                     <Button size="icon" variant="outline" className="h-10 w-10 rounded-full bg-green-50 border-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm" asChild>
                       <a href={waLink} target="_blank" rel="noopener noreferrer">
@@ -339,14 +342,14 @@ function DonorsContent() {
             );
           })}
 
-          {!isLoggedIn && donors.length > 3 && (
+          {!isLoggedIn && donors.length > visibleLimit && (
             <Card className="overflow-hidden border-2 border-dashed border-primary/30 rounded-[2rem] bg-accent/20 flex flex-col items-center justify-center p-10 text-center space-y-6 relative min-h-[300px]">
                <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] z-0"></div>
                <div className="relative z-10 space-y-4">
                   <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
                     <Lock className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="text-2xl font-black font-headline">আরও {donors.length - 3} জন দাতা আছেন!</h3>
+                  <h3 className="text-2xl font-black font-headline">আরও {donors.length - visibleLimit} জন দাতা আছেন!</h3>
                   <p className="text-muted-foreground font-bold leading-relaxed max-w-xs mx-auto">
                     সব রক্তদাতার তথ্য এবং সরাসরি যোগাযোগের সুবিধা পেতে আপনাকে লগইন করতে হবে।
                   </p>
