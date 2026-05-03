@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: '%s | RoktoDao'
   },
   description: 'রক্তদাও (RoktoDao) বাংলাদেশের একটি অন্যতম বৃহৎ রক্তদাতার প্ল্যাটফর্ম। এখানে আপনি সারা বাংলাদেশের যেকোনো প্রান্ত থেকে জরুরি মুহূর্তে রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজে পেতে পারেন।',
-  keywords: ['রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান'],
+  keywords: ['রক্তদাও', 'RoktoDao', 'রক্তদান', 'রক্তদাতা খুঁজুন', 'বাংলাদেশে রক্তদান', 'Blood Donation Bangladesh', 'Emergency Blood', 'Life Saving App'],
   authors: [{ name: 'RoktoDao Team' }],
   manifest: '/manifest.webmanifest',
   appleWebApp: {
@@ -37,11 +37,25 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'রক্তদাও - RoktoDao | মানবতার সেবায় নিয়োজিত',
-    description: 'সারাদেশে জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে আমাদের সাথে যুক্ত হোন।',
+    description: 'সারাদেশে জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে আমাদের সাথে যুক্ত হোন। রক্ত দিয়ে জীবন বাঁচান।',
     url: baseUrl,
     siteName: 'RoktoDao',
     locale: 'bn_BD',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'RoktoDao - Blood Donation Platform',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RoktoDao - Blood Donation Bangladesh',
+    description: 'Find blood donors nearby instantly. Join our mission to save lives.',
+    images: ['/og-image.png'],
   },
   alternates: {
     canonical: './',

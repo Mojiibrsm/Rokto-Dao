@@ -58,7 +58,6 @@ export default function Home() {
           getGallery()
         ]);
         setRequests(requestsData.slice(0, 4));
-        // Sort donors by donations for display
         const sortedDonors = [...donorsData].sort((a, b) => (b.totalDonations || 0) - (a.totalDonations || 0));
         setDonors(sortedDonors.slice(0, 6));
         setGalleryItems(galleryData.slice(0, 4));
@@ -81,38 +80,55 @@ export default function Home() {
   };
 
   const handleShare = async (req: BloodRequest) => {
-    const diseasePart = req.disease ? `\n🩺 রোগ: ${req.disease}${req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}` : '';
-    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨\n\n🩸 রক্তের গ্রুপ: *${req.bloodType}*\n👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}${diseasePart}\n🏥 হাসপাতাল: ${req.hospitalName}\n📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}\n🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ\n⏰ কখন প্রয়োজন: ${req.neededWhen}\n📞 যোগাযোগ করুন: ${req.phone}\n\n🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।\n🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
-
+    const shareText = `🚨 জরুরী রক্তের অনুরোধ (Blood Request) 🚨\n\n🩸 রক্তের গ্রুপ: *${req.bloodType}*\n👤 রোগী: ${req.patientName || 'নাম প্রকাশে অনিচ্ছুক'}\n🏥 হাসপাতাল: ${req.hospitalName}\n📍 স্থান: ${req.area ? req.area + ', ' : ''}${req.district}\n🎒 রক্তের পরিমাণ: ${req.bagsNeeded} ব্যাগ\n⏰ কখন প্রয়োজন: ${req.neededWhen}\n📞 যোগাযোগ করুন: ${req.phone}\n\n🙏 রক্ত দিয়ে জীবন বাঁচাতে এগিয়ে আসুন। শেয়ার করে অন্যদের জানাবেন।\n🔗 RoktoDao - মানবতার সেবায় আপনার পাশে।`;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(shareText);
       }
-      toast({
-        title: "কপি হয়েছে!",
-        description: "রক্তের অনুরোধটি শেয়ার করার জন্য ক্লিপবোর্ডে কপি করা হয়েছে।",
-      });
+      toast({ title: "কপি হয়েছে!" });
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "ব্যর্থ হয়েছে",
-      });
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
+    }
+  };
+
+  // Structured Data for SEO (JSON-LD)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "RoktoDao",
+    "url": "https://roktodao.pro.bd",
+    "logo": "https://roktodao.pro.bd/files/icon-192x192.png",
+    "description": "বাংলাদেশের সবচেয়ে নির্ভরযোগ্য রক্তদাতা ও গ্রহীতার সেতুবন্ধন প্ল্যাটফর্ম।",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+8801600151907",
+      "contactType": "emergency helpline",
+      "areaServed": "BD",
+      "availableLanguage": ["Bengali", "English"]
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://roktodao.pro.bd/donors?bloodType={blood_group}",
+      "query-input": "required name=blood_group"
     }
   };
 
   return (
     <div className="flex flex-col gap-0 pb-0 overflow-x-hidden">
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* 1. Hero Section */}
       <section className="relative w-full py-20 md:py-32 flex flex-col items-center justify-center bg-accent/30 text-center px-4 overflow-hidden border-b-4 border-primary/10">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] opacity-60"></div>
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[80px] opacity-40"></div>
-        
         <div className="container mx-auto relative z-10 max-w-5xl space-y-10">
           <div className="inline-flex items-center gap-2 bg-white border-2 border-primary/20 px-6 py-2 rounded-full shadow-md animate-bounce">
             <Heart className="h-5 w-5 text-primary fill-primary" />
             <span className="text-primary font-black uppercase tracking-widest text-[12px]">স্বেচ্ছায় রক্তদান করুন, জীবন বাঁচান</span>
           </div>
-          
           <div className="space-y-6">
             <h1 className="text-5xl md:text-8xl font-black tracking-tight text-primary font-headline leading-tight drop-shadow-sm">
               আপনার নিকটবর্তী <br /><span className="text-foreground">রক্তদাতা খুঁজুন</span>
@@ -121,7 +137,6 @@ export default function Home() {
               সারা বাংলাদেশে জরুরি মুহূর্তে রক্ত খুঁজে পেতে বা রক্তদানের মাধ্যমে জীবন বাঁচাতে আমাদের প্ল্যাটফর্মে যোগ দিন।
             </p>
           </div>
-          
           <div className="max-w-4xl mx-auto pt-8">
             <div className="bg-white p-4 rounded-[2.5rem] shadow-2xl border-4 border-primary/10 flex flex-col md:row gap-4">
               <div className="flex flex-col md:flex-row flex-1 divide-y md:divide-y-0 md:divide-x-2 divide-primary/5">
@@ -276,7 +291,6 @@ export default function Home() {
               <NextLink href="/requests">সব অনুরোধ দেখুন <ArrowRight className="h-6 w-6" /></NextLink>
             </Button>
           </div>
-          
           {loadingRequests ? (
             <div className="flex justify-center py-20"><Loader2 className="animate-spin h-16 w-16 text-primary" /></div>
           ) : (
@@ -298,12 +312,6 @@ export default function Home() {
                     </div>
                   </CardHeader>
                   <CardContent className="px-8 pb-10">
-                    {req.disease && (
-                      <div className="flex items-center gap-4 mb-6 text-lg font-bold text-primary bg-primary/5 p-5 rounded-3xl border-2 border-primary/10">
-                        <Activity className="h-7 w-7 text-primary" />
-                        <span>রোগ: {req.disease}{req.diseaseInfo ? ` (${req.diseaseInfo})` : ''}</span>
-                      </div>
-                    )}
                     <div className="grid grid-cols-3 gap-6 py-8 border-y-4 border-dashed border-accent my-6">
                       <div className="text-center">
                         <p className="text-[11px] uppercase font-black text-muted-foreground mb-2 tracking-[0.2em]">রক্তের গ্রুপ</p>
@@ -448,8 +456,6 @@ export default function Home() {
       <section className="container mx-auto px-4 py-16">
         <div className="bg-slate-950 rounded-[4rem] p-12 md:p-24 overflow-hidden relative group border-4 border-primary/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
           <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4"></div>
-          
           <div className="grid md:grid-cols-2 gap-20 items-center relative z-10">
             <div className="space-y-12 text-center md:text-left">
               <h2 className="text-5xl md:text-8xl font-black font-headline text-white leading-tight">
@@ -464,7 +470,6 @@ export default function Home() {
                 </NextLink>
               </Button>
             </div>
-            
             <div className="relative flex justify-center md:justify-end">
               <div className="relative w-full max-w-[450px] aspect-[3/4] rounded-[3rem] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] border-[12px] border-white/5 group-hover:scale-105 group-hover:rotate-2 transition-all duration-700 ease-out">
                 <Image 

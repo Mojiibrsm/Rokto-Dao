@@ -1,18 +1,26 @@
 import { MetadataRoute } from 'next';
 
 /**
- * @fileOverview Robots.txt জেনারেটর যা সার্চ ইঞ্জিনকে সাইট ইনডেক্স করতে গাইড করে।
+ * @fileOverview Robots.txt generator for guiding search engines.
  */
 
 export default function robots(): MetadataRoute.Robots {
-  // আপনার ডোমেইন অনুযায়ী আপডেট করা হয়েছে
   const baseUrl = 'https://roktodao.pro.bd';
 
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin/', '/dashboard/', '/login/'],
+      disallow: [
+        '/admin/', 
+        '/dashboard/', 
+        '/login/', 
+        '/messages/',
+        '/forgot/',
+        '/reset-otp/',
+        '/reset-question/',
+        '/reset-password/'
+      ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };
