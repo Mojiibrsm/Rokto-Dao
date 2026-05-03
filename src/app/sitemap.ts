@@ -46,12 +46,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Sitemap blog error:', error);
   }
 
-  // 3. Fetch Dynamic Donor Profiles
+  // 3. Fetch Dynamic Donor Profiles using Slugs
   let donorEntries: MetadataRoute.Sitemap = [];
   try {
     const donors = await getDonors();
     donorEntries = donors.map((donor) => ({
-      url: `${baseUrl}/donors/${donor.phone}`,
+      url: `${baseUrl}/donors/${donor.slug || donor.phone}`,
       lastModified: new Date(),
       changeFrequency: 'hourly' as const,
       priority: 0.6,

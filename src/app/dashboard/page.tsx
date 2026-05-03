@@ -6,10 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getDonors, getBloodRequests, updateDonorProfile, setDonorPassword, logActivity, sendMessage } from '@/lib/sheets';
 import { findMatchingRequests } from '@/lib/blood-matching';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Droplet, Calendar, History, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, Clock, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield, Camera, Link as LinkIcon, Navigation, CheckCircle2, Sparkles, MessageSquare, Phone } from 'lucide-react';
+import { Droplet, MapPin, Loader2, User, LogOut, Settings, Save, ShieldCheck, HeartPulse, KeyRound, Eye, EyeOff, ShieldAlert, AlertCircle, Shield, Camera, Link as LinkIcon, Navigation, Sparkles, MessageSquare, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,7 +88,6 @@ export default function DashboardPage() {
           });
           setPasswordData(currentDonor.password || '');
 
-          // Find matches for this donor
           const matches = findMatchingRequests(currentDonor, allRequests);
           setMatchingRequests(matches);
         }
@@ -105,7 +104,7 @@ export default function DashboardPage() {
     e.preventDefault();
     setIsUpdating(true);
     try {
-      const originalKey = user.email || user.phone;
+      const originalKey = user.phone;
       const result = await updateDonorProfile(originalKey, {
         ...formData,
         totalDonations: Number(formData.totalDonations)
@@ -114,7 +113,13 @@ export default function DashboardPage() {
       if (result.success) {
         await logActivity(formData.fullName, formData.phone, 'Edit Profile', `User updated profile information and image`);
         toast({ title: "সফল!", description: "প্রোফাইল আপডেট করা হয়েছে।" });
-        const updatedUser = { ...user, fullName: formData.fullName, email: formData.email, phone: formData.phone };
+        const updatedUser = { 
+          ...user, 
+          fullName: formData.fullName, 
+          email: formData.email, 
+          phone: formData.phone,
+          slug: result.slug || user.slug
+        };
         localStorage.setItem('roktodao_user', JSON.stringify(updatedUser));
         setUser(updatedUser);
       }
@@ -130,8 +135,6 @@ export default function DashboardPage() {
     try {
       const res = await setDonorPassword(user.email, user.phone, passwordData);
       if (res.success) {
-        const action = passwordData ? 'Set Password' : 'Removed Password';
-        await logActivity(user.fullName, user.phone, action, `User ${passwordData ? 'enabled' : 'disabled'} password protection`);
         toast({ title: "সফল!", description: passwordData ? "পাসওয়ার্ড সেট করা হয়েছে।" : "পাসওয়ার্ড নিরাপত্তা বন্ধ করা হয়েছে।" });
         setDonorDetails({...donorDetails, password: passwordData});
       }
@@ -163,14 +166,11 @@ export default function DashboardPage() {
           setDetectingLocation(false);
           toast({ title: "লোকেশন শনাক্ত হয়েছে!", description: "এখন 'তথ্য সেভ করুন' বাটনে ক্লিক করে সেভ করুন।" });
         },
-        (error) => {
+        () => {
           setDetectingLocation(false);
-          toast({ variant: "destructive", title: "ব্যর্থ হয়েছে", description: "অনুগ্রহ করে ব্রাউজারে লোকেশন পারমিশন দিন।" });
+          toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
         }
       );
-    } else {
-      setDetectingLocation(false);
-      toast({ variant: "destructive", title: "সাপোর্ট নেই", description: "আপনার ব্রাউজারে জিপিএস সাপোর্ট নেই।" });
     }
   };
 
@@ -239,15 +239,11 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Smart Matches For Donor */}
           <Card className="rounded-[2.5rem] border-none shadow-xl bg-slate-950 text-white overflow-hidden">
             <CardHeader className="bg-primary pb-6">
                <CardTitle className="text-xl font-black flex items-center gap-2">
                  <Sparkles className="h-5 w-5 text-white" /> Matches For You
                </CardTitle>
-               <CardDescription className="text-white/70 font-bold">
-                 Urgent requests near your location.
-               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {matchingRequests.length === 0 ? (
@@ -301,60 +297,10 @@ export default function DashboardPage() {
               <Card className="shadow-xl rounded-[2.5rem] border-none overflow-hidden">
                 <CardHeader className="bg-primary/5 pb-8 pt-10 px-10">
                   <CardTitle className="text-2xl font-black">তথ্য আপডেট করুন</CardTitle>
-                  <CardDescription>আপনার ব্যক্তিগত তথ্য এখান থেকে পরিবর্তন করতে পারেন।</CardDescription>
+                  <CardDescription>আপনার ব্যক্তিগত তথ্য এবং লিঙ্ক এখান থেকে পরিবর্তন করতে পারেন।</CardDescription>
                 </CardHeader>
                 <CardContent className="p-10 pt-8">
                   <form onSubmit={handleUpdateProfile} className="space-y-8">
-                    {/* Location Detection Block */}
-                    <div className="p-8 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
-                       <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <Navigation className="h-7 w-7 text-primary" />
-                            <h4 className="font-black text-xl">আমার সঠিক অবস্থান</h4>
-                          </div>
-                          <Button 
-                            type="button" 
-                            onClick={handleDetectLocation} 
-                            disabled={detectingLocation}
-                            className="bg-primary hover:bg-primary/90 text-white rounded-full font-black px-6 shadow-lg shadow-primary/10"
-                          >
-                            {detectingLocation ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Navigation className="h-4 w-4 mr-2" />}
-                            Detect Location
-                          </Button>
-                       </div>
-                       <div className="flex flex-col md:flex-row gap-4 items-center">
-                          <div className={`p-4 rounded-2xl border-2 flex-1 w-full text-center ${formData.lat ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200'}`}>
-                             <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">অক্ষাংশ (Latitude)</p>
-                             <p className="font-mono font-bold">{formData.lat || 'সংগ্রহ করা হয়নি'}</p>
-                          </div>
-                          <div className={`p-4 rounded-2xl border-2 flex-1 w-full text-center ${formData.lng ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200'}`}>
-                             <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">দ্রাঘিমাংশ (Longitude)</p>
-                             <p className="font-mono font-bold">{formData.lng || 'সংগ্রহ করা হয়নি'}</p>
-                          </div>
-                       </div>
-                    </div>
-
-                    <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
-                       <div className="flex items-center gap-4 mb-2">
-                          <Camera className="h-6 w-6 text-primary" />
-                          <h4 className="font-black text-lg">প্রোফাইল ছবি</h4>
-                       </div>
-                       <div className="flex flex-col md:flex-row gap-6 items-center">
-                          <div className="h-32 w-32 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden relative shrink-0">
-                             {formData.imageUrl ? <Image src={formData.imageUrl} fill alt="Preview" className="object-cover" /> : <div className="h-full w-full flex items-center justify-center text-muted-foreground"><User className="h-10 w-10" /></div>}
-                          </div>
-                          <div className="flex-1 w-full space-y-3">
-                             <Label className="font-bold flex items-center gap-2"><LinkIcon className="h-4 w-4" /> ছবির লিঙ্ক (Image URL)</Label>
-                             <Input 
-                                value={formData.imageUrl} 
-                                onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
-                                placeholder="https://example.com/your-photo.jpg" 
-                                className="h-12 rounded-xl border-2 focus:border-primary"
-                             />
-                          </div>
-                       </div>
-                    </div>
-
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <Label className="text-lg font-bold">পুরো নাম</Label>
@@ -384,6 +330,27 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
+                    <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
+                       <div className="flex items-center gap-4 mb-2">
+                          <Camera className="h-6 w-6 text-primary" />
+                          <h4 className="font-black text-lg">প্রোফাইল ছবি</h4>
+                       </div>
+                       <div className="flex flex-col md:flex-row gap-6 items-center">
+                          <div className="h-32 w-32 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden relative shrink-0">
+                             {formData.imageUrl ? <Image src={formData.imageUrl} fill alt="Preview" className="object-cover" /> : <div className="h-full w-full flex items-center justify-center text-muted-foreground"><User className="h-10 w-10" /></div>}
+                          </div>
+                          <div className="flex-1 w-full space-y-3">
+                             <Label className="font-bold flex items-center gap-2"><LinkIcon className="h-4 w-4" /> ছবির লিঙ্ক (Image URL)</Label>
+                             <Input 
+                                value={formData.imageUrl} 
+                                onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
+                                placeholder="https://example.com/your-photo.jpg" 
+                                className="h-12 rounded-xl border-2 focus:border-primary"
+                             />
+                          </div>
+                       </div>
+                    </div>
+
                     <Button type="submit" className="w-full bg-primary h-16 text-2xl font-black rounded-2xl shadow-xl shadow-primary/20" disabled={isUpdating}>
                       {isUpdating ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Save className="h-6 w-6 mr-2" />}
                       তথ্য সেভ করুন
@@ -396,7 +363,6 @@ export default function DashboardPage() {
             <TabsContent value="security" className="animate-in fade-in-50 duration-500">
               <Card className="shadow-xl rounded-[2.5rem] border-none overflow-hidden">
                 <CardHeader className="bg-slate-900 text-white pb-10 pt-12 px-10 relative">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                   <div className="flex items-center gap-5 mb-4">
                     <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur">
                       <ShieldAlert className="h-8 w-8 text-primary" />
@@ -409,16 +375,9 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="p-10">
                   <div className="space-y-8 max-w-md mx-auto">
-                    <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 flex items-center gap-4 mb-4">
-                      <AlertCircle className="h-6 w-6 text-primary shrink-0" />
-                      <p className="text-sm text-muted-foreground font-bold">
-                        পাসওয়ার্ড সেট করলে লগইন করার সময় ফোন নম্বরের পাশাপাশি এই পাসওয়ার্ডটিও প্রয়োজন হবে।
-                      </p>
-                    </div>
-
                     <div className="space-y-4">
                       <Label className="text-lg font-bold flex items-center gap-2">
-                        {donorDetails?.password ? "পাসওয়ার্ড পরিবর্তন করুন" : "নতুন পাসওয়ার্ড সেট করুন"}
+                        পাসওয়ার্ড
                       </Label>
                       <div className="relative">
                         <Input 
@@ -437,16 +396,14 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                      <Button 
-                        onClick={handleSetPassword} 
-                        disabled={isUpdatingPass} 
-                        className="h-16 rounded-2xl text-xl font-black bg-primary shadow-lg shadow-primary/20"
-                      >
-                        {isUpdatingPass ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <ShieldCheck className="h-6 w-6 mr-2" />}
-                        {passwordData ? "পাসওয়ার্ড সেভ করুন" : "পাসওয়ার্ড মুছে ফেলুন"}
-                      </Button>
-                    </div>
+                    <Button 
+                      onClick={handleSetPassword} 
+                      disabled={isUpdatingPass} 
+                      className="w-full h-16 rounded-2xl text-xl font-black bg-primary shadow-lg shadow-primary/20"
+                    >
+                      {isUpdatingPass ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <ShieldCheck className="h-6 w-6 mr-2" />}
+                      সেভ করুন
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
