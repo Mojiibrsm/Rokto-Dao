@@ -98,7 +98,7 @@ export default function Home() {
     "name": "RoktoDao",
     "url": "https://roktodao.pro.bd",
     "logo": "https://roktodao.pro.bd/files/icon-192x192.png",
-    "description": "বাংলাদেশের সবচেয়ে নির্ভরযোগ্য রক্তদাতা ও গ্রহীতার সেতুবন্ধন প্ল্যাটফর্ম।",
+    "description": "বাংলাদেশের সবচেয়ে নির্ভরযোগ্য অনলাইন রক্তদাতা ও গ্রহীতার সেতুবন্ধন প্ল্যাটফর্ম। ঢাকা, চট্টগ্রামসহ ৬৪ জেলায় জরুরি মুহূর্তে ও পজেটিভ (O+), বি পজেটিভ (B+) সহ সব গ্রুপের রক্তদাতা খুঁজুন।",
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": "+8801600151907",
@@ -110,7 +110,8 @@ export default function Home() {
       "@type": "SearchAction",
       "target": "https://roktodao.pro.bd/donors?bloodType={blood_group}",
       "query-input": "required name=blood_group"
-    }
+    },
+    "knowsAbout": ["Blood Donation", "Blood Bank Bangladesh", "Red Crescent", "Sandhani", "Badhan", "Emergency Blood Dhaka"]
   };
 
   return (
@@ -134,7 +135,7 @@ export default function Home() {
               আপনার নিকটবর্তী <br /><span className="text-foreground">রক্তদাতা খুঁজুন</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto font-bold leading-relaxed">
-              সারা বাংলাদেশে জরুরি মুহূর্তে রক্ত খুঁজে পেতে বা রক্তদানের মাধ্যমে জীবন বাঁচাতে আমাদের প্ল্যাটফর্মে যোগ দিন।
+              বাংলাদেশে জরুরি মুহূর্তে রক্তদাতা খুঁজে পেতে বা অনলাইনে রক্তদাতা রেজিস্ট্রেশন করতে আমাদের প্ল্যাটফর্মে যোগ দিন।
             </p>
           </div>
           <div className="max-w-4xl mx-auto pt-8">
@@ -210,7 +211,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-4xl md:text-6xl font-black font-headline">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
-            <p className="text-xl text-muted-foreground font-bold italic opacity-70">"নিঃস্বার্থভাবে জীবন বাঁচানোর কারিগর"</p>
+            <p className="text-xl text-muted-foreground font-bold italic opacity-70">"বাংলাদেশের শ্রেষ্ঠ স্বেচ্ছাসেবী রক্তদাতাদের তালিকা"</p>
             <div className="h-2 w-24 bg-primary mx-auto rounded-full mt-6"></div>
           </div>
           {loadingDonors ? (
@@ -267,7 +268,7 @@ export default function Home() {
           )}
           <div className="text-center">
             <Button size="lg" className="rounded-full px-16 h-16 text-2xl bg-white border-4 border-primary text-primary hover:bg-primary hover:text-white font-black transition-all shadow-xl shadow-primary/10" asChild>
-              <NextLink href="/donors">সব রক্তদাতা দেখুন <ArrowRight className="ml-3 h-7 w-7" /></NextLink>
+              <NextLink href="/donors">সব রক্তদাতা তালিকা দেখুন <ArrowRight className="ml-3 h-7 w-7" /></NextLink>
             </Button>
           </div>
         </div>
@@ -380,7 +381,7 @@ export default function Home() {
               <Image 
                 src="https://image.mojib.me/uploads/General/1771907154_%E0%A6%95%E0%A7%87%E0%A6%A8%20%E0%A6%B0%E0%A6%95%E0%A7%8D%E0%A6%A4%20%E0%A6%A6%E0%A7%87%E0%A6%AC%E0%A7%87%E0%A6%A8.png" 
                 fill 
-                alt="রক্তদানের স্বাস্থ্য উপকারিতা" 
+                alt="রক্তদানের স্বাস্থ্য উপকারিতা (Benefits of Donating Blood)" 
                 className="object-cover" 
                 data-ai-hint="blood donation benefits" 
               />
@@ -475,7 +476,7 @@ export default function Home() {
                 <Image 
                   src="https://image.mojib.me/uploads/General/1771907823_Can%20You%20Donate%20Blood%20Today.png" 
                   fill 
-                  alt="Can You Donate Blood Today?" 
+                  alt="রক্তদান করার নিয়ম এবং যোগ্যতা (Can You Donate Blood Today?)" 
                   className="object-cover"
                   data-ai-hint="blood donor"
                   priority
