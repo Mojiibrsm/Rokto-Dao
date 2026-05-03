@@ -10,7 +10,7 @@ import {
   Smartphone, HandHeart, 
   Globe, Zap, Quote, Award, Activity,
   Info, MessageSquare, ExternalLink, ChevronDown, CheckCircle2,
-  UserPlus, HeartPulse, Camera, Trophy, Medal
+  UserPlus, HeartPulse, Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -58,7 +58,7 @@ export default function Home() {
           getGallery()
         ]);
         setRequests(requestsData.slice(0, 4));
-        // Sort donors by donations for gamification section
+        // Sort donors by donations for display
         const sortedDonors = [...donorsData].sort((a, b) => (b.totalDonations || 0) - (a.totalDonations || 0));
         setDonors(sortedDonors.slice(0, 6));
         setGalleryItems(galleryData.slice(0, 4));
@@ -168,62 +168,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Top Life Savers (Leaderboard Section) */}
-      <section className="py-24 bg-slate-900 text-white overflow-hidden relative border-y-8 border-primary">
-         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
-         <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 text-center md:text-left">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 px-4 py-1 rounded-full">
-                  <Trophy className="h-4 w-4 text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">শীর্ষ রক্তদাতা</span>
-                </div>
-                <h2 className="text-4xl md:text-7xl font-black font-headline leading-tight">আমাদের <span className="text-primary">রক্তযোদ্ধারা</span></h2>
-                <p className="text-xl text-slate-400 font-bold max-w-2xl">যারা নিয়মিত রক্তদানের মাধ্যমে সমাজে দৃষ্টান্ত স্থাপন করছেন।</p>
-              </div>
-              <Button size="lg" className="rounded-full bg-white text-slate-900 hover:bg-slate-100 h-14 px-10 text-xl font-black gap-3 shadow-2xl" asChild>
-                <NextLink href="/leaderboard">সম্পূর্ণ লিডারবোর্ড <ArrowRight className="h-6 w-6" /></NextLink>
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-               {loadingDonors ? (
-                 <div className="col-span-full flex justify-center py-20"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
-               ) : (
-                 donors.slice(0, 3).map((donor, i) => {
-                    const badge = getDonorBadge(donor.totalDonations || 0);
-                    return (
-                      <Card key={i} className="bg-white/5 border-2 border-white/10 rounded-[3rem] p-8 backdrop-blur shadow-2xl transition-all hover:border-primary/50 group">
-                        <div className="flex items-center gap-6">
-                           <div className="h-20 w-20 rounded-full border-4 border-primary/20 overflow-hidden relative shadow-2xl group-hover:scale-110 transition-transform">
-                             {donor.imageUrl ? <Image src={donor.imageUrl} fill alt="P" className="object-cover" /> : <div className="h-full w-full bg-primary flex items-center justify-center text-white text-3xl font-black">{donor.fullName.substring(0, 1)}</div>}
-                           </div>
-                           <div className="flex-1 min-w-0">
-                             <h3 className="text-2xl font-black truncate">{donor.fullName}</h3>
-                             <p className="text-slate-400 font-bold text-sm">{donor.district}</p>
-                             {badge && (
-                               <Badge className={`${badge.bgColor} ${badge.color} border-none font-black text-[9px] uppercase mt-2 px-3 h-5`}>
-                                 {badge.icon} {badge.label}
-                               </Badge>
-                             )}
-                           </div>
-                        </div>
-                        <div className="mt-8 flex items-center justify-between bg-primary/10 p-5 rounded-3xl border border-primary/20">
-                           <div className="space-y-0.5">
-                             <p className="text-[10px] font-black uppercase text-primary tracking-widest">মোট রক্তদান</p>
-                             <p className="text-3xl font-black text-white">{donor.totalDonations} বার</p>
-                           </div>
-                           <Medal className={`h-10 w-10 ${i === 0 ? 'text-amber-400' : i === 1 ? 'text-slate-400' : 'text-orange-400'}`} />
-                        </div>
-                      </Card>
-                    );
-                 })
-               )}
-            </div>
-         </div>
-      </section>
-
-      {/* 3. Stats Section */}
+      {/* 2. Stats Section */}
       <section className="bg-white py-16 border-b-2 border-accent">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-10">
@@ -245,7 +190,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Donors Section */}
+      {/* 3. Donors Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
@@ -313,7 +258,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Requests Section */}
+      {/* 4. Requests Section */}
       <section className="bg-primary/5 py-24 border-y-4 border-primary/10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-center md:text-left">
@@ -390,7 +335,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Process Section */}
+      {/* 5. Process Section */}
       <section className="py-24 bg-accent/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
@@ -419,7 +364,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Why Donate Section */}
+      {/* 6. Why Donate Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-20 items-center max-w-7xl mx-auto">
@@ -465,7 +410,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Gallery Section */}
+      {/* 7. Gallery Section */}
       <section className="py-24 bg-accent/10 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20 space-y-4">
@@ -499,7 +444,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. Eligibility Banner */}
+      {/* 8. Eligibility Banner */}
       <section className="container mx-auto px-4 py-16">
         <div className="bg-slate-950 rounded-[4rem] p-12 md:p-24 overflow-hidden relative group border-4 border-primary/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
           <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-primary/20 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
@@ -537,7 +482,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. Blood Compatibility Section */}
+      {/* 9. Blood Compatibility Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-20 space-y-6">
@@ -568,7 +513,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 11. Help Section */}
+      {/* 10. Help Section */}
       <section className="py-24 bg-slate-950 text-white text-center relative border-t-8 border-primary">
         <div className="container mx-auto px-4 space-y-12">
           <div className="h-24 w-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-xl border-4 border-primary/30 animate-pulse shadow-2xl">

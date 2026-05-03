@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Droplet, User, Menu, LayoutDashboard, LogOut, Users, Heart, ClipboardCheck, HelpCircle, Shield, MessageSquare, Trophy } from 'lucide-react';
+import { Droplet, User, Menu, LayoutDashboard, LogOut, Users, Heart, ClipboardCheck, HelpCircle, Shield, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
@@ -40,7 +40,6 @@ export function Navigation() {
   const navLinks = [
     { href: '/donors', label: 'দাতা খুঁজুন', icon: User },
     { href: '/requests', label: 'রক্তের অনুরোধ', icon: Droplet },
-    { href: '/leaderboard', label: 'লিডারবোর্ড', icon: Trophy },
     { href: '/faq', label: 'সাধারণ জিজ্ঞাসা', icon: HelpCircle },
     { href: '/eligibility', label: 'যোগ্যতা যাচাই', icon: ClipboardCheck },
     { href: '/team', label: 'আমাদের টিম', icon: Users },
