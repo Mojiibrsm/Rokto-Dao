@@ -11,6 +11,8 @@ export type HospitalEntry = {
   district: string;
   upazila?: string;
   address?: string;
+  phone?: string;
+  website?: string;
 };
 
 const getCoords = (dist: string): { lat: number; lng: number } => {
@@ -26,8 +28,40 @@ export const HOSPITALS: HospitalEntry[] = [
   { name: "রাজশাহী মেডিকেল কলেজ হাসপাতাল", lat: 24.3701, lng: 88.5835, district: "রাজশাহী", address: "Rajpara, Rajshahi" },
   { name: "সিলেট এম এ জি ওসমানী মেডিকেল কলেজ হাসপাতাল", lat: 24.8988, lng: 91.8515, district: "সিলেট", address: "Sylhet Sadar" },
   { name: "রংপুর মেডিকেল কলেজ হাসপাতাল", lat: 25.7592, lng: 89.2405, district: "রংপুর", address: "Rangpur Sadar" },
-  
-  // Data from User Provided List (English names as provided)
+
+  // --- Bangladesh Red Crescent Society ---
+  { name: "Bangladesh Red Crescent Society (National HQ)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "684-686, Red Crescent Sarak, Bara Maghbazar, Dhaka-1217", phone: "+880-2-48310188", website: "https://www.bdrcs.org" },
+  { name: "Bangladesh Red Crescent Blood Bank (Aurongzeb Road)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "7/5, Aurongzeb Road, Mohammadpur, Dhaka", phone: "+880-2-8121497" },
+  { name: "Fatema Begum Red Crescent Blood Center", ...getCoords("চট্টগ্রাম"), district: "চট্টগ্রাম", address: "395 Anderkilla, Chattogram", phone: "01815850533" },
+  { name: "Begum Tayeeba Mojumder Red Crescent Blood Center", ...getCoords("দিনাজপুর"), district: "দিনাজপুর", address: "1 New Town, Dinajpur", phone: "01765311450" },
+  { name: "Mujib Jahan Red Crescent Blood Center", ...getCoords("সিলেট"), district: "সিলেট", address: "Chowhatta, Sylhet", phone: "01611300900" },
+  { name: "Natore Red Crescent Blood Center", ...getCoords("নাটোর"), district: "নাটোর", address: "Hospital Road, Natore", phone: "01792774841" },
+  { name: "Rajshahi Red Crescent Blood Center", ...getCoords("রাজশাহী"), district: "রাজশাহী", address: "Rajshahi District Road, Rajshahi", phone: "01865055075" },
+  { name: "Achia Khatun Memorial Red Crescent Blood Center", ...getCoords("মাগুরা"), district: "মাগুরা", address: "Jhenidah Road, Stadium Para, Magura", phone: "01913137366" },
+
+  // --- Quantum Foundation ---
+  { name: "Quantum Blood Bank (Shantinagar)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "31/V, Shilpacharya Zainul Abedin Sarak, Shantinagar, Dhaka", phone: "01714974333", website: "https://quantummethod.org.bd" },
+  { name: "Voluntary Blood Donation Program and Quantum Lab", ...getCoords("ঢাকা"), district: "ঢাকা", address: "31/V Shilpacharya Zainul Abedin Sarak, Shantinagar, Dhaka", phone: "02-8322987" },
+
+  // --- BADHAN ---
+  { name: "BADHAN (Central Office)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "TSC (Ground Floor), University of Dhaka, Dhaka-1000", phone: "01534982674", website: "https://www.badhan.org" },
+
+  // --- Sandhani ---
+  { name: "Sandhani (Central Office)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "Room 35, BSMMU, Shahabag, Dhaka", phone: "02-8621658", website: "https://www.sandhani.org" },
+  { name: "Sandhani (Dhaka Medical College Unit)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "DMC Unit, Dhaka", phone: "01819284878" },
+  { name: "Sandhani (Dhaka Dental College Unit)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "Mirpur, Dhaka", phone: "02-9011887" },
+  { name: "Sandhani (Bangladesh Medical College Unit)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "Dhanmondi, Dhaka", phone: "01552371531" },
+
+  // --- Other Important Blood Banks ---
+  { name: "Police Blood Bank", ...getCoords("ঢাকা"), district: "ঢাকা", address: "Central Police Hospital, Rajarbag, Dhaka", phone: "01713398386", website: "https://www.policebloodbank.gov.bd" },
+  { name: "Thalassemia Foundation Hospital", ...getCoords("ঢাকা"), district: "ঢাকা", address: "30 Chamelibagh, 1st Lane, Shantinagar, Dhaka-1219", phone: "01755587479", website: "https://www.thals.org" },
+  { name: "bloodseek.com", ...getCoords("ঢাকা"), district: "ঢাকা", address: "house: 71, Road: 9/A, Dhanmondi, Dhaka", phone: "01739171768" },
+  { name: "Retina Blood Bank", ...getCoords("ঢাকা"), district: "ঢাকা", address: "2 KA 5, Nowab Habibullah Road (Behind PG Hospital), Dhaka", phone: "01614606411" },
+  { name: "Oriental Blood Bank", ...getCoords("ঢাকা"), district: "ঢাকা", address: "Green Center, 2B/30, Green Road, Dhanmondi, Dhaka", phone: "01812700053" },
+  { name: "New Bangladesh Pathology & Blood Bank", ...getCoords("ঢাকা"), district: "ঢাকা", address: "House # 69, Road # 9/A, Dhanmondi R/A, Dhaka-1209", phone: "01715546807" },
+  { name: "Islami Bank Hospital Blood Bank (Kakrail)", ...getCoords("ঢাকা"), district: "ঢাকা", address: "30, VIP Road, Kakrail Dhaka-1000", phone: "02-8317090" },
+
+  // --- Facility List Data ---
   { name: "Bandhan Blood Bank and Transfusion Center", ...getCoords("ঢাকা"), district: "ঢাকা", upazila: "Chak Bazar", address: "19, Bakshi Bazar Road, Chak Bazar, Dhaka-121" },
   { name: "Medical Centre Blood Transfusion", ...getCoords("চট্টগ্রাম"), district: "চট্টগ্রাম", upazila: "Panchlaish", address: "953, O. R Nizam Road, Panchlaish, Cgattogram" },
   { name: "Ashiyan Medical College Hospital", ...getCoords("ঢাকা"), district: "ঢাকা", upazila: "Khilkhet", address: "Barua, Khilkhet, Dhaka - 1229" },
@@ -86,7 +120,7 @@ export const HOSPITALS: HospitalEntry[] = [
   { name: "Green Life Hospital Ltd", ...getCoords("ঢাকা"), district: "ঢাকা", upazila: "Kalabagan", address: "Dhanmondi, Dhaka-1205" },
   { name: "Hi-Care General Hospital Ltd.", ...getCoords("ঢাকা"), district: "ঢাকা", upazila: "Uttara Paschim", address: "Sector# 7, Uttara, Dhaka-1230." },
   { name: "Holy Crescent Blood Bank", ...getCoords("যশোর"), district: "যশোর", upazila: "Jashore Sadar", address: "Jail Road, Sadar, Jashore." },
-  { name: "Ibn Sina Hospital Sylhet", ...getCoords("সিলেট"), district: "সিলেট", upazila: "Sylhet Sadar", address: "Subhanighat Point, Sylhet." },
+  { name: "Ibn Sina Hospital Sylhet", ...getCoords("সিলেট"), district: "সিলেট", upazila: "Sylhet Sadar", address: "Subhani Ghat, kotwali, Sylhet." },
   { name: "Imperial Hospital Limited", ...getCoords("চট্টগ্রাম"), district: "চট্টগ্রাম", upazila: "Pahartali", address: "Zakir Hossain Road, Chittagong" },
   { name: "International Medical College", ...getCoords("গাজীপুর"), district: "গাজীপুর", upazila: "Gazipur Sadar", address: "Tongi, Gazipur" },
   { name: "ISHWARDI BLOOD BANK", ...getCoords("পাবনা"), district: "পাবনা", upazila: "Ishwardi", address: "Akborermor, Ishwardi, Pabna" },
