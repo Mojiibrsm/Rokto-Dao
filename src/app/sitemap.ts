@@ -1,9 +1,9 @@
 import { MetadataRoute } from 'next';
-import { getBlogs, getDonors } from '@/lib/sheets';
+import { getBlogs, getDonors, getTeamMembers } from '@/lib/sheets';
 
 /**
  * @fileOverview SEO friendly dynamic sitemap generator.
- * Automatically indexes all pages, blog posts, and donor profiles.
+ * Automatically indexes all pages, blog posts, donor profiles, and team profiles.
  */
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -60,5 +60,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Sitemap donor error:', error);
   }
 
-  return [...staticRoutes, ...blogEntries, ...donorEntries];
+  // 4. Fetch Dynamic Team Profiles using Slugs
+  let teamEntries: MetadataRoute.Sitemap = [];
+  try {
+    const members = await getTeamMembers();
+    teamEntries = members.map((member) => ({
+      url: `${baseUrl}/team/${member.slug || member.id}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    }));
+  } catch (error) {
+    console.error('Sitemap team error:', error);
+  }
+
+  return [...staticRoutes, ...blogEntries, ...donorEntries, ...teamEntries];
 }

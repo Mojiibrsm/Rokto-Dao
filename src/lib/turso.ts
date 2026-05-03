@@ -65,7 +65,7 @@ export async function initDb() {
           diseaseInfo TEXT,
           createdBy TEXT
         )`,
-        // 3. Team Members Table
+        // 3. Team Members Table (Updated with slug)
         `CREATE TABLE IF NOT EXISTS team (
           id TEXT PRIMARY KEY,
           name TEXT,
@@ -74,7 +74,8 @@ export async function initDb() {
           imageurl TEXT,
           twitter TEXT,
           linkedin TEXT,
-          email TEXT
+          email TEXT,
+          slug TEXT UNIQUE
         )`,
         // 4. Gallery Table
         `CREATE TABLE IF NOT EXISTS gallery (

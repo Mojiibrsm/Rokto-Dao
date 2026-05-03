@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Linkedin, Twitter, Mail, Award, Heart, ShieldCheck, Users, Loader2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { Linkedin, Twitter, Mail, Award, Heart, ShieldCheck, Users, Loader2, AlertCircle, ArrowRight, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -70,8 +71,8 @@ export default function TeamPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {members.map((member, i) => (
-              <Card key={i} className="group border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white text-center">
-                <div className="relative h-72 overflow-hidden">
+              <Card key={i} className="group border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white text-center flex flex-col">
+                <Link href={`/team/${member.slug}`} className="relative h-72 overflow-hidden block">
                   <Image 
                     src={member.imageurl || 'https://picsum.photos/seed/team/400/400'} 
                     fill 
@@ -79,33 +80,26 @@ export default function TeamPage() {
                     className="object-cover group-hover:scale-110 transition-transform duration-700"
                     data-ai-hint="professional person"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-6 gap-4">
-                    {member.twitter && (
-                      <Button size="icon" variant="secondary" className="rounded-full bg-white/20 backdrop-blur text-white hover:bg-primary" asChild>
-                        <a href={member.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="h-4 w-4" /></a>
-                      </Button>
-                    )}
-                    {member.linkedin && (
-                      <Button size="icon" variant="secondary" className="rounded-full bg-white/20 backdrop-blur text-white hover:bg-primary" asChild>
-                        <a href={member.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin className="h-4 w-4" /></a>
-                      </Button>
-                    )}
-                    {member.email && (
-                      <Button size="icon" variant="secondary" className="rounded-full bg-white/20 backdrop-blur text-white hover:bg-primary" asChild>
-                        <a href={`mailto:${member.email}`}><Mail className="h-4 w-4" /></a>
-                      </Button>
-                    )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6 gap-4">
+                    <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-bold">View Profile</Badge>
                   </div>
-                </div>
+                </Link>
                 <CardHeader className="pt-8 px-6">
-                  <CardTitle className="text-2xl font-bold">{member.name}</CardTitle>
-                  <CardDescription className="text-primary font-bold uppercase tracking-widest text-xs mt-1">
+                  <Link href={`/team/${member.slug}`}>
+                    <CardTitle className="text-2xl font-black group-hover:text-primary transition-colors">{member.name}</CardTitle>
+                  </Link>
+                  <CardDescription className="text-primary font-black uppercase tracking-widest text-[10px] mt-1">
                     {member.role}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="px-6 pb-8">
-                  <p className="text-muted-foreground text-sm leading-relaxed italic">"{member.bio}"</p>
+                <CardContent className="px-6 pb-6 flex-grow">
+                  <p className="text-muted-foreground text-sm leading-relaxed italic line-clamp-2">"{member.bio}"</p>
                 </CardContent>
+                <div className="px-6 pb-8 pt-2">
+                   <Button variant="ghost" asChild className="w-full rounded-xl font-bold group/btn text-primary hover:bg-primary/5">
+                     <Link href={`/team/${member.slug}`}>বিস্তারিত দেখুন <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" /></Link>
+                   </Button>
+                </div>
               </Card>
             ))}
           </div>

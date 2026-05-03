@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Edit, Trash2, ArrowLeft, Save, Users, Link as LinkIcon, Mail } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, ArrowLeft, Save, Users, Link as LinkIcon, Mail, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -97,7 +97,7 @@ export default function ManageTeamPage() {
             <TableRow className="h-14 border-none">
               <TableHead className="px-10 font-black text-slate-900 uppercase text-[11px] tracking-widest">মেম্বার</TableHead>
               <TableHead className="font-black text-slate-900 uppercase text-[11px] tracking-widest">পদবী</TableHead>
-              <TableHead className="font-black text-slate-900 uppercase text-[11px] tracking-widest">বায়ো</TableHead>
+              <TableHead className="font-black text-slate-900 uppercase text-[11px] tracking-widest">স্ল্যাগ (Slug)</TableHead>
               <TableHead className="font-black text-slate-900 uppercase text-[11px] tracking-widest text-right px-10">অ্যাকশন</TableHead>
             </TableRow>
           </TableHeader>
@@ -134,11 +134,14 @@ export default function ManageTeamPage() {
                   <TableCell>
                     <span className="bg-primary/5 text-primary px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border border-primary/10">{member.role}</span>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    <p className="text-sm text-slate-600 font-medium">{member.bio}</p>
+                  <TableCell>
+                    <code className="text-xs bg-muted px-2 py-1 rounded text-primary font-bold">/{member.slug}</code>
                   </TableCell>
                   <TableCell className="text-right px-10">
                     <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="icon" asChild className="rounded-xl h-10 w-10 border-slate-200">
+                        <Link href={`/team/${member.slug}`} target="_blank"><ExternalLink className="h-4 w-4" /></Link>
+                      </Button>
                       <Button variant="outline" size="icon" onClick={() => { setIsAddMode(false); setEditingMember(member); }} className="rounded-xl h-10 w-10 border-slate-200 text-slate-600 hover:text-primary hover:border-primary transition-all">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -158,7 +161,7 @@ export default function ManageTeamPage() {
         <DialogContent className="max-w-2xl rounded-[2.5rem]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black">{isAddMode ? 'নতুন মেম্বার যোগ করুন' : 'তথ্য এডিট করুন'}</DialogTitle>
-            <DialogDescription className="font-bold">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন।</DialogDescription>
+            <DialogDescription className="font-bold">সঠিক তথ্য দিয়ে ফর্মটি পূরণ করুন। স্ল্যাগ অটো জেনারেট হবে।</DialogDescription>
           </DialogHeader>
           {editingMember && (
             <form onSubmit={handleSave} className="space-y-6 py-4">
@@ -197,11 +200,11 @@ export default function ManageTeamPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="font-bold flex items-center gap-2"><LinkIcon className="h-3 w-3 text-blue-500" /> টুইটার লিংক</Label>
-                  <Input value={editingMember.twitter} onChange={e => setEditingMember({...editingMember, twitter: e.target.value})} className="rounded-xl h-10" />
+                  <Input value={member.twitter} onChange={e => setEditingMember({...editingMember, twitter: e.target.value})} className="rounded-xl h-10" />
                 </div>
                 <div className="space-y-2">
                   <Label className="font-bold flex items-center gap-2"><LinkIcon className="h-3 w-3 text-blue-700" /> লিঙ্কডইন লিংক</Label>
-                  <Input value={editingMember.linkedin} onChange={e => setEditingMember({...editingMember, linkedin: e.target.value})} className="rounded-xl h-10" />
+                  <Input value={member.linkedin} onChange={e => setEditingMember({...editingMember, linkedin: e.target.value})} className="rounded-xl h-10" />
                 </div>
               </div>
 

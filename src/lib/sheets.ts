@@ -30,10 +30,109 @@ export type Donor = {
   slug?: string;
 };
 
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  bio?: string;
+  imageurl?: string;
+  twitter?: string;
+  linkedin?: string;
+  email?: string;
+  slug?: string;
+};
+
+export type BlogPost = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  category?: string;
+  author?: string;
+  imageurl?: string;
+  createdat?: string;
+};
+
+export type BloodRequest = {
+  id: string;
+  patientName?: string;
+  bloodType: string;
+  hospitalName: string;
+  district: string;
+  area?: string;
+  union?: string;
+  phone: string;
+  neededWhen: string;
+  bagsNeeded: string;
+  isUrgent: boolean;
+  status: 'Pending' | 'Approved' | 'Completed';
+  createdAt: string;
+  disease?: string;
+  diseaseInfo?: string;
+  createdBy?: string;
+};
+
+export type GalleryItem = {
+  id: string;
+  imageurl: string;
+  title?: string;
+  category?: string;
+  createdat: string;
+};
+
+export type BloodDrive = {
+  id: string;
+  name: string;
+  location: string;
+  date: string;
+  time: string;
+  distance?: string;
+};
+
+export type ActivityLog = {
+  timestamp: string;
+  username: string;
+  phone: string;
+  action: string;
+  details: string;
+};
+
+export type Conversation = {
+  id: string;
+  p1: string;
+  p2: string;
+  lastMessage: string;
+  updatedAt: string;
+  otherUser?: Donor;
+};
+
+export type Message = {
+  id: string;
+  convoId: string;
+  sender: string;
+  receiver: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+};
+
+export type Report = {
+  id: string;
+  type: 'Donor' | 'Request';
+  targetId: string;
+  targetName: string;
+  reporterPhone: string;
+  reason: string;
+  details?: string;
+  timestamp: string;
+  status: 'Pending' | 'Reviewed' | 'Dismissed' | 'Action Taken';
+};
+
 // --- HELPERS ---
 
-function generateUserSlug(name: string, district: string = ''): string {
-  const base = `${name} ${district}`
+function generateUserSlug(name: string, extra: string = ''): string {
+  const base = `${name} ${extra}`
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, '')
@@ -189,7 +288,6 @@ export async function updateDonorProfile(originalKey: string, data: Partial<Dono
   }
 }
 
-// (Rest of the file Omitted as it remains unchanged)
 export async function setDonorPassword(email: string, phone: string, password: string) {
   await initDb();
   try {
@@ -320,27 +418,73 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
     imageurl: String(row.imageurl || ''),
     twitter: String(row.twitter || ''),
     linkedin: String(row.linkedin || ''),
-    email: String(row.email || '')
+    email: String(row.email || ''),
+    slug: String(row.slug || '')
   }));
 }
 
-export async function addTeamMember(data: Omit<TeamMember, 'id'>) {
+export async function getTeamMemberBySlug(slug: string): Promise<TeamMember | null> {
+  await initDb();
+  const res = await db.execute({
+    sql: "SELECT * FROM team WHERE slug = ?",
+    args: [slug]
+  });
+  if (res.rows.length === 0) return null;
+  const row = res.rows[0];
+  return {
+    id: String(row.id),
+    name: String(row.name),
+    role: String(row.role),
+    bio: String(row.bio || ''),
+    imageurl: String(row.imageurl || ''),
+    twitter: String(row.twitter || ''),
+    linkedin: String(row.linkedin || ''),
+    email: String(row.email || ''),
+    slug: String(row.slug || '')
+  };
+}
+
+export async function addTeamMember(data: Omit<TeamMember, 'id' | 'slug'>) {
   await initDb();
   const id = Math.random().toString(36).substring(7);
+  const slug = generateUserSlug(data.name, data.role);
   await db.execute({
-    sql: "INSERT INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    args: [id, data.name, data.role, data.bio, data.imageurl, data.twitter, data.linkedin, data.email]
+    sql: "INSERT INTO team (id, name, role, bio, imageurl, twitter, linkedin, email, slug) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    args: [id, data.name, data.role, data.bio, data.imageurl, data.twitter, data.linkedin, data.email, slug]
   });
   return { success: true };
 }
 
 export async function updateTeamMember(id: string, data: Partial<TeamMember>) {
   await initDb();
-  await db.execute({
-    sql: "UPDATE team SET name = ?, role = ?, bio = ?, imageurl = ?, twitter = ?, linkedin = ?, email = ? WHERE id = ?",
-    args: [data.name, data.role, data.bio, data.imageurl, data.twitter, data.linkedin, data.email, id]
-  });
-  return { success: true };
+  try {
+    const currentRes = await db.execute({ sql: "SELECT * FROM team WHERE id = ?", args: [id] });
+    const current = currentRes.rows[0];
+    let newSlug = String(current.slug || '');
+    
+    if (data.name || data.role) {
+      newSlug = generateUserSlug(data.name || String(current.name), data.role || String(current.role));
+    }
+
+    await db.execute({
+      sql: "UPDATE team SET name = ?, role = ?, bio = ?, imageurl = ?, twitter = ?, linkedin = ?, email = ?, slug = ? WHERE id = ?",
+      args: [
+        data.name ?? String(current.name), 
+        data.role ?? String(current.role), 
+        data.bio ?? String(current.bio), 
+        data.imageurl ?? String(current.imageurl), 
+        data.twitter ?? String(current.twitter), 
+        data.linkedin ?? String(current.linkedin), 
+        data.email ?? String(current.email), 
+        newSlug,
+        id
+      ]
+    });
+    return { success: true };
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
 }
 
 export async function getBlogs(): Promise<BlogPost[]> {
@@ -575,9 +719,10 @@ export async function migrateAllDataFromSheets() {
           }
         } else if (table === 'Team') {
           for (const t of data) {
+            const slug = generateUserSlug(t.name, t.role);
             await db.execute({
-              sql: `INSERT OR REPLACE INTO team (id, name, role, bio, imageurl, twitter, linkedin, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-              args: [t.id, t.name, t.role, t.bio, t.imageurl, t.twitter, t.linkedin, t.email]
+              sql: `INSERT OR REPLACE INTO team (id, name, role, bio, imageurl, twitter, linkedin, email, slug) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [t.id, t.name, t.role, t.bio, t.imageurl, t.twitter, t.linkedin, t.email, slug]
             });
           }
         } else if (table === 'Blogs') {
