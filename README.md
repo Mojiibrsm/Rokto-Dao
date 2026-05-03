@@ -1,38 +1,50 @@
-# RoktoDao - Setup Guide
+# 🩸 RoktoDao - Humanity First
 
-RoktoDao uses Google Sheets as a lightweight real-time backend. Follow these steps to connect your site.
+RoktoDao (রক্তদাও) বাংলাদেশের একটি পূর্ণাঙ্গ এবং আধুনিক অনলাইন রক্তদাতা ডাটাবেজ প্ল্যাটফর্ম। এটি মানবতার সেবায় রক্তদাতা ও গ্রহীতার মধ্যে দ্রুত সেতুবন্ধন তৈরি করতে ডিজাইন করা হয়েছে।
 
-## 🚀 Easy Setup: Google Sheets Backend
+## 🚀 Key Features
 
-### 1. Create a Blank Sheet
-1. Go to [sheets.new](https://sheets.new).
-2. Give it a name (e.g., "RoktoDao Data").
-3. **DO NOT** manually create any tabs or headers. The script will do it for you!
+### 1. Smart Donor Management
+- **Profile with Badges:** Donors get badges like 🏆 Life Saver, 💪 Hero Donor based on their contributions.
+- **Radius-based Search:** Find donors within a specific distance (KM) from your location.
+- **Interactive Map:** View all donors across Bangladesh on a Leaflet map.
 
-### 2. Deploy Apps Script
-1. Go to **Extensions** > **Apps Script**.
-2. Delete any existing code and paste the content from `docs/google-sheets-setup.js`.
-3. Click the **Save** icon.
-4. Click **Deploy** > **New Deployment**.
-5. Select type: **Web App**.
-6. Set **Description** to "RoktoDao API".
-7. Set **Execute as** to "Me".
-8. Set **Who has access** to **Anyone**.
-9. Click **Deploy**. (You will need to authorize permissions for your Google account).
-10. Copy the **Web App URL**.
+### 2. Emergency Blood Requests
+- **Offline Emergency Mode:** Submit requests even without internet; data saves locally and syncs once online.
+- **Nearest Hospital Suggestion:** Auto-suggests the closest blood banks from a pre-built database of 170+ hospitals.
+- **Auto-Matching:** System finds the best donors for a specific request based on blood group compatibility and distance.
 
-### 3. Connect to App
-1. Open your project's `.env` file.
-2. Add your URL: `NEXT_PUBLIC_SHEETS_URL=your_copied_url_here`
-3. Restart your dev server (`npm run dev`).
+### 3. Communication & Security
+- **In-App Messaging:** Real-time chat system between donors and recipients.
+- **SMS Alerts:** Automatic SMS notifications for urgent requests (focused on rural areas).
+- **Report System:** Report spam requests or fake profiles directly to admins.
 
-## ✅ How to Verify Connection
-1. **Try Posting a Request**: Go to the "রক্তের অনুরোধ" (New Request) page and submit a test request.
-2. **Check Your Google Sheet**: You should see a new tab named **'Requests'** automatically appear with your test data!
-3. **Check Donors**: Registration and searching for donors will also automatically create the **'Donors'** tab.
+### 4. AI-Powered Tools (Genkit)
+- **Eligibility Doctor:** AI analyzes donor health data to check donation fitness.
+- **Fake Profile Detector:** Security analyst AI to identify suspicious activity.
+- **Bulk Import:** Smart AI parser to import donor data from Excel or raw text.
 
-## Features
-- **Donor Registration**: Join the life-saving community.
-- **Urgent Requests**: Post and view live blood requirements.
-- **Real-time Sync**: Data updates instantly in your Google Sheet.
-- **AI Eligibility**: Check if you can donate before going to the center.
+### 5. Advanced SEO & Performance
+- **200+ Keyword Optimization:** Optimized for high-ranking search terms in Bengali and English.
+- **Dynamic Sitemap & Robots.txt:** Ensures search engines index every donor profile and blog post.
+- **PWA Support:** Install the site as a mobile app on Android/iOS.
+
+## 🛠 Tech Stack
+- **Framework:** Next.js 15 (App Router)
+- **Database:** Turso (Edge LibSQL)
+- **AI:** Google Genkit (Gemini 2.5 Flash)
+- **Styling:** Tailwind CSS + ShadCN UI
+- **Maps:** Leaflet.js
+- **Auth:** Local Auth with Password Protection
+
+## 🛡 Setup & Deployment
+1. **Clone the repo.**
+2. **Environment Variables:**
+   - `TURSO_URL`: Your Turso DB URL.
+   - `TURSO_AUTH_TOKEN`: Your Turso Auth Token.
+   - `SMS_API_KEY`: API key for the integrated SMS gateway.
+   - `ADMIN_PASSWORD`: For admin dashboard access.
+3. **Run Build:** `npm run build`
+
+---
+*Created with love for Humanity by RoktoDao Team.*
