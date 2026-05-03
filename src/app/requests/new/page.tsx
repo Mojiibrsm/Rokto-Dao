@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import dynamic from 'next/dynamic';
-import { Droplet, ArrowLeft, ArrowRight, Loader2, Hospital, WifiOff, CloudUpload, AlertCircle, MapPin, Navigation, Sparkles } from 'lucide-react';
+import { Droplet, ArrowLeft, ArrowRight, Loader2, Hospital, WifiOff, CloudUpload, AlertCircle, MapPin, Navigation, Sparkles, MapPinned } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -120,8 +120,9 @@ export default function NewRequestPage() {
         setUpazilas(data);
         setLoadingLocations(prev => ({ ...prev, upazilas: false }));
         
+        // Find blood banks in this district
         const inDistrict = HOSPITALS.filter(h => h.district === selectedDistrict);
-        setSuggestedHospitals(inDistrict);
+        setSuggestedHospitals(inDistrict.slice(0, 10));
       } else {
         setUpazilas([]);
         setSuggestedHospitals([]);
@@ -136,12 +137,12 @@ export default function NewRequestPage() {
     const withDistance = HOSPITALS.map(h => ({
       ...h,
       distance: getDist(lat, lng, h.lat, h.lng)
-    })).sort((a, b) => a.distance - b.distance);
+    })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
     
-    setSuggestedHospitals(withDistance.slice(0, 5));
+    setSuggestedHospitals(withDistance.slice(0, 10));
     toast({
       title: "অবস্থান শনাক্ত হয়েছে",
-      description: "আপনার অবস্থানের নিকটস্থ হাসপাতালগুলো সাজেস্ট করা হয়েছে।",
+      description: "আপনার অবস্থানের নিকটস্থ ব্লাড ব্যাংকগুলো সাজেস্ট করা হয়েছে।",
     });
   };
 
@@ -231,7 +232,7 @@ export default function NewRequestPage() {
             <Droplet className="h-10 w-10 text-primary fill-primary" />
           </div>
           <CardTitle className="text-4xl font-black font-headline">জরুরী রক্তের অনুরোধ</CardTitle>
-          <CardDescription className="text-lg font-bold">হাসপাতালের সঠিক অবস্থান নিশ্চিত করুন।</CardDescription>
+          <CardDescription className="text-lg font-bold">সঠিক ব্লাড ব্যাংক বা হাসপাতালের তথ্য দিন।</CardDescription>
         </CardHeader>
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
@@ -240,7 +241,7 @@ export default function NewRequestPage() {
               <div className="space-y-6">
                  <div className="flex items-center justify-between">
                     <FormLabel className="text-lg font-black flex items-center gap-2">
-                       <MapPin className="h-5 w-5 text-primary" /> হাসপাতালের অবস্থান (Map)
+                       <MapPinned className="h-5 w-5 text-primary" /> ব্লাড ব্যাংক বা হাসপাতালের অবস্থান
                     </FormLabel>
                     <Button 
                       type="button" 
@@ -249,7 +250,7 @@ export default function NewRequestPage() {
                       onClick={handleDetectBrowserLocation}
                       className="rounded-full h-8 px-4 font-bold border-primary/20 text-primary"
                     >
-                      <Navigation className="h-3 w-3 mr-2" /> Detect My Location
+                      <Navigation className="h-3 w-3 mr-2" /> Detect Location
                     </Button>
                  </div>
                  <LocationPicker 
@@ -288,20 +289,20 @@ export default function NewRequestPage() {
                   name="hospitalName"
                   render={({ field }) => (
                     <FormItem className="relative">
-                      <FormLabel className="font-black">হাসপাতালের নাম *</FormLabel>
+                      <FormLabel className="font-black">ব্লাড ব্যাংক বা হাসপাতালের নাম *</FormLabel>
                       <FormControl>
                         <div className="relative group">
                           <Hospital className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                          <Input className="pl-12 h-12 rounded-xl border-2 focus:border-primary" placeholder="হাসপাতালের নাম লিখুন" {...field} />
+                          <Input className="pl-12 h-12 rounded-xl border-2 focus:border-primary" placeholder="নাম লিখুন" {...field} />
                         </div>
                       </FormControl>
                       
                       {suggestedHospitals.length > 0 && (
                         <div className="mt-3 p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 animate-in fade-in slide-in-from-top-2">
                            <p className="text-[10px] font-black uppercase text-primary mb-3 flex items-center gap-2">
-                             <Sparkles className="h-3 w-3" /> নিকটস্থ হাসপাতাল (Suggested)
+                             <Sparkles className="h-3 w-3" /> নিকটস্থ ব্লাড ব্যাংকসমূহ (Suggested)
                            </p>
-                           <div className="flex flex-wrap gap-2">
+                           <div className="grid grid-cols-1 gap-2">
                               {suggestedHospitals.map((h, i) => (
                                 <Button 
                                   key={i} 
@@ -309,9 +310,12 @@ export default function NewRequestPage() {
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => form.setValue('hospitalName', h.name)}
-                                  className="text-[11px] font-bold h-7 rounded-full bg-white border-primary/20 text-slate-800 hover:bg-primary hover:text-white transition-all shadow-sm px-4"
+                                  className="justify-start text-[11px] font-bold h-auto py-2 rounded-xl bg-white border-primary/20 text-slate-800 hover:bg-primary hover:text-white transition-all shadow-sm px-4"
                                 >
-                                  {h.name}
+                                  <div className="text-left">
+                                    <p className="font-black">{h.name}</p>
+                                    <p className="text-[9px] opacity-70 font-medium truncate">{h.address}</p>
+                                  </div>
                                 </Button>
                               ))}
                            </div>
