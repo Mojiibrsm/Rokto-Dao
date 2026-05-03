@@ -1,17 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { Droplet, User, Menu, LayoutDashboard, LogOut, Users, Heart, ClipboardCheck, HelpCircle, Shield, MessageSquare } from 'lucide-react';
+import { Droplet, User, Menu, LayoutDashboard, LogOut, Users, Heart, ClipboardCheck, HelpCircle, Shield, MessageSquare, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import { useRouter } from 'next/navigation';
+import { useI18n } from '@/lib/i18n-context';
+import { LanguageSwitcher } from './language-switcher';
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { t } = useI18n();
 
   useEffect(() => {
     setMounted(true);
@@ -38,11 +41,11 @@ export function Navigation() {
   };
 
   const navLinks = [
-    { href: '/donors', label: 'দাতা খুঁজুন', icon: User },
-    { href: '/requests', label: 'রক্তের অনুরোধ', icon: Droplet },
-    { href: '/faq', label: 'সাধারণ জিজ্ঞাসা', icon: HelpCircle },
-    { href: '/eligibility', label: 'যোগ্যতা যাচাই', icon: ClipboardCheck },
-    { href: '/team', label: 'আমাদের টিম', icon: Users },
+    { href: '/donors', label: t.nav.donors, icon: User },
+    { href: '/requests', label: t.nav.requests, icon: Droplet },
+    { href: '/faq', label: t.nav.faq, icon: HelpCircle },
+    { href: '/eligibility', label: t.nav.eligibility, icon: ClipboardCheck },
+    { href: '/team', label: t.nav.team, icon: Users },
   ];
 
   return (
@@ -76,6 +79,8 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <LanguageSwitcher />
+            
             {!mounted ? (
               <div className="h-10 w-24 bg-muted animate-pulse rounded-full" />
             ) : user ? (
@@ -86,22 +91,22 @@ export function Navigation() {
                 </Link>
                 {user.role === 'admin' && (
                   <Link href="/admin" className="hidden xl:flex items-center gap-2 text-slate-900 bg-slate-100 px-3 py-2 rounded-full border hover:bg-slate-200 transition-colors font-bold text-[13px]">
-                    <Shield className="h-4 w-4" /> অ্যাডমিন
+                    <Shield className="h-4 w-4" /> {t.nav.admin}
                   </Link>
                 )}
                 <Link href="/dashboard" className="text-[13px] font-black flex items-center gap-2 text-primary bg-primary/5 px-3 py-2 rounded-full border border-primary/20 hover:bg-primary/10 transition-colors whitespace-nowrap">
                   <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">আমার ড্যাশবোর্ড</span>
+                  <span className="hidden sm:inline">{t.nav.dashboard}</span>
                 </Link>
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 font-bold hover:bg-red-50 text-[13px]">
-                  <LogOut className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">লগআউট</span>
+                  <LogOut className="h-4 w-4 mr-1" /> <span className="hidden sm:inline">{t.nav.logout}</span>
                 </Button>
               </div>
             ) : (
               <>
-                <Link href="/login" className="text-[15px] font-bold hidden sm:block hover:text-primary text-foreground px-4 py-2 rounded-lg transition-colors whitespace-nowrap">লগইন</Link>
+                <Link href="/login" className="text-[15px] font-bold hidden sm:block hover:text-primary text-foreground px-4 py-2 rounded-lg transition-colors whitespace-nowrap">{t.nav.login}</Link>
                 <Button size="default" asChild className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 sm:px-8 font-black shadow-lg shadow-primary/20 hover:scale-105 transition-all text-sm whitespace-nowrap">
-                  <Link href="/register">রেজিস্ট্রেশন</Link>
+                  <Link href="/register">{t.nav.register}</Link>
                 </Button>
               </>
             )}
@@ -120,11 +125,13 @@ export function Navigation() {
                       RoktoDao
                     </SheetTitle>
                     <SheetDescription className="font-medium text-muted-foreground">
-                      জীবন বাঁচাতে আমাদের সাথে যুক্ত থাকুন।
+                      {t.nav.heroBadge || 'Saving lives together.'}
                     </SheetDescription>
                   </SheetHeader>
                   <div className="flex flex-col gap-6 mt-4">
-                    <Link href="/" onClick={() => setIsOpen(false)} className="text-xl font-black text-foreground hover:text-primary transition-colors">হোম</Link>
+                    <Link href="/" onClick={() => setIsOpen(false)} className="text-xl font-black text-foreground hover:text-primary transition-colors flex items-center gap-3">
+                       <Home className="h-6 w-6 text-primary/60" /> {t.nav.home}
+                    </Link>
                     {navLinks.map((link) => (
                       <Link 
                         key={link.href} 
@@ -145,19 +152,19 @@ export function Navigation() {
                           <MessageSquare className="h-6 w-6 text-primary" /> ইনবক্স
                         </Link>
                         <Link href="/dashboard" onClick={() => setIsOpen(false)} className="text-xl font-black text-primary flex items-center gap-3">
-                          <LayoutDashboard className="h-6 w-6" /> ড্যাশবোর্ড
+                          <LayoutDashboard className="h-6 w-6" /> {t.nav.dashboard}
                         </Link>
                         {user.role === 'admin' && (
                           <Link href="/admin" onClick={() => setIsOpen(false)} className="text-xl font-black text-slate-900 flex items-center gap-3">
-                            <Shield className="h-6 w-6" /> অ্যাডমিন প্যানেল
+                            <Shield className="h-6 w-6" /> {t.nav.admin}
                           </Link>
                         )}
                         <button onClick={handleLogout} className="text-xl font-bold text-left text-red-600 flex items-center gap-3">
-                          <LogOut className="h-6 w-6" /> লগআউট
+                          <LogOut className="h-6 w-6" /> {t.nav.logout}
                         </button>
                       </>
                     ) : (
-                      <Link href="/login" onClick={() => setIsOpen(false)} className="text-xl font-black text-foreground">লগইন</Link>
+                      <Link href="/login" onClick={() => setIsOpen(false)} className="text-xl font-black text-foreground">{t.nav.login}</Link>
                     )}
                   </div>
                 </SheetContent>

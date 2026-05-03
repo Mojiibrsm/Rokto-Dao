@@ -6,6 +6,7 @@ import { Droplet } from 'lucide-react';
 import Link from 'next/link';
 import { FooterYear } from '@/components/footer-year';
 import Script from 'next/script';
+import { I18nProvider } from '@/lib/i18n-context';
 
 export const viewport: Viewport = {
   themeColor: '#d31d2a',
@@ -83,82 +84,84 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="https://roktodao.pro.bd/files/icon-192x192.png" />
       </head>
       <body className="font-body antialiased min-h-screen bg-background flex flex-col" suppressHydrationWarning>
-        <Navigation />
-        
-        <main className="flex-grow">{children}</main>
+        <I18nProvider>
+          <Navigation />
+          
+          <main className="flex-grow">{children}</main>
 
-        <footer className="bg-slate-900 text-white pt-16 pb-8">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-              <div className="space-y-6">
-                <Link href="/" className="flex items-center gap-1 font-bold text-primary text-2xl">
-                  <Droplet className="h-8 w-8 text-primary fill-primary" />
-                  <span className="tracking-tight font-headline">RoktoDao</span>
-                </Link>
-                <p className="text-slate-400 text-base leading-relaxed">
-                  বাংলাদেশের অন্যতম নির্ভরযোগ্য রক্তদাতা প্ল্যাটফর্ম। ঢাকা, চট্টগ্রামসহ সব জেলায় জরুরি প্রয়োজনে রক্তদাতা খুঁজে পেতে আমরা আপনার পাশে আছি।
-                </p>
-                <div className="text-2xl font-black text-primary">+8801600151907</div>
+          <footer className="bg-slate-900 text-white pt-16 pb-8">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div className="space-y-6">
+                  <Link href="/" className="flex items-center gap-1 font-bold text-primary text-2xl">
+                    <Droplet className="h-8 w-8 text-primary fill-primary" />
+                    <span className="tracking-tight font-headline">RoktoDao</span>
+                  </Link>
+                  <p className="text-slate-400 text-base leading-relaxed">
+                    বাংলাদেশের অন্যতম নির্ভরযোগ্য রক্তদাতা প্ল্যাটফর্ম। ঢাকা, চট্টগ্রামসহ সব জেলায় জরুরি প্রয়োজনে রক্তদাতা খুঁজে পেতে আমরা আপনার পাশে আছি।
+                  </p>
+                  <div className="text-2xl font-black text-primary">+8801600151907</div>
+                </div>
+
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold border-b border-slate-700 pb-2">জরুরি লিংক</h3>
+                  <ul className="space-y-3 text-sm text-slate-400">
+                    <li><Link href="/donors" className="hover:text-primary transition-colors">রক্তদাতা খুঁজুন (Find Donor)</Link></li>
+                    <li><Link href="/donors/map" className="hover:text-primary transition-colors">রক্তদাতা মানচিত্র (Blood Map)</Link></li>
+                    <li><Link href="/requests" className="hover:text-primary transition-colors">রক্তের অনুরোধ (Blood Request)</Link></li>
+                    <li><Link href="/eligibility" className="hover:text-primary transition-colors">রক্তদানের যোগ্যতা (Eligibility)</Link></li>
+                    <li><Link href="/blog" className="hover:text-primary transition-colors">আমাদের ব্লগ (Awareness)</Link></li>
+                    <li><Link href="/faq" className="hover:text-primary transition-colors">সাধারণ জিজ্ঞাসা (FAQ)</Link></li>
+                  </ul>
+                </div>
+
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold border-b border-slate-700 pb-2">সেবা এলাকা (Areas)</h3>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
+                    <span className="hover:text-slate-300">ঢাকা (Dhaka)</span>
+                    <span className="hover:text-slate-300">চট্টগ্রাম (Ctg)</span>
+                    <span className="hover:text-slate-300">সিলেট (Sylhet)</span>
+                    <span className="hover:text-slate-300">রাজশাহী (Raj)</span>
+                    <span className="hover:text-slate-300">খুলনা (Khulna)</span>
+                    <span className="hover:text-slate-300">বরিশাল (Barisal)</span>
+                    <span className="hover:text-slate-300">রংপুর (Rangpur)</span>
+                    <span className="hover:text-slate-300">কুমিল্লা (Cumilla)</span>
+                    <span className="hover:text-slate-300">গাজীপুর (Gazipur)</span>
+                    <span className="hover:text-slate-300">নোয়াখালী (Noakhali)</span>
+                  </div>
+                  <div className="pt-2">
+                    <p className="text-[10px] text-slate-500 italic">সারা বাংলাদেশে (৬৪ জেলা) আমাদের কার্যক্রম পরিচালিত হয়।</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <h3 className="text-lg font-bold border-b border-slate-700 pb-2">রক্তের গ্রুপ (Groups)</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {['A+', 'O+', 'B+', 'AB+', 'A-', 'O-', 'B-', 'AB-'].map(g => (
+                      <span key={g} className="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg text-xs font-black">{g}</span>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-relaxed">
+                    সন্ধানী (Sandhani), বাঁধন (Badhan) এবং রেড ক্রিসেন্ট (Red Crescent) সহ সকল স্বেচ্ছাসেবী সংগঠনের জন্য উন্মুক্ত প্ল্যাটফর্ম।
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-6">
-                <h3 className="text-lg font-bold border-b border-slate-700 pb-2">জরুরি লিংক</h3>
-                <ul className="space-y-3 text-sm text-slate-400">
-                  <li><Link href="/donors" className="hover:text-primary transition-colors">রক্তদাতা খুঁজুন (Find Donor)</Link></li>
-                  <li><Link href="/donors/map" className="hover:text-primary transition-colors">রক্তদাতা মানচিত্র (Blood Map)</Link></li>
-                  <li><Link href="/requests" className="hover:text-primary transition-colors">রক্তের অনুরোধ (Blood Request)</Link></li>
-                  <li><Link href="/eligibility" className="hover:text-primary transition-colors">রক্তদানের যোগ্যতা (Eligibility)</Link></li>
-                  <li><Link href="/blog" className="hover:text-primary transition-colors">আমাদের ব্লগ (Awareness)</Link></li>
-                  <li><Link href="/faq" className="hover:text-primary transition-colors">সাধারণ জিজ্ঞাসা (FAQ)</Link></li>
-                </ul>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-lg font-bold border-b border-slate-700 pb-2">সেবা এলাকা (Areas)</h3>
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
-                  <span className="hover:text-slate-300">ঢাকা (Dhaka)</span>
-                  <span className="hover:text-slate-300">চট্টগ্রাম (Ctg)</span>
-                  <span className="hover:text-slate-300">সিলেট (Sylhet)</span>
-                  <span className="hover:text-slate-300">রাজশাহী (Raj)</span>
-                  <span className="hover:text-slate-300">খুলনা (Khulna)</span>
-                  <span className="hover:text-slate-300">বরিশাল (Barisal)</span>
-                  <span className="hover:text-slate-300">রংপুর (Rangpur)</span>
-                  <span className="hover:text-slate-300">কুমিল্লা (Cumilla)</span>
-                  <span className="hover:text-slate-300">গাজীপুর (Gazipur)</span>
-                  <span className="hover:text-slate-300">নোয়াখালী (Noakhali)</span>
+              <div className="pt-10 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex gap-6 text-[10px] uppercase font-black text-slate-500 tracking-widest">
+                  <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+                  <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+                  <Link href="/contact" className="hover:text-primary transition-colors">Contact Support</Link>
                 </div>
-                <div className="pt-2">
-                  <p className="text-[10px] text-slate-500 italic">সারা বাংলাদেশে (৬৪ জেলা) আমাদের কার্যক্রম পরিচালিত হয়।</p>
+                <div className="text-slate-600 text-[10px] font-bold">
+                  <FooterYear />
                 </div>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-lg font-bold border-b border-slate-700 pb-2">রক্তের গ্রুপ (Groups)</h3>
-                <div className="flex flex-wrap gap-2">
-                  {['A+', 'O+', 'B+', 'AB+', 'A-', 'O-', 'B-', 'AB-'].map(g => (
-                    <span key={g} className="bg-slate-800 text-slate-300 px-3 py-1 rounded-lg text-xs font-black">{g}</span>
-                  ))}
-                </div>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
-                  সন্ধানী (Sandhani), বাঁধন (Badhan) এবং রেড ক্রিসেন্ট (Red Crescent) সহ সকল স্বেচ্ছাসেবী সংগঠনের জন্য উন্মুক্ত প্ল্যাটফর্ম।
-                </p>
               </div>
             </div>
+          </footer>
 
-            <div className="pt-10 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex gap-6 text-[10px] uppercase font-black text-slate-500 tracking-widest">
-                <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-                <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
-                <Link href="/contact" className="hover:text-primary transition-colors">Contact Support</Link>
-              </div>
-              <div className="text-slate-600 text-[10px] font-bold">
-                <FooterYear />
-              </div>
-            </div>
-          </div>
-        </footer>
-
-        <Toaster />
+          <Toaster />
+        </I18nProvider>
 
         <Script id="register-sw" strategy="afterInteractive">
           {`
